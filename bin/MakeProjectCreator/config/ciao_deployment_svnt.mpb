@@ -1,9 +1,0 @@
-// -*- MPC -*-
-// $Id$
-
-project : portableserver, taoidldefaults {
-  after += Deployment_svnt
-  libs  += Deployment_svnt
-  includes += $(CIAO_ROOT)/DnC/ciao $(CIAO_ROOT)/DnC
-  idlflags += -I$(CIAO_ROOT)/DnC -I$(CIAO_ROOT)/DnC/ciao -Sc
-}
