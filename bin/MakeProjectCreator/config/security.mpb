@@ -1,8 +1,0 @@
-// -*- MPC -*-
-// $Id$
-
-project : portableserver, valuetype, orbsvcslib {
-  after     += Security
-  libs      += TAO_Security
-  tagchecks += Security
-}
