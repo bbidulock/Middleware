@@ -14,8 +14,7 @@ namespace CIAO
 
 #include <memory>
 #include <vector>
-#include <XSCRT/XMLSchema.hpp>
-#include <XSCRT/Parser.hpp>
+#include <XMLSchema/Types.hpp>
 
 #include "ccd.hpp"
 
@@ -63,12 +62,16 @@ namespace CIAO
       // implementation
       // 
       public:
-      ::CIAO::Config_Handlers::MonolithicDeploymentDescription const& implementation () const;
-      ::CIAO::Config_Handlers::MonolithicDeploymentDescription& implementation ();
-      void implementation (::CIAO::Config_Handlers::MonolithicDeploymentDescription const& );
+      typedef ::std::vector< ::CIAO::Config_Handlers::MonolithicDeploymentDescription >::iterator implementation_iterator;
+      typedef ::std::vector< ::CIAO::Config_Handlers::MonolithicDeploymentDescription >::const_iterator implementation_const_iterator;
+      implementation_iterator begin_implementation ();
+      implementation_iterator end_implementation ();
+      implementation_const_iterator begin_implementation () const;
+      implementation_const_iterator end_implementation () const;
+      void add_implementation (::CIAO::Config_Handlers::MonolithicDeploymentDescription const& );
 
       protected:
-      ::std::auto_ptr< ::CIAO::Config_Handlers::MonolithicDeploymentDescription > implementation_;
+      ::std::vector< ::CIAO::Config_Handlers::MonolithicDeploymentDescription > implementation_;
 
       // instance
       // 
@@ -141,7 +144,8 @@ namespace CIAO
       ::std::vector< ::CIAO::Config_Handlers::Property > infoProperty_;
 
       public:
-      DeploymentPlan ();
+      DeploymentPlan (::CIAO::Config_Handlers::ComponentInterfaceDescription const& realizes__);
+
       DeploymentPlan (::XSCRT::XML::Element< char > const&);
       DeploymentPlan (DeploymentPlan const& s);
 
@@ -151,6 +155,336 @@ namespace CIAO
       private:
       char regulator__;
     };
+  }
+}
+
+namespace CIAO
+{
+  namespace Config_Handlers
+  {
+  }
+}
+
+#include <XMLSchema/Traversal.hpp>
+
+namespace CIAO
+{
+  namespace Config_Handlers
+  {
+    namespace Traversal
+    {
+      struct DeploymentPlan : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::DeploymentPlan >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        label (Type&);
+
+        virtual void
+        label (Type const&);
+
+        virtual void
+        label_none (Type&);
+
+        virtual void
+        label_none (Type const&);
+
+        virtual void
+        UUID (Type&);
+
+        virtual void
+        UUID (Type const&);
+
+        virtual void
+        UUID_none (Type&);
+
+        virtual void
+        UUID_none (Type const&);
+
+        virtual void
+        realizes (Type&);
+
+        virtual void
+        realizes (Type const&);
+
+        virtual void
+        implementation (Type&);
+
+        virtual void
+        implementation (Type const&);
+
+        virtual void
+        implementation_pre (Type&);
+
+        virtual void
+        implementation_pre (Type const&);
+
+        virtual void
+        implementation_next (Type&);
+
+        virtual void
+        implementation_next (Type const&);
+
+        virtual void
+        implementation_post (Type&);
+
+        virtual void
+        implementation_post (Type const&);
+
+        virtual void
+        instance (Type&);
+
+        virtual void
+        instance (Type const&);
+
+        virtual void
+        instance_pre (Type&);
+
+        virtual void
+        instance_pre (Type const&);
+
+        virtual void
+        instance_next (Type&);
+
+        virtual void
+        instance_next (Type const&);
+
+        virtual void
+        instance_post (Type&);
+
+        virtual void
+        instance_post (Type const&);
+
+        virtual void
+        instance_none (Type&);
+
+        virtual void
+        instance_none (Type const&);
+
+        virtual void
+        connection (Type&);
+
+        virtual void
+        connection (Type const&);
+
+        virtual void
+        connection_pre (Type&);
+
+        virtual void
+        connection_pre (Type const&);
+
+        virtual void
+        connection_next (Type&);
+
+        virtual void
+        connection_next (Type const&);
+
+        virtual void
+        connection_post (Type&);
+
+        virtual void
+        connection_post (Type const&);
+
+        virtual void
+        connection_none (Type&);
+
+        virtual void
+        connection_none (Type const&);
+
+        virtual void
+        dependsOn (Type&);
+
+        virtual void
+        dependsOn (Type const&);
+
+        virtual void
+        dependsOn_pre (Type&);
+
+        virtual void
+        dependsOn_pre (Type const&);
+
+        virtual void
+        dependsOn_next (Type&);
+
+        virtual void
+        dependsOn_next (Type const&);
+
+        virtual void
+        dependsOn_post (Type&);
+
+        virtual void
+        dependsOn_post (Type const&);
+
+        virtual void
+        dependsOn_none (Type&);
+
+        virtual void
+        dependsOn_none (Type const&);
+
+        virtual void
+        artifact (Type&);
+
+        virtual void
+        artifact (Type const&);
+
+        virtual void
+        artifact_pre (Type&);
+
+        virtual void
+        artifact_pre (Type const&);
+
+        virtual void
+        artifact_next (Type&);
+
+        virtual void
+        artifact_next (Type const&);
+
+        virtual void
+        artifact_post (Type&);
+
+        virtual void
+        artifact_post (Type const&);
+
+        virtual void
+        artifact_none (Type&);
+
+        virtual void
+        artifact_none (Type const&);
+
+        virtual void
+        infoProperty (Type&);
+
+        virtual void
+        infoProperty (Type const&);
+
+        virtual void
+        infoProperty_pre (Type&);
+
+        virtual void
+        infoProperty_pre (Type const&);
+
+        virtual void
+        infoProperty_next (Type&);
+
+        virtual void
+        infoProperty_next (Type const&);
+
+        virtual void
+        infoProperty_post (Type&);
+
+        virtual void
+        infoProperty_post (Type const&);
+
+        virtual void
+        infoProperty_none (Type&);
+
+        virtual void
+        infoProperty_none (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+    }
+  }
+}
+
+#include <XMLSchema/Writer.hpp>
+
+namespace CIAO
+{
+  namespace Config_Handlers
+  {
+    namespace Writer
+    {
+      struct DeploymentPlan : Traversal::DeploymentPlan, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::DeploymentPlan Type;
+        DeploymentPlan (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        label (Type const&);
+
+        virtual void
+        UUID (Type const&);
+
+        virtual void
+        realizes (Type const&);
+
+        virtual void
+        implementation_pre (Type const&);
+
+        virtual void
+        implementation_next (Type const&);
+
+        virtual void
+        implementation_post (Type const&);
+
+        virtual void
+        instance_pre (Type const&);
+
+        virtual void
+        instance_next (Type const&);
+
+        virtual void
+        instance_post (Type const&);
+
+        virtual void
+        connection_pre (Type const&);
+
+        virtual void
+        connection_next (Type const&);
+
+        virtual void
+        connection_post (Type const&);
+
+        virtual void
+        dependsOn_pre (Type const&);
+
+        virtual void
+        dependsOn_next (Type const&);
+
+        virtual void
+        dependsOn_post (Type const&);
+
+        virtual void
+        artifact_pre (Type const&);
+
+        virtual void
+        artifact_next (Type const&);
+
+        virtual void
+        artifact_post (Type const&);
+
+        virtual void
+        infoProperty_pre (Type const&);
+
+        virtual void
+        infoProperty_next (Type const&);
+
+        virtual void
+        infoProperty_post (Type const&);
+
+        protected:
+        DeploymentPlan ();
+      };
+    }
   }
 }
 
