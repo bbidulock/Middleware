@@ -1,4 +1,4 @@
-//$Id$
+// $Id$
 #ifndef BASIC_DEPLOYMENT_DATA_HPP
 #define BASIC_DEPLOYMENT_DATA_HPP
 
@@ -44,8 +44,7 @@ namespace CIAO
 
 #include <memory>
 #include <vector>
-#include <XSCRT/XMLSchema.hpp>
-#include <XSCRT/Parser.hpp>
+#include <XMLSchema/Types.hpp>
 
 namespace CIAO
 {
@@ -54,7 +53,6 @@ namespace CIAO
     class TCKind : public ::XSCRT::Type
     {
       public:
-      TCKind ();
       TCKind (::XSCRT::XML::Element< char > const&);
       TCKind (::XSCRT::XML::Attribute< char > const&);
 
@@ -171,6 +169,7 @@ namespace CIAO
 
       public:
       DataType ();
+
       DataType (::XSCRT::XML::Element< char > const&);
       DataType (DataType const& s);
 
@@ -364,6 +363,7 @@ namespace CIAO
 
       public:
       DataValue ();
+
       DataValue (::XSCRT::XML::Element< char > const&);
       DataValue (DataValue const& s);
 
@@ -400,7 +400,9 @@ namespace CIAO
       ::std::auto_ptr< ::CIAO::Config_Handlers::DataValue > value_;
 
       public:
-      Any ();
+      Any (::CIAO::Config_Handlers::DataType const& type__,
+      ::CIAO::Config_Handlers::DataValue const& value__);
+
       Any (::XSCRT::XML::Element< char > const&);
       Any (Any const& s);
 
@@ -437,7 +439,9 @@ namespace CIAO
       ::std::auto_ptr< ::CIAO::Config_Handlers::Any > value_;
 
       public:
-      Property ();
+      Property (::XMLSchema::string< char > const& name__,
+      ::CIAO::Config_Handlers::Any const& value__);
+
       Property (::XSCRT::XML::Element< char > const&);
       Property (Property const& s);
 
@@ -474,7 +478,9 @@ namespace CIAO
       ::std::auto_ptr< ::XMLSchema::string< char > > label_;
 
       public:
-      Node ();
+      Node (::XMLSchema::string< char > const& name__,
+      ::XMLSchema::string< char > const& label__);
+
       Node (::XSCRT::XML::Element< char > const&);
       Node (Node const& s);
 
@@ -488,7 +494,6 @@ namespace CIAO
     class SatisfierPropertyKind : public ::XSCRT::Type
     {
       public:
-      SatisfierPropertyKind ();
       SatisfierPropertyKind (::XSCRT::XML::Element< char > const&);
       SatisfierPropertyKind (::XSCRT::XML::Attribute< char > const&);
 
@@ -561,7 +566,10 @@ namespace CIAO
       ::std::auto_ptr< ::CIAO::Config_Handlers::Any > value_;
 
       public:
-      SatisfierProperty ();
+      SatisfierProperty (::XMLSchema::string< char > const& name__,
+      ::CIAO::Config_Handlers::SatisfierPropertyKind const& kind__,
+      ::CIAO::Config_Handlers::Any const& value__);
+
       SatisfierProperty (::XSCRT::XML::Element< char > const&);
       SatisfierProperty (SatisfierProperty const& s);
 
@@ -608,7 +616,10 @@ namespace CIAO
       ::std::auto_ptr< ::CIAO::Config_Handlers::SatisfierProperty > property_;
 
       public:
-      Resource ();
+      Resource (::XMLSchema::string< char > const& name__,
+      ::XMLSchema::string< char > const& resourceType__,
+      ::CIAO::Config_Handlers::SatisfierProperty const& property__);
+
       Resource (::XSCRT::XML::Element< char > const&);
       Resource (Resource const& s);
 
@@ -665,7 +676,11 @@ namespace CIAO
       ::std::auto_ptr< ::CIAO::Config_Handlers::SatisfierProperty > property_;
 
       public:
-      SharedResource ();
+      SharedResource (::XMLSchema::string< char > const& name__,
+      ::XMLSchema::string< char > const& resourceType__,
+      ::CIAO::Config_Handlers::Node const& node__,
+      ::CIAO::Config_Handlers::SatisfierProperty const& property__);
+
       SharedResource (::XSCRT::XML::Element< char > const&);
       SharedResource (SharedResource const& s);
 
@@ -712,7 +727,10 @@ namespace CIAO
       ::std::auto_ptr< ::CIAO::Config_Handlers::Property > property_;
 
       public:
-      Requirement ();
+      Requirement (::XMLSchema::string< char > const& resourceType__,
+      ::XMLSchema::string< char > const& name__,
+      ::CIAO::Config_Handlers::Property const& property__);
+
       Requirement (::XSCRT::XML::Element< char > const&);
       Requirement (Requirement const& s);
 
@@ -759,7 +777,10 @@ namespace CIAO
       ::std::auto_ptr< ::CIAO::Config_Handlers::Any > resourceValue_;
 
       public:
-      ResourceDeploymentDescription ();
+      ResourceDeploymentDescription (::XMLSchema::string< char > const& requirementName__,
+      ::XMLSchema::string< char > const& resourceName__,
+      ::CIAO::Config_Handlers::Any const& resourceValue__);
+
       ResourceDeploymentDescription (::XSCRT::XML::Element< char > const&);
       ResourceDeploymentDescription (ResourceDeploymentDescription const& s);
 
@@ -788,17 +809,20 @@ namespace CIAO
       // source
       // 
       public:
-      ::XMLSchema::string< char > const& source () const;
-      ::XMLSchema::string< char >& source ();
-      void source (::XMLSchema::string< char > const& );
+      typedef ::std::vector< ::XMLSchema::string< char > >::iterator source_iterator;
+      typedef ::std::vector< ::XMLSchema::string< char > >::const_iterator source_const_iterator;
+      source_iterator begin_source ();
+      source_iterator end_source ();
+      source_const_iterator begin_source () const;
+      source_const_iterator end_source () const;
+      void add_source (::XMLSchema::string< char > const& );
 
       protected:
-      ::std::auto_ptr< ::XMLSchema::string< char > > source_;
+      ::std::vector< ::XMLSchema::string< char > > source_;
 
       // node
       // 
       public:
-      bool node_p () const;
       ::XMLSchema::string< char > const& node () const;
       ::XMLSchema::string< char >& node ();
       void node (::XMLSchema::string< char > const& );
@@ -823,35 +847,44 @@ namespace CIAO
       // execParameter
       // 
       public:
-      bool execParameter_p () const;
-      ::CIAO::Config_Handlers::Property const& execParameter () const;
-      ::CIAO::Config_Handlers::Property& execParameter ();
-      void execParameter (::CIAO::Config_Handlers::Property const& );
+      typedef ::std::vector< ::CIAO::Config_Handlers::Property >::iterator execParameter_iterator;
+      typedef ::std::vector< ::CIAO::Config_Handlers::Property >::const_iterator execParameter_const_iterator;
+      execParameter_iterator begin_execParameter ();
+      execParameter_iterator end_execParameter ();
+      execParameter_const_iterator begin_execParameter () const;
+      execParameter_const_iterator end_execParameter () const;
+      void add_execParameter (::CIAO::Config_Handlers::Property const& );
 
       protected:
-      ::std::auto_ptr< ::CIAO::Config_Handlers::Property > execParameter_;
+      ::std::vector< ::CIAO::Config_Handlers::Property > execParameter_;
 
       // deployRequirement
       // 
       public:
-      bool deployRequirement_p () const;
-      ::CIAO::Config_Handlers::Requirement const& deployRequirement () const;
-      ::CIAO::Config_Handlers::Requirement& deployRequirement ();
-      void deployRequirement (::CIAO::Config_Handlers::Requirement const& );
+      typedef ::std::vector< ::CIAO::Config_Handlers::Requirement >::iterator deployRequirement_iterator;
+      typedef ::std::vector< ::CIAO::Config_Handlers::Requirement >::const_iterator deployRequirement_const_iterator;
+      deployRequirement_iterator begin_deployRequirement ();
+      deployRequirement_iterator end_deployRequirement ();
+      deployRequirement_const_iterator begin_deployRequirement () const;
+      deployRequirement_const_iterator end_deployRequirement () const;
+      void add_deployRequirement (::CIAO::Config_Handlers::Requirement const& );
 
       protected:
-      ::std::auto_ptr< ::CIAO::Config_Handlers::Requirement > deployRequirement_;
+      ::std::vector< ::CIAO::Config_Handlers::Requirement > deployRequirement_;
 
       // deployedResource
       // 
       public:
-      bool deployedResource_p () const;
-      ::CIAO::Config_Handlers::ResourceDeploymentDescription const& deployedResource () const;
-      ::CIAO::Config_Handlers::ResourceDeploymentDescription& deployedResource ();
-      void deployedResource (::CIAO::Config_Handlers::ResourceDeploymentDescription const& );
+      typedef ::std::vector< ::CIAO::Config_Handlers::ResourceDeploymentDescription >::iterator deployedResource_iterator;
+      typedef ::std::vector< ::CIAO::Config_Handlers::ResourceDeploymentDescription >::const_iterator deployedResource_const_iterator;
+      deployedResource_iterator begin_deployedResource ();
+      deployedResource_iterator end_deployedResource ();
+      deployedResource_const_iterator begin_deployedResource () const;
+      deployedResource_const_iterator end_deployedResource () const;
+      void add_deployedResource (::CIAO::Config_Handlers::ResourceDeploymentDescription const& );
 
       protected:
-      ::std::auto_ptr< ::CIAO::Config_Handlers::ResourceDeploymentDescription > deployedResource_;
+      ::std::vector< ::CIAO::Config_Handlers::ResourceDeploymentDescription > deployedResource_;
 
       // id
       // 
@@ -865,7 +898,9 @@ namespace CIAO
       ::std::auto_ptr< ::XMLSchema::ID< char > > id_;
 
       public:
-      ArtifactDeploymentDescription ();
+      ArtifactDeploymentDescription (::XMLSchema::string< char > const& name__,
+      ::XMLSchema::string< char > const& node__);
+
       ArtifactDeploymentDescription (::XSCRT::XML::Element< char > const&);
       ArtifactDeploymentDescription (ArtifactDeploymentDescription const& s);
 
@@ -894,12 +929,16 @@ namespace CIAO
       // source
       // 
       public:
-      ::XMLSchema::string< char > const& source () const;
-      ::XMLSchema::string< char >& source ();
-      void source (::XMLSchema::string< char > const& );
+      typedef ::std::vector< ::XMLSchema::string< char > >::iterator source_iterator;
+      typedef ::std::vector< ::XMLSchema::string< char > >::const_iterator source_const_iterator;
+      source_iterator begin_source ();
+      source_iterator end_source ();
+      source_const_iterator begin_source () const;
+      source_const_iterator end_source () const;
+      void add_source (::XMLSchema::string< char > const& );
 
       protected:
-      ::std::auto_ptr< ::XMLSchema::string< char > > source_;
+      ::std::vector< ::XMLSchema::string< char > > source_;
 
       // artifact
       // 
@@ -918,24 +957,30 @@ namespace CIAO
       // execParameter
       // 
       public:
-      bool execParameter_p () const;
-      ::CIAO::Config_Handlers::Property const& execParameter () const;
-      ::CIAO::Config_Handlers::Property& execParameter ();
-      void execParameter (::CIAO::Config_Handlers::Property const& );
+      typedef ::std::vector< ::CIAO::Config_Handlers::Property >::iterator execParameter_iterator;
+      typedef ::std::vector< ::CIAO::Config_Handlers::Property >::const_iterator execParameter_const_iterator;
+      execParameter_iterator begin_execParameter ();
+      execParameter_iterator end_execParameter ();
+      execParameter_const_iterator begin_execParameter () const;
+      execParameter_const_iterator end_execParameter () const;
+      void add_execParameter (::CIAO::Config_Handlers::Property const& );
 
       protected:
-      ::std::auto_ptr< ::CIAO::Config_Handlers::Property > execParameter_;
+      ::std::vector< ::CIAO::Config_Handlers::Property > execParameter_;
 
       // deployRequirement
       // 
       public:
-      bool deployRequirement_p () const;
-      ::CIAO::Config_Handlers::Requirement const& deployRequirement () const;
-      ::CIAO::Config_Handlers::Requirement& deployRequirement ();
-      void deployRequirement (::CIAO::Config_Handlers::Requirement const& );
+      typedef ::std::vector< ::CIAO::Config_Handlers::Requirement >::iterator deployRequirement_iterator;
+      typedef ::std::vector< ::CIAO::Config_Handlers::Requirement >::const_iterator deployRequirement_const_iterator;
+      deployRequirement_iterator begin_deployRequirement ();
+      deployRequirement_iterator end_deployRequirement ();
+      deployRequirement_const_iterator begin_deployRequirement () const;
+      deployRequirement_const_iterator end_deployRequirement () const;
+      void add_deployRequirement (::CIAO::Config_Handlers::Requirement const& );
 
       protected:
-      ::std::auto_ptr< ::CIAO::Config_Handlers::Requirement > deployRequirement_;
+      ::std::vector< ::CIAO::Config_Handlers::Requirement > deployRequirement_;
 
       // id
       // 
@@ -949,7 +994,8 @@ namespace CIAO
       ::std::auto_ptr< ::XMLSchema::ID< char > > id_;
 
       public:
-      MonolithicDeploymentDescription ();
+      MonolithicDeploymentDescription (::XMLSchema::string< char > const& name__);
+
       MonolithicDeploymentDescription (::XSCRT::XML::Element< char > const&);
       MonolithicDeploymentDescription (MonolithicDeploymentDescription const& s);
 
@@ -963,7 +1009,6 @@ namespace CIAO
     class ResourceUsageKind : public ::XSCRT::Type
     {
       public:
-      ResourceUsageKind ();
       ResourceUsageKind (::XSCRT::XML::Element< char > const&);
       ResourceUsageKind (::XSCRT::XML::Attribute< char > const&);
 
@@ -1044,7 +1089,11 @@ namespace CIAO
       ::std::auto_ptr< ::CIAO::Config_Handlers::Any > resourceValue_;
 
       public:
-      InstanceResourceDeploymentDescription ();
+      InstanceResourceDeploymentDescription (::CIAO::Config_Handlers::ResourceUsageKind const& resourceUsage__,
+      ::XMLSchema::string< char > const& requirementName__,
+      ::XMLSchema::string< char > const& resourceName__,
+      ::CIAO::Config_Handlers::Any const& resourceValue__);
+
       InstanceResourceDeploymentDescription (::XSCRT::XML::Element< char > const&);
       InstanceResourceDeploymentDescription (InstanceResourceDeploymentDescription const& s);
 
@@ -1103,13 +1152,16 @@ namespace CIAO
       // configProperty
       // 
       public:
-      bool configProperty_p () const;
-      ::CIAO::Config_Handlers::Property const& configProperty () const;
-      ::CIAO::Config_Handlers::Property& configProperty ();
-      void configProperty (::CIAO::Config_Handlers::Property const& );
+      typedef ::std::vector< ::CIAO::Config_Handlers::Property >::iterator configProperty_iterator;
+      typedef ::std::vector< ::CIAO::Config_Handlers::Property >::const_iterator configProperty_const_iterator;
+      configProperty_iterator begin_configProperty ();
+      configProperty_iterator end_configProperty ();
+      configProperty_const_iterator begin_configProperty () const;
+      configProperty_const_iterator end_configProperty () const;
+      void add_configProperty (::CIAO::Config_Handlers::Property const& );
 
       protected:
-      ::std::auto_ptr< ::CIAO::Config_Handlers::Property > configProperty_;
+      ::std::vector< ::CIAO::Config_Handlers::Property > configProperty_;
 
       // deployedResource
       // 
@@ -1145,7 +1197,11 @@ namespace CIAO
       ::std::auto_ptr< ::XMLSchema::ID< char > > id_;
 
       public:
-      InstanceDeploymentDescription ();
+      InstanceDeploymentDescription (::XMLSchema::string< char > const& name__,
+      ::XMLSchema::string< char > const& node__,
+      ::XMLSchema::string< char > const& source__,
+      ::XMLSchema::IDREF< char > const& implementation__);
+
       InstanceDeploymentDescription (::XSCRT::XML::Element< char > const&);
       InstanceDeploymentDescription (InstanceDeploymentDescription const& s);
 
@@ -1159,7 +1215,6 @@ namespace CIAO
     class CCMComponentPortKind : public ::XSCRT::Type
     {
       public:
-      CCMComponentPortKind ();
       CCMComponentPortKind (::XSCRT::XML::Element< char > const&);
       CCMComponentPortKind (::XSCRT::XML::Attribute< char > const&);
 
@@ -1282,7 +1337,15 @@ namespace CIAO
       ::std::auto_ptr< ::CIAO::Config_Handlers::CCMComponentPortKind > kind_;
 
       public:
-      ComponentPortDescription ();
+      ComponentPortDescription (::XMLSchema::string< char > const& name__,
+      ::XMLSchema::string< char > const& specificType__,
+      ::XMLSchema::string< char > const& supportedType__,
+      ::XMLSchema::string< char > const& provider__,
+      ::XMLSchema::string< char > const& exclusiveProvider__,
+      ::XMLSchema::string< char > const& exclusiveUser__,
+      ::XMLSchema::string< char > const& optional__,
+      ::CIAO::Config_Handlers::CCMComponentPortKind const& kind__);
+
       ComponentPortDescription (::XSCRT::XML::Element< char > const&);
       ComponentPortDescription (ComponentPortDescription const& s);
 
@@ -1319,7 +1382,9 @@ namespace CIAO
       ::std::auto_ptr< ::CIAO::Config_Handlers::DataType > type_;
 
       public:
-      ComponentPropertyDescription ();
+      ComponentPropertyDescription (::XMLSchema::string< char > const& name__,
+      ::CIAO::Config_Handlers::DataType const& type__);
+
       ComponentPropertyDescription (::XSCRT::XML::Element< char > const&);
       ComponentPropertyDescription (ComponentPropertyDescription const& s);
 
@@ -1346,7 +1411,8 @@ namespace CIAO
       ::std::auto_ptr< ::XMLSchema::string< char > > portName_;
 
       public:
-      ComponentExternalPortEndpoint ();
+      ComponentExternalPortEndpoint (::XMLSchema::string< char > const& portName__);
+
       ComponentExternalPortEndpoint (::XSCRT::XML::Element< char > const&);
       ComponentExternalPortEndpoint (ComponentExternalPortEndpoint const& s);
 
@@ -1404,7 +1470,10 @@ namespace CIAO
       ::std::auto_ptr< ::XMLSchema::IDREF< char > > instance_;
 
       public:
-      PlanSubcomponentPortEndpoint ();
+      PlanSubcomponentPortEndpoint (::XMLSchema::string< char > const& portName__,
+      ::CIAO::Config_Handlers::CCMComponentPortKind const& kind__,
+      ::XMLSchema::IDREF< char > const& instance__);
+
       PlanSubcomponentPortEndpoint (::XSCRT::XML::Element< char > const&);
       PlanSubcomponentPortEndpoint (PlanSubcomponentPortEndpoint const& s);
 
@@ -1431,7 +1500,8 @@ namespace CIAO
       ::std::auto_ptr< ::XMLSchema::string< char > > location_;
 
       public:
-      ExternalReferenceEndpoint ();
+      ExternalReferenceEndpoint (::XMLSchema::string< char > const& location__);
+
       ExternalReferenceEndpoint (::XSCRT::XML::Element< char > const&);
       ExternalReferenceEndpoint (ExternalReferenceEndpoint const& s);
 
@@ -1488,7 +1558,11 @@ namespace CIAO
       ::std::auto_ptr< ::CIAO::Config_Handlers::Any > resourceValue_;
 
       public:
-      ConnectionResourceDeploymentDescription ();
+      ConnectionResourceDeploymentDescription (::XMLSchema::string< char > const& targetName__,
+      ::XMLSchema::string< char > const& requirementName__,
+      ::XMLSchema::string< char > const& resourceName__,
+      ::CIAO::Config_Handlers::Any const& resourceValue__);
+
       ConnectionResourceDeploymentDescription (::XSCRT::XML::Element< char > const&);
       ConnectionResourceDeploymentDescription (ConnectionResourceDeploymentDescription const& s);
 
@@ -1528,13 +1602,16 @@ namespace CIAO
       // deployRequirement
       // 
       public:
-      bool deployRequirement_p () const;
-      ::CIAO::Config_Handlers::Requirement const& deployRequirement () const;
-      ::CIAO::Config_Handlers::Requirement& deployRequirement ();
-      void deployRequirement (::CIAO::Config_Handlers::Requirement const& );
+      typedef ::std::vector< ::CIAO::Config_Handlers::Requirement >::iterator deployRequirement_iterator;
+      typedef ::std::vector< ::CIAO::Config_Handlers::Requirement >::const_iterator deployRequirement_const_iterator;
+      deployRequirement_iterator begin_deployRequirement ();
+      deployRequirement_iterator end_deployRequirement ();
+      deployRequirement_const_iterator begin_deployRequirement () const;
+      deployRequirement_const_iterator end_deployRequirement () const;
+      void add_deployRequirement (::CIAO::Config_Handlers::Requirement const& );
 
       protected:
-      ::std::auto_ptr< ::CIAO::Config_Handlers::Requirement > deployRequirement_;
+      ::std::vector< ::CIAO::Config_Handlers::Requirement > deployRequirement_;
 
       // externalEndpoint
       // 
@@ -1581,16 +1658,20 @@ namespace CIAO
       // deployedResource
       // 
       public:
-      bool deployedResource_p () const;
-      ::CIAO::Config_Handlers::ConnectionResourceDeploymentDescription const& deployedResource () const;
-      ::CIAO::Config_Handlers::ConnectionResourceDeploymentDescription& deployedResource ();
-      void deployedResource (::CIAO::Config_Handlers::ConnectionResourceDeploymentDescription const& );
+      typedef ::std::vector< ::CIAO::Config_Handlers::ConnectionResourceDeploymentDescription >::iterator deployedResource_iterator;
+      typedef ::std::vector< ::CIAO::Config_Handlers::ConnectionResourceDeploymentDescription >::const_iterator deployedResource_const_iterator;
+      deployedResource_iterator begin_deployedResource ();
+      deployedResource_iterator end_deployedResource ();
+      deployedResource_const_iterator begin_deployedResource () const;
+      deployedResource_const_iterator end_deployedResource () const;
+      void add_deployedResource (::CIAO::Config_Handlers::ConnectionResourceDeploymentDescription const& );
 
       protected:
-      ::std::auto_ptr< ::CIAO::Config_Handlers::ConnectionResourceDeploymentDescription > deployedResource_;
+      ::std::vector< ::CIAO::Config_Handlers::ConnectionResourceDeploymentDescription > deployedResource_;
 
       public:
-      PlanConnectionDescription ();
+      PlanConnectionDescription (::XMLSchema::string< char > const& name__);
+
       PlanConnectionDescription (::XSCRT::XML::Element< char > const&);
       PlanConnectionDescription (PlanConnectionDescription const& s);
 
@@ -1617,7 +1698,8 @@ namespace CIAO
       ::std::auto_ptr< ::XMLSchema::string< char > > requiredType_;
 
       public:
-      ImplementationDependency ();
+      ImplementationDependency (::XMLSchema::string< char > const& requiredType__);
+
       ImplementationDependency (::XSCRT::XML::Element< char > const&);
       ImplementationDependency (ImplementationDependency const& s);
 
@@ -1664,7 +1746,10 @@ namespace CIAO
       ::std::auto_ptr< ::CIAO::Config_Handlers::SatisfierProperty > property_;
 
       public:
-      Capability ();
+      Capability (::XMLSchema::string< char > const& name__,
+      ::XMLSchema::string< char > const& resourceType__,
+      ::CIAO::Config_Handlers::SatisfierProperty const& property__);
+
       Capability (::XSCRT::XML::Element< char > const&);
       Capability (Capability const& s);
 
@@ -1741,7 +1826,13 @@ namespace CIAO
       ::std::auto_ptr< ::CIAO::Config_Handlers::Property > property_;
 
       public:
-      ImplementationRequirement ();
+      ImplementationRequirement (::CIAO::Config_Handlers::ResourceUsageKind const& resourceUsage__,
+      ::XMLSchema::string< char > const& resourcePort__,
+      ::XMLSchema::string< char > const& componentPort__,
+      ::XMLSchema::string< char > const& resourceType__,
+      ::XMLSchema::string< char > const& name__,
+      ::CIAO::Config_Handlers::Property const& property__);
+
       ImplementationRequirement (::XSCRT::XML::Element< char > const&);
       ImplementationRequirement (ImplementationRequirement const& s);
 
@@ -1788,7 +1879,10 @@ namespace CIAO
       ::std::auto_ptr< ::XMLSchema::string< char > > requiredType_;
 
       public:
-      ComponentPackageReference ();
+      ComponentPackageReference (::XMLSchema::string< char > const& requiredUUID__,
+      ::XMLSchema::string< char > const& requiredName__,
+      ::XMLSchema::string< char > const& requiredType__);
+
       ComponentPackageReference (::XSCRT::XML::Element< char > const&);
       ComponentPackageReference (ComponentPackageReference const& s);
 
@@ -1825,7 +1919,9 @@ namespace CIAO
       ::std::auto_ptr< ::XMLSchema::IDREF< char > > instance_;
 
       public:
-      SubcomponentPortEndpoint ();
+      SubcomponentPortEndpoint (::XMLSchema::string< char > const& portName__,
+      ::XMLSchema::IDREF< char > const& instance__);
+
       SubcomponentPortEndpoint (::XSCRT::XML::Element< char > const&);
       SubcomponentPortEndpoint (SubcomponentPortEndpoint const& s);
 
@@ -1905,7 +2001,8 @@ namespace CIAO
       ::std::vector< ::CIAO::Config_Handlers::ExternalReferenceEndpoint > externalReference_;
 
       public:
-      AssemblyConnectionDescription ();
+      AssemblyConnectionDescription (::XMLSchema::string< char > const& name__);
+
       AssemblyConnectionDescription (::XSCRT::XML::Element< char > const&);
       AssemblyConnectionDescription (AssemblyConnectionDescription const& s);
 
@@ -1915,6 +2012,2679 @@ namespace CIAO
       private:
       char regulator__;
     };
+  }
+}
+
+namespace CIAO
+{
+  namespace Config_Handlers
+  {
+  }
+}
+
+#include <XMLSchema/Traversal.hpp>
+
+namespace CIAO
+{
+  namespace Config_Handlers
+  {
+    namespace Traversal
+    {
+      typedef
+      ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::TCKind >
+      TCKind;
+
+      struct DataType : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::DataType >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        kind (Type&);
+
+        virtual void
+        kind (Type const&);
+
+        virtual void
+        kind_none (Type&);
+
+        virtual void
+        kind_none (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct DataValue : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::DataValue >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        short_ (Type&);
+
+        virtual void
+        short_ (Type const&);
+
+        virtual void
+        short_none (Type&);
+
+        virtual void
+        short_none (Type const&);
+
+        virtual void
+        long_ (Type&);
+
+        virtual void
+        long_ (Type const&);
+
+        virtual void
+        long_none (Type&);
+
+        virtual void
+        long_none (Type const&);
+
+        virtual void
+        ushort (Type&);
+
+        virtual void
+        ushort (Type const&);
+
+        virtual void
+        ushort_none (Type&);
+
+        virtual void
+        ushort_none (Type const&);
+
+        virtual void
+        ulong (Type&);
+
+        virtual void
+        ulong (Type const&);
+
+        virtual void
+        ulong_none (Type&);
+
+        virtual void
+        ulong_none (Type const&);
+
+        virtual void
+        float_ (Type&);
+
+        virtual void
+        float_ (Type const&);
+
+        virtual void
+        float_none (Type&);
+
+        virtual void
+        float_none (Type const&);
+
+        virtual void
+        double_ (Type&);
+
+        virtual void
+        double_ (Type const&);
+
+        virtual void
+        double_none (Type&);
+
+        virtual void
+        double_none (Type const&);
+
+        virtual void
+        boolean (Type&);
+
+        virtual void
+        boolean (Type const&);
+
+        virtual void
+        boolean_none (Type&);
+
+        virtual void
+        boolean_none (Type const&);
+
+        virtual void
+        octet (Type&);
+
+        virtual void
+        octet (Type const&);
+
+        virtual void
+        octet_none (Type&);
+
+        virtual void
+        octet_none (Type const&);
+
+        virtual void
+        objref (Type&);
+
+        virtual void
+        objref (Type const&);
+
+        virtual void
+        objref_none (Type&);
+
+        virtual void
+        objref_none (Type const&);
+
+        virtual void
+        enum_ (Type&);
+
+        virtual void
+        enum_ (Type const&);
+
+        virtual void
+        enum_none (Type&);
+
+        virtual void
+        enum_none (Type const&);
+
+        virtual void
+        string (Type&);
+
+        virtual void
+        string (Type const&);
+
+        virtual void
+        string_none (Type&);
+
+        virtual void
+        string_none (Type const&);
+
+        virtual void
+        longlong (Type&);
+
+        virtual void
+        longlong (Type const&);
+
+        virtual void
+        longlong_none (Type&);
+
+        virtual void
+        longlong_none (Type const&);
+
+        virtual void
+        ulonglong (Type&);
+
+        virtual void
+        ulonglong (Type const&);
+
+        virtual void
+        ulonglong_none (Type&);
+
+        virtual void
+        ulonglong_none (Type const&);
+
+        virtual void
+        longdouble (Type&);
+
+        virtual void
+        longdouble (Type const&);
+
+        virtual void
+        longdouble_none (Type&);
+
+        virtual void
+        longdouble_none (Type const&);
+
+        virtual void
+        fixed (Type&);
+
+        virtual void
+        fixed (Type const&);
+
+        virtual void
+        fixed_none (Type&);
+
+        virtual void
+        fixed_none (Type const&);
+
+        virtual void
+        typecode (Type&);
+
+        virtual void
+        typecode (Type const&);
+
+        virtual void
+        typecode_none (Type&);
+
+        virtual void
+        typecode_none (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct Any : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::Any >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        type (Type&);
+
+        virtual void
+        type (Type const&);
+
+        virtual void
+        value (Type&);
+
+        virtual void
+        value (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct Property : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::Property >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        name (Type&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        value (Type&);
+
+        virtual void
+        value (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct Node : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::Node >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        name (Type&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        label (Type&);
+
+        virtual void
+        label (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      typedef
+      ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::SatisfierPropertyKind >
+      SatisfierPropertyKind;
+
+      struct SatisfierProperty : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::SatisfierProperty >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        name (Type&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        kind (Type&);
+
+        virtual void
+        kind (Type const&);
+
+        virtual void
+        value (Type&);
+
+        virtual void
+        value (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct Resource : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::Resource >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        name (Type&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        resourceType (Type&);
+
+        virtual void
+        resourceType (Type const&);
+
+        virtual void
+        property (Type&);
+
+        virtual void
+        property (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct SharedResource : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::SharedResource >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        name (Type&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        resourceType (Type&);
+
+        virtual void
+        resourceType (Type const&);
+
+        virtual void
+        node (Type&);
+
+        virtual void
+        node (Type const&);
+
+        virtual void
+        property (Type&);
+
+        virtual void
+        property (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct Requirement : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::Requirement >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        resourceType (Type&);
+
+        virtual void
+        resourceType (Type const&);
+
+        virtual void
+        name (Type&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        property (Type&);
+
+        virtual void
+        property (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct ResourceDeploymentDescription : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::ResourceDeploymentDescription >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        requirementName (Type&);
+
+        virtual void
+        requirementName (Type const&);
+
+        virtual void
+        resourceName (Type&);
+
+        virtual void
+        resourceName (Type const&);
+
+        virtual void
+        resourceValue (Type&);
+
+        virtual void
+        resourceValue (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct ArtifactDeploymentDescription : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::ArtifactDeploymentDescription >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        name (Type&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        source (Type&);
+
+        virtual void
+        source (Type const&);
+
+        virtual void
+        source_pre (Type&);
+
+        virtual void
+        source_pre (Type const&);
+
+        virtual void
+        source_next (Type&);
+
+        virtual void
+        source_next (Type const&);
+
+        virtual void
+        source_post (Type&);
+
+        virtual void
+        source_post (Type const&);
+
+        virtual void
+        node (Type&);
+
+        virtual void
+        node (Type const&);
+
+        virtual void
+        location (Type&);
+
+        virtual void
+        location (Type const&);
+
+        virtual void
+        location_pre (Type&);
+
+        virtual void
+        location_pre (Type const&);
+
+        virtual void
+        location_next (Type&);
+
+        virtual void
+        location_next (Type const&);
+
+        virtual void
+        location_post (Type&);
+
+        virtual void
+        location_post (Type const&);
+
+        virtual void
+        execParameter (Type&);
+
+        virtual void
+        execParameter (Type const&);
+
+        virtual void
+        execParameter_pre (Type&);
+
+        virtual void
+        execParameter_pre (Type const&);
+
+        virtual void
+        execParameter_next (Type&);
+
+        virtual void
+        execParameter_next (Type const&);
+
+        virtual void
+        execParameter_post (Type&);
+
+        virtual void
+        execParameter_post (Type const&);
+
+        virtual void
+        execParameter_none (Type&);
+
+        virtual void
+        execParameter_none (Type const&);
+
+        virtual void
+        deployRequirement (Type&);
+
+        virtual void
+        deployRequirement (Type const&);
+
+        virtual void
+        deployRequirement_pre (Type&);
+
+        virtual void
+        deployRequirement_pre (Type const&);
+
+        virtual void
+        deployRequirement_next (Type&);
+
+        virtual void
+        deployRequirement_next (Type const&);
+
+        virtual void
+        deployRequirement_post (Type&);
+
+        virtual void
+        deployRequirement_post (Type const&);
+
+        virtual void
+        deployRequirement_none (Type&);
+
+        virtual void
+        deployRequirement_none (Type const&);
+
+        virtual void
+        deployedResource (Type&);
+
+        virtual void
+        deployedResource (Type const&);
+
+        virtual void
+        deployedResource_pre (Type&);
+
+        virtual void
+        deployedResource_pre (Type const&);
+
+        virtual void
+        deployedResource_next (Type&);
+
+        virtual void
+        deployedResource_next (Type const&);
+
+        virtual void
+        deployedResource_post (Type&);
+
+        virtual void
+        deployedResource_post (Type const&);
+
+        virtual void
+        deployedResource_none (Type&);
+
+        virtual void
+        deployedResource_none (Type const&);
+
+        virtual void
+        id (Type&);
+
+        virtual void
+        id (Type const&);
+
+        virtual void
+        id_none (Type&);
+
+        virtual void
+        id_none (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct MonolithicDeploymentDescription : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::MonolithicDeploymentDescription >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        name (Type&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        source (Type&);
+
+        virtual void
+        source (Type const&);
+
+        virtual void
+        source_pre (Type&);
+
+        virtual void
+        source_pre (Type const&);
+
+        virtual void
+        source_next (Type&);
+
+        virtual void
+        source_next (Type const&);
+
+        virtual void
+        source_post (Type&);
+
+        virtual void
+        source_post (Type const&);
+
+        virtual void
+        artifact (Type&);
+
+        virtual void
+        artifact (Type const&);
+
+        virtual void
+        artifact_pre (Type&);
+
+        virtual void
+        artifact_pre (Type const&);
+
+        virtual void
+        artifact_next (Type&);
+
+        virtual void
+        artifact_next (Type const&);
+
+        virtual void
+        artifact_post (Type&);
+
+        virtual void
+        artifact_post (Type const&);
+
+        virtual void
+        execParameter (Type&);
+
+        virtual void
+        execParameter (Type const&);
+
+        virtual void
+        execParameter_pre (Type&);
+
+        virtual void
+        execParameter_pre (Type const&);
+
+        virtual void
+        execParameter_next (Type&);
+
+        virtual void
+        execParameter_next (Type const&);
+
+        virtual void
+        execParameter_post (Type&);
+
+        virtual void
+        execParameter_post (Type const&);
+
+        virtual void
+        deployRequirement (Type&);
+
+        virtual void
+        deployRequirement (Type const&);
+
+        virtual void
+        deployRequirement_pre (Type&);
+
+        virtual void
+        deployRequirement_pre (Type const&);
+
+        virtual void
+        deployRequirement_next (Type&);
+
+        virtual void
+        deployRequirement_next (Type const&);
+
+        virtual void
+        deployRequirement_post (Type&);
+
+        virtual void
+        deployRequirement_post (Type const&);
+
+        virtual void
+        id (Type&);
+
+        virtual void
+        id (Type const&);
+
+        virtual void
+        id_none (Type&);
+
+        virtual void
+        id_none (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      typedef
+      ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::ResourceUsageKind >
+      ResourceUsageKind;
+
+      struct InstanceResourceDeploymentDescription : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::InstanceResourceDeploymentDescription >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        resourceUsage (Type&);
+
+        virtual void
+        resourceUsage (Type const&);
+
+        virtual void
+        requirementName (Type&);
+
+        virtual void
+        requirementName (Type const&);
+
+        virtual void
+        resourceName (Type&);
+
+        virtual void
+        resourceName (Type const&);
+
+        virtual void
+        resourceValue (Type&);
+
+        virtual void
+        resourceValue (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct InstanceDeploymentDescription : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::InstanceDeploymentDescription >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        name (Type&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        node (Type&);
+
+        virtual void
+        node (Type const&);
+
+        virtual void
+        source (Type&);
+
+        virtual void
+        source (Type const&);
+
+        virtual void
+        implementation (Type&);
+
+        virtual void
+        implementation (Type const&);
+
+        virtual void
+        configProperty (Type&);
+
+        virtual void
+        configProperty (Type const&);
+
+        virtual void
+        configProperty_pre (Type&);
+
+        virtual void
+        configProperty_pre (Type const&);
+
+        virtual void
+        configProperty_next (Type&);
+
+        virtual void
+        configProperty_next (Type const&);
+
+        virtual void
+        configProperty_post (Type&);
+
+        virtual void
+        configProperty_post (Type const&);
+
+        virtual void
+        configProperty_none (Type&);
+
+        virtual void
+        configProperty_none (Type const&);
+
+        virtual void
+        deployedResource (Type&);
+
+        virtual void
+        deployedResource (Type const&);
+
+        virtual void
+        deployedResource_none (Type&);
+
+        virtual void
+        deployedResource_none (Type const&);
+
+        virtual void
+        deployedSharedResource (Type&);
+
+        virtual void
+        deployedSharedResource (Type const&);
+
+        virtual void
+        deployedSharedResource_none (Type&);
+
+        virtual void
+        deployedSharedResource_none (Type const&);
+
+        virtual void
+        id (Type&);
+
+        virtual void
+        id (Type const&);
+
+        virtual void
+        id_none (Type&);
+
+        virtual void
+        id_none (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      typedef
+      ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::CCMComponentPortKind >
+      CCMComponentPortKind;
+
+      struct ComponentPortDescription : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::ComponentPortDescription >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        name (Type&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        specificType (Type&);
+
+        virtual void
+        specificType (Type const&);
+
+        virtual void
+        supportedType (Type&);
+
+        virtual void
+        supportedType (Type const&);
+
+        virtual void
+        provider (Type&);
+
+        virtual void
+        provider (Type const&);
+
+        virtual void
+        exclusiveProvider (Type&);
+
+        virtual void
+        exclusiveProvider (Type const&);
+
+        virtual void
+        exclusiveUser (Type&);
+
+        virtual void
+        exclusiveUser (Type const&);
+
+        virtual void
+        optional (Type&);
+
+        virtual void
+        optional (Type const&);
+
+        virtual void
+        kind (Type&);
+
+        virtual void
+        kind (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct ComponentPropertyDescription : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::ComponentPropertyDescription >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        name (Type&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        type (Type&);
+
+        virtual void
+        type (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct ComponentExternalPortEndpoint : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::ComponentExternalPortEndpoint >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        portName (Type&);
+
+        virtual void
+        portName (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct PlanSubcomponentPortEndpoint : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::PlanSubcomponentPortEndpoint >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        portName (Type&);
+
+        virtual void
+        portName (Type const&);
+
+        virtual void
+        provider (Type&);
+
+        virtual void
+        provider (Type const&);
+
+        virtual void
+        provider_none (Type&);
+
+        virtual void
+        provider_none (Type const&);
+
+        virtual void
+        kind (Type&);
+
+        virtual void
+        kind (Type const&);
+
+        virtual void
+        instance (Type&);
+
+        virtual void
+        instance (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct ExternalReferenceEndpoint : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::ExternalReferenceEndpoint >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        location (Type&);
+
+        virtual void
+        location (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct ConnectionResourceDeploymentDescription : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::ConnectionResourceDeploymentDescription >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        targetName (Type&);
+
+        virtual void
+        targetName (Type const&);
+
+        virtual void
+        requirementName (Type&);
+
+        virtual void
+        requirementName (Type const&);
+
+        virtual void
+        resourceName (Type&);
+
+        virtual void
+        resourceName (Type const&);
+
+        virtual void
+        resourceValue (Type&);
+
+        virtual void
+        resourceValue (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct PlanConnectionDescription : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::PlanConnectionDescription >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        name (Type&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        source (Type&);
+
+        virtual void
+        source (Type const&);
+
+        virtual void
+        source_none (Type&);
+
+        virtual void
+        source_none (Type const&);
+
+        virtual void
+        deployRequirement (Type&);
+
+        virtual void
+        deployRequirement (Type const&);
+
+        virtual void
+        deployRequirement_pre (Type&);
+
+        virtual void
+        deployRequirement_pre (Type const&);
+
+        virtual void
+        deployRequirement_next (Type&);
+
+        virtual void
+        deployRequirement_next (Type const&);
+
+        virtual void
+        deployRequirement_post (Type&);
+
+        virtual void
+        deployRequirement_post (Type const&);
+
+        virtual void
+        deployRequirement_none (Type&);
+
+        virtual void
+        deployRequirement_none (Type const&);
+
+        virtual void
+        externalEndpoint (Type&);
+
+        virtual void
+        externalEndpoint (Type const&);
+
+        virtual void
+        externalEndpoint_pre (Type&);
+
+        virtual void
+        externalEndpoint_pre (Type const&);
+
+        virtual void
+        externalEndpoint_next (Type&);
+
+        virtual void
+        externalEndpoint_next (Type const&);
+
+        virtual void
+        externalEndpoint_post (Type&);
+
+        virtual void
+        externalEndpoint_post (Type const&);
+
+        virtual void
+        externalEndpoint_none (Type&);
+
+        virtual void
+        externalEndpoint_none (Type const&);
+
+        virtual void
+        internalEndpoint (Type&);
+
+        virtual void
+        internalEndpoint (Type const&);
+
+        virtual void
+        internalEndpoint_pre (Type&);
+
+        virtual void
+        internalEndpoint_pre (Type const&);
+
+        virtual void
+        internalEndpoint_next (Type&);
+
+        virtual void
+        internalEndpoint_next (Type const&);
+
+        virtual void
+        internalEndpoint_post (Type&);
+
+        virtual void
+        internalEndpoint_post (Type const&);
+
+        virtual void
+        internalEndpoint_none (Type&);
+
+        virtual void
+        internalEndpoint_none (Type const&);
+
+        virtual void
+        externalReference (Type&);
+
+        virtual void
+        externalReference (Type const&);
+
+        virtual void
+        externalReference_pre (Type&);
+
+        virtual void
+        externalReference_pre (Type const&);
+
+        virtual void
+        externalReference_next (Type&);
+
+        virtual void
+        externalReference_next (Type const&);
+
+        virtual void
+        externalReference_post (Type&);
+
+        virtual void
+        externalReference_post (Type const&);
+
+        virtual void
+        externalReference_none (Type&);
+
+        virtual void
+        externalReference_none (Type const&);
+
+        virtual void
+        deployedResource (Type&);
+
+        virtual void
+        deployedResource (Type const&);
+
+        virtual void
+        deployedResource_pre (Type&);
+
+        virtual void
+        deployedResource_pre (Type const&);
+
+        virtual void
+        deployedResource_next (Type&);
+
+        virtual void
+        deployedResource_next (Type const&);
+
+        virtual void
+        deployedResource_post (Type&);
+
+        virtual void
+        deployedResource_post (Type const&);
+
+        virtual void
+        deployedResource_none (Type&);
+
+        virtual void
+        deployedResource_none (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct ImplementationDependency : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::ImplementationDependency >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        requiredType (Type&);
+
+        virtual void
+        requiredType (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct Capability : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::Capability >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        name (Type&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        resourceType (Type&);
+
+        virtual void
+        resourceType (Type const&);
+
+        virtual void
+        property (Type&);
+
+        virtual void
+        property (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct ImplementationRequirement : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::ImplementationRequirement >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        resourceUsage (Type&);
+
+        virtual void
+        resourceUsage (Type const&);
+
+        virtual void
+        resourcePort (Type&);
+
+        virtual void
+        resourcePort (Type const&);
+
+        virtual void
+        componentPort (Type&);
+
+        virtual void
+        componentPort (Type const&);
+
+        virtual void
+        resourceType (Type&);
+
+        virtual void
+        resourceType (Type const&);
+
+        virtual void
+        name (Type&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        property (Type&);
+
+        virtual void
+        property (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct ComponentPackageReference : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::ComponentPackageReference >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        requiredUUID (Type&);
+
+        virtual void
+        requiredUUID (Type const&);
+
+        virtual void
+        requiredName (Type&);
+
+        virtual void
+        requiredName (Type const&);
+
+        virtual void
+        requiredType (Type&);
+
+        virtual void
+        requiredType (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct SubcomponentPortEndpoint : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::SubcomponentPortEndpoint >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        portName (Type&);
+
+        virtual void
+        portName (Type const&);
+
+        virtual void
+        instance (Type&);
+
+        virtual void
+        instance (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+
+      struct AssemblyConnectionDescription : ::XMLSchema::Traversal::Traverser< ::CIAO::Config_Handlers::AssemblyConnectionDescription >
+      {
+        virtual void
+        traverse (Type&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        pre (Type&);
+
+        virtual void
+        pre (Type const&);
+
+        virtual void
+        name (Type&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        deployRequirement (Type&);
+
+        virtual void
+        deployRequirement (Type const&);
+
+        virtual void
+        deployRequirement_none (Type&);
+
+        virtual void
+        deployRequirement_none (Type const&);
+
+        virtual void
+        externalEndpoint (Type&);
+
+        virtual void
+        externalEndpoint (Type const&);
+
+        virtual void
+        externalEndpoint_pre (Type&);
+
+        virtual void
+        externalEndpoint_pre (Type const&);
+
+        virtual void
+        externalEndpoint_next (Type&);
+
+        virtual void
+        externalEndpoint_next (Type const&);
+
+        virtual void
+        externalEndpoint_post (Type&);
+
+        virtual void
+        externalEndpoint_post (Type const&);
+
+        virtual void
+        externalEndpoint_none (Type&);
+
+        virtual void
+        externalEndpoint_none (Type const&);
+
+        virtual void
+        internalEndpoint (Type&);
+
+        virtual void
+        internalEndpoint (Type const&);
+
+        virtual void
+        internalEndpoint_pre (Type&);
+
+        virtual void
+        internalEndpoint_pre (Type const&);
+
+        virtual void
+        internalEndpoint_next (Type&);
+
+        virtual void
+        internalEndpoint_next (Type const&);
+
+        virtual void
+        internalEndpoint_post (Type&);
+
+        virtual void
+        internalEndpoint_post (Type const&);
+
+        virtual void
+        internalEndpoint_none (Type&);
+
+        virtual void
+        internalEndpoint_none (Type const&);
+
+        virtual void
+        externalReference (Type&);
+
+        virtual void
+        externalReference (Type const&);
+
+        virtual void
+        externalReference_pre (Type&);
+
+        virtual void
+        externalReference_pre (Type const&);
+
+        virtual void
+        externalReference_next (Type&);
+
+        virtual void
+        externalReference_next (Type const&);
+
+        virtual void
+        externalReference_post (Type&);
+
+        virtual void
+        externalReference_post (Type const&);
+
+        virtual void
+        externalReference_none (Type&);
+
+        virtual void
+        externalReference_none (Type const&);
+
+        virtual void
+        post (Type&);
+
+        virtual void
+        post (Type const&);
+      };
+    }
+  }
+}
+
+#include <XMLSchema/Writer.hpp>
+
+namespace CIAO
+{
+  namespace Config_Handlers
+  {
+    namespace Writer
+    {
+      struct TCKind : Traversal::TCKind, 
+      virtual ::XSCRT::Writer< char >
+      {
+        TCKind (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        protected:
+        TCKind ();
+      };
+
+      struct DataType : Traversal::DataType, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::DataType Type;
+        DataType (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        kind (Type const&);
+
+        protected:
+        DataType ();
+      };
+
+      struct DataValue : Traversal::DataValue, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::DataValue Type;
+        DataValue (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        short_ (Type const&);
+
+        virtual void
+        long_ (Type const&);
+
+        virtual void
+        ushort (Type const&);
+
+        virtual void
+        ulong (Type const&);
+
+        virtual void
+        float_ (Type const&);
+
+        virtual void
+        double_ (Type const&);
+
+        virtual void
+        boolean (Type const&);
+
+        virtual void
+        octet (Type const&);
+
+        virtual void
+        objref (Type const&);
+
+        virtual void
+        enum_ (Type const&);
+
+        virtual void
+        string (Type const&);
+
+        virtual void
+        longlong (Type const&);
+
+        virtual void
+        ulonglong (Type const&);
+
+        virtual void
+        longdouble (Type const&);
+
+        virtual void
+        fixed (Type const&);
+
+        virtual void
+        typecode (Type const&);
+
+        protected:
+        DataValue ();
+      };
+
+      struct Any : Traversal::Any, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::Any Type;
+        Any (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        type (Type const&);
+
+        virtual void
+        value (Type const&);
+
+        protected:
+        Any ();
+      };
+
+      struct Property : Traversal::Property, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::Property Type;
+        Property (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        value (Type const&);
+
+        protected:
+        Property ();
+      };
+
+      struct Node : Traversal::Node, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::Node Type;
+        Node (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        label (Type const&);
+
+        protected:
+        Node ();
+      };
+
+      struct SatisfierPropertyKind : Traversal::SatisfierPropertyKind, 
+      virtual ::XSCRT::Writer< char >
+      {
+        SatisfierPropertyKind (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        protected:
+        SatisfierPropertyKind ();
+      };
+
+      struct SatisfierProperty : Traversal::SatisfierProperty, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::SatisfierProperty Type;
+        SatisfierProperty (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        kind (Type const&);
+
+        virtual void
+        value (Type const&);
+
+        protected:
+        SatisfierProperty ();
+      };
+
+      struct Resource : Traversal::Resource, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::Resource Type;
+        Resource (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        resourceType (Type const&);
+
+        virtual void
+        property (Type const&);
+
+        protected:
+        Resource ();
+      };
+
+      struct SharedResource : Traversal::SharedResource, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::SharedResource Type;
+        SharedResource (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        resourceType (Type const&);
+
+        virtual void
+        node (Type const&);
+
+        virtual void
+        property (Type const&);
+
+        protected:
+        SharedResource ();
+      };
+
+      struct Requirement : Traversal::Requirement, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::Requirement Type;
+        Requirement (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        resourceType (Type const&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        property (Type const&);
+
+        protected:
+        Requirement ();
+      };
+
+      struct ResourceDeploymentDescription : Traversal::ResourceDeploymentDescription, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::ResourceDeploymentDescription Type;
+        ResourceDeploymentDescription (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        requirementName (Type const&);
+
+        virtual void
+        resourceName (Type const&);
+
+        virtual void
+        resourceValue (Type const&);
+
+        protected:
+        ResourceDeploymentDescription ();
+      };
+
+      struct ArtifactDeploymentDescription : Traversal::ArtifactDeploymentDescription, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::ArtifactDeploymentDescription Type;
+        ArtifactDeploymentDescription (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        source_pre (Type const&);
+
+        virtual void
+        source_next (Type const&);
+
+        virtual void
+        source_post (Type const&);
+
+        virtual void
+        node (Type const&);
+
+        virtual void
+        location_pre (Type const&);
+
+        virtual void
+        location_next (Type const&);
+
+        virtual void
+        location_post (Type const&);
+
+        virtual void
+        execParameter_pre (Type const&);
+
+        virtual void
+        execParameter_next (Type const&);
+
+        virtual void
+        execParameter_post (Type const&);
+
+        virtual void
+        deployRequirement_pre (Type const&);
+
+        virtual void
+        deployRequirement_next (Type const&);
+
+        virtual void
+        deployRequirement_post (Type const&);
+
+        virtual void
+        deployedResource_pre (Type const&);
+
+        virtual void
+        deployedResource_next (Type const&);
+
+        virtual void
+        deployedResource_post (Type const&);
+
+        virtual void
+        id (Type const&);
+
+        protected:
+        ArtifactDeploymentDescription ();
+      };
+
+      struct MonolithicDeploymentDescription : Traversal::MonolithicDeploymentDescription, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::MonolithicDeploymentDescription Type;
+        MonolithicDeploymentDescription (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        source_pre (Type const&);
+
+        virtual void
+        source_next (Type const&);
+
+        virtual void
+        source_post (Type const&);
+
+        virtual void
+        artifact_pre (Type const&);
+
+        virtual void
+        artifact_next (Type const&);
+
+        virtual void
+        artifact_post (Type const&);
+
+        virtual void
+        execParameter_pre (Type const&);
+
+        virtual void
+        execParameter_next (Type const&);
+
+        virtual void
+        execParameter_post (Type const&);
+
+        virtual void
+        deployRequirement_pre (Type const&);
+
+        virtual void
+        deployRequirement_next (Type const&);
+
+        virtual void
+        deployRequirement_post (Type const&);
+
+        virtual void
+        id (Type const&);
+
+        protected:
+        MonolithicDeploymentDescription ();
+      };
+
+      struct ResourceUsageKind : Traversal::ResourceUsageKind, 
+      virtual ::XSCRT::Writer< char >
+      {
+        ResourceUsageKind (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        protected:
+        ResourceUsageKind ();
+      };
+
+      struct InstanceResourceDeploymentDescription : Traversal::InstanceResourceDeploymentDescription, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::InstanceResourceDeploymentDescription Type;
+        InstanceResourceDeploymentDescription (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        resourceUsage (Type const&);
+
+        virtual void
+        requirementName (Type const&);
+
+        virtual void
+        resourceName (Type const&);
+
+        virtual void
+        resourceValue (Type const&);
+
+        protected:
+        InstanceResourceDeploymentDescription ();
+      };
+
+      struct InstanceDeploymentDescription : Traversal::InstanceDeploymentDescription, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::InstanceDeploymentDescription Type;
+        InstanceDeploymentDescription (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        node (Type const&);
+
+        virtual void
+        source (Type const&);
+
+        virtual void
+        implementation (Type const&);
+
+        virtual void
+        configProperty_pre (Type const&);
+
+        virtual void
+        configProperty_next (Type const&);
+
+        virtual void
+        configProperty_post (Type const&);
+
+        virtual void
+        deployedResource (Type const&);
+
+        virtual void
+        deployedSharedResource (Type const&);
+
+        virtual void
+        id (Type const&);
+
+        protected:
+        InstanceDeploymentDescription ();
+      };
+
+      struct CCMComponentPortKind : Traversal::CCMComponentPortKind, 
+      virtual ::XSCRT::Writer< char >
+      {
+        CCMComponentPortKind (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        protected:
+        CCMComponentPortKind ();
+      };
+
+      struct ComponentPortDescription : Traversal::ComponentPortDescription, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::ComponentPortDescription Type;
+        ComponentPortDescription (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        specificType (Type const&);
+
+        virtual void
+        supportedType (Type const&);
+
+        virtual void
+        provider (Type const&);
+
+        virtual void
+        exclusiveProvider (Type const&);
+
+        virtual void
+        exclusiveUser (Type const&);
+
+        virtual void
+        optional (Type const&);
+
+        virtual void
+        kind (Type const&);
+
+        protected:
+        ComponentPortDescription ();
+      };
+
+      struct ComponentPropertyDescription : Traversal::ComponentPropertyDescription, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::ComponentPropertyDescription Type;
+        ComponentPropertyDescription (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        type (Type const&);
+
+        protected:
+        ComponentPropertyDescription ();
+      };
+
+      struct ComponentExternalPortEndpoint : Traversal::ComponentExternalPortEndpoint, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::ComponentExternalPortEndpoint Type;
+        ComponentExternalPortEndpoint (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        portName (Type const&);
+
+        protected:
+        ComponentExternalPortEndpoint ();
+      };
+
+      struct PlanSubcomponentPortEndpoint : Traversal::PlanSubcomponentPortEndpoint, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::PlanSubcomponentPortEndpoint Type;
+        PlanSubcomponentPortEndpoint (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        portName (Type const&);
+
+        virtual void
+        provider (Type const&);
+
+        virtual void
+        kind (Type const&);
+
+        virtual void
+        instance (Type const&);
+
+        protected:
+        PlanSubcomponentPortEndpoint ();
+      };
+
+      struct ExternalReferenceEndpoint : Traversal::ExternalReferenceEndpoint, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::ExternalReferenceEndpoint Type;
+        ExternalReferenceEndpoint (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        location (Type const&);
+
+        protected:
+        ExternalReferenceEndpoint ();
+      };
+
+      struct ConnectionResourceDeploymentDescription : Traversal::ConnectionResourceDeploymentDescription, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::ConnectionResourceDeploymentDescription Type;
+        ConnectionResourceDeploymentDescription (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        targetName (Type const&);
+
+        virtual void
+        requirementName (Type const&);
+
+        virtual void
+        resourceName (Type const&);
+
+        virtual void
+        resourceValue (Type const&);
+
+        protected:
+        ConnectionResourceDeploymentDescription ();
+      };
+
+      struct PlanConnectionDescription : Traversal::PlanConnectionDescription, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::PlanConnectionDescription Type;
+        PlanConnectionDescription (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        source (Type const&);
+
+        virtual void
+        deployRequirement_pre (Type const&);
+
+        virtual void
+        deployRequirement_next (Type const&);
+
+        virtual void
+        deployRequirement_post (Type const&);
+
+        virtual void
+        externalEndpoint_pre (Type const&);
+
+        virtual void
+        externalEndpoint_next (Type const&);
+
+        virtual void
+        externalEndpoint_post (Type const&);
+
+        virtual void
+        internalEndpoint_pre (Type const&);
+
+        virtual void
+        internalEndpoint_next (Type const&);
+
+        virtual void
+        internalEndpoint_post (Type const&);
+
+        virtual void
+        externalReference_pre (Type const&);
+
+        virtual void
+        externalReference_next (Type const&);
+
+        virtual void
+        externalReference_post (Type const&);
+
+        virtual void
+        deployedResource_pre (Type const&);
+
+        virtual void
+        deployedResource_next (Type const&);
+
+        virtual void
+        deployedResource_post (Type const&);
+
+        protected:
+        PlanConnectionDescription ();
+      };
+
+      struct ImplementationDependency : Traversal::ImplementationDependency, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::ImplementationDependency Type;
+        ImplementationDependency (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        requiredType (Type const&);
+
+        protected:
+        ImplementationDependency ();
+      };
+
+      struct Capability : Traversal::Capability, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::Capability Type;
+        Capability (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        resourceType (Type const&);
+
+        virtual void
+        property (Type const&);
+
+        protected:
+        Capability ();
+      };
+
+      struct ImplementationRequirement : Traversal::ImplementationRequirement, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::ImplementationRequirement Type;
+        ImplementationRequirement (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        resourceUsage (Type const&);
+
+        virtual void
+        resourcePort (Type const&);
+
+        virtual void
+        componentPort (Type const&);
+
+        virtual void
+        resourceType (Type const&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        property (Type const&);
+
+        protected:
+        ImplementationRequirement ();
+      };
+
+      struct ComponentPackageReference : Traversal::ComponentPackageReference, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::ComponentPackageReference Type;
+        ComponentPackageReference (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        requiredUUID (Type const&);
+
+        virtual void
+        requiredName (Type const&);
+
+        virtual void
+        requiredType (Type const&);
+
+        protected:
+        ComponentPackageReference ();
+      };
+
+      struct SubcomponentPortEndpoint : Traversal::SubcomponentPortEndpoint, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::SubcomponentPortEndpoint Type;
+        SubcomponentPortEndpoint (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        portName (Type const&);
+
+        virtual void
+        instance (Type const&);
+
+        protected:
+        SubcomponentPortEndpoint ();
+      };
+
+      struct AssemblyConnectionDescription : Traversal::AssemblyConnectionDescription, 
+      virtual ::XSCRT::Writer< char >
+      {
+        typedef ::CIAO::Config_Handlers::AssemblyConnectionDescription Type;
+        AssemblyConnectionDescription (::XSCRT::XML::Element< char >&);
+
+        virtual void
+        traverse (Type const&);
+
+        virtual void
+        name (Type const&);
+
+        virtual void
+        deployRequirement (Type const&);
+
+        virtual void
+        externalEndpoint_pre (Type const&);
+
+        virtual void
+        externalEndpoint_next (Type const&);
+
+        virtual void
+        externalEndpoint_post (Type const&);
+
+        virtual void
+        internalEndpoint_pre (Type const&);
+
+        virtual void
+        internalEndpoint_next (Type const&);
+
+        virtual void
+        internalEndpoint_post (Type const&);
+
+        virtual void
+        externalReference_pre (Type const&);
+
+        virtual void
+        externalReference_next (Type const&);
+
+        virtual void
+        externalReference_post (Type const&);
+
+        protected:
+        AssemblyConnectionDescription ();
+      };
+    }
   }
 }
 
