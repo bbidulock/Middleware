@@ -1,10 +1,8 @@
-// This may look like C, but it's really -*- C++ -*-
 // $Id$
 
 #include "tao/Pluggable.h"
 #include "tao/Stub.h"
 #include "tao/Environment.h"
-#include "tao/GIOP.h"
 #include "tao/ORB_Core.h"
 #include "tao/Client_Strategy_Factory.h"
 #include "tao/Wait_Strategy.h"
@@ -13,6 +11,7 @@
 #include "tao/debug.h"
 
 #include "ace/ACE.h"
+#include "tao/target_identifier.h"
 
 #if !defined (__ACE_INLINE__)
 # include "tao/Pluggable.i"
@@ -51,25 +50,126 @@ TAO_Transport::~TAO_Transport (void)
   delete this->buffering_queue_;
 }
 
-void
-TAO_Transport::flush_buffered_messages (void)
+ssize_t
+TAO_Transport::send_buffered_messages (const ACE_Time_Value *max_wait_time)
 {
-  // If we have a buffering queue.
+  // Make sure we have a buffering queue and there are messages in it.
+  if (this->buffering_queue_ == 0 ||
+      this->buffering_queue_->is_empty ())
+    return 0;
+
+  // Get the first message from the queue.
+  ACE_Message_Block *queued_message = 0;
+  ssize_t result = this->buffering_queue_->peek_dequeue_head (queued_message);
+
+  // @@ What to do here on failures?
+  ACE_ASSERT (result != -1);
+
+  // Actual network send.
+  result = this->send (queued_message,
+                       max_wait_time);
+
+  // Socket closed.
+  if (result == 0)
+    {
+      this->dequeue_all ();
+      return -1;
+    }
+
+  // Cannot send.
+  if (result == -1)
+    {
+      // Timeout.
+      if (errno == ETIME)
+        {
+          // Since we queue up the message, this is not an error.  We
+          // can try next time around.
+          return 0;
+        }
+      // Non-timeout error.
+      else
+        {
+          this->dequeue_all ();
+          return -1;
+        }
+    }
+
+  // If successful in sending some or all of the data, reset the queue
+  // appropriately.
+  this->reset_queued_message (queued_message,
+                              result);
+
+  // Indicate success.
+  return result;
+}
+
+void
+TAO_Transport::dequeue_head (void)
+{
+  // Remove from the head of the queue.
+  ACE_Message_Block *message_block = 0;
+  int result = this->buffering_queue_->dequeue_head (message_block);
+
+  // @@ What to do here on failures?
+  ACE_ASSERT (result != -1);
+  ACE_UNUSED_ARG (result);
+
+  // Release the memory.
+  message_block->release ();
+}
+
+void
+TAO_Transport::dequeue_all (void)
+{
+  // Flush all queued messages.
   if (this->buffering_queue_)
     {
-      // Flush all queued messages.
       while (!this->buffering_queue_->is_empty ())
+        this->dequeue_head ();
+    }
+}
+
+void
+TAO_Transport::reset_queued_message (ACE_Message_Block *message_block,
+                                     size_t bytes_delivered)
+{
+  while (message_block != 0 &&
+         bytes_delivered != 0)
+    {
+      // Partial send.
+      if (message_block->length () > bytes_delivered)
         {
-          // Get the first message from the queue.
-          ACE_Message_Block *queued_message = 0;
-          this->buffering_queue_->dequeue_head (queued_message);
+          // Reset so that we skip this in the next send.
+          message_block->rd_ptr (bytes_delivered);
 
-          // Actual network send. Cannot deal with errors, and
-          // therefore they are ignored.
-          this->send (queued_message);
+          // Hand adjust <message_length>.
+          this->buffering_queue_->message_length (this->buffering_queue_->message_length () - bytes_delivered);
 
-          // Release the memory.
-          queued_message->release ();
+          break;
+        }
+
+      // <message_block> was completely sent.
+      bytes_delivered -= message_block->length ();
+
+      // Check continuation chain.
+      if (message_block->cont ())
+        {
+          // Reset so that we skip this message block in the next send.
+          message_block->rd_ptr (message_block->length ());
+
+          // Hand adjust <message_length>.
+          this->buffering_queue_->message_length (this->buffering_queue_->message_length () - bytes_delivered);
+
+          // Next selection.
+          message_block = message_block->cont ();
+        }
+      else
+        {
+          // Go to the next one.
+          message_block = message_block->next ();
+
+          // Release this <message_block>.
+          this->dequeue_head ();
         }
     }
 }
@@ -118,7 +218,7 @@ TAO_Transport::leader_follower_condition_variable (void)
 
 void
 TAO_Transport::start_request (TAO_ORB_Core *,
-                              const TAO_Profile *,
+                              TAO_Target_Specification & /*spec */,
                               TAO_OutputCDR &,
                               CORBA::Environment &ACE_TRY_ENV)
     ACE_THROW_SPEC ((CORBA::SystemException))
@@ -128,7 +228,7 @@ TAO_Transport::start_request (TAO_ORB_Core *,
 
 void
 TAO_Transport::start_locate (TAO_ORB_Core *,
-                             const TAO_Profile *,
+                             TAO_Target_Specification & /*spec */,
                              CORBA::ULong,
                              TAO_OutputCDR &,
                              CORBA::Environment &ACE_TRY_ENV)

@@ -3,7 +3,6 @@
 
 #include "tao/IIOP_Connector.h"
 #include "tao/IIOP_Profile.h"
-#include "tao/GIOP.h"
 #include "tao/debug.h"
 #include "tao/ORB_Core.h"
 #include "tao/Client_Strategy_Factory.h"
@@ -338,7 +337,7 @@ typedef ACE_Cached_Connect_Strategy<TAO_IIOP_Client_Connection_Handler,
 #endif /* ! TAO_USES_ROBUST_CONNECTION_MGMT */
 
 TAO_IIOP_Connector::TAO_IIOP_Connector (void)
-  : TAO_Connector (TAO_IOP_TAG_INTERNET_IOP),
+  : TAO_Connector (TAO_TAG_IIOP_PROFILE),
     orb_core_ (0),
     base_connector_ ()
 #if defined (TAO_USES_ROBUST_CONNECTION_MGMT)
@@ -445,7 +444,7 @@ TAO_IIOP_Connector::connect (TAO_Profile *profile,
                              TAO_Transport *&transport,
                              ACE_Time_Value *max_wait_time)
 {
-  if (profile->tag () != TAO_IOP_TAG_INTERNET_IOP)
+  if (profile->tag () != TAO_TAG_IIOP_PROFILE)
     return -1;
 
   TAO_IIOP_Profile *iiop_profile =

@@ -14,6 +14,7 @@
 
 #include "tao/Messaging_Policy_i.h"
 #include "tao/Client_Priority_Policy.h"
+#include "tao/target_identifier.h"
 
 #if !defined (__ACE_INLINE__)
 # include "tao/Invocation.i"
@@ -331,18 +332,18 @@ TAO_GIOP_Invocation::prepare_header (CORBA::Octet response_flags,
   // unverified user ID, and then verifying the message (i.e. a dummy
   // service context entry is set up to hold a digital signature for
   // this message, then patched shortly before it's sent).
-  static CORBA::Principal_ptr principal = 0;
+  TAO_Target_Specification spec;
+  spec.target_specifier (this->profile_->object_key ());
 
-  if (TAO_GIOP::write_request_header (this->service_info_,
-                                      this->request_id_,
-                                      response_flags,
-                                      this->profile_->object_key (),
-                                      this->opname_,
-                                      principal,
-                                      this->out_stream_,
-                                      this->orb_core_) == 0)
+  if (this->transport_->send_request_header (this->service_info_,
+                                             this->request_id_,
+                                             response_flags,
+                                             spec,
+                                             this->opname_,   
+                                             this->out_stream_) == 0)
     ACE_THROW (CORBA::MARSHAL ());
 }
+
 
 // Send request.
 int
@@ -552,8 +553,10 @@ TAO_GIOP_Twoway_Invocation::start (CORBA::Environment &ACE_TRY_ENV)
   this->TAO_GIOP_Invocation::start (ACE_TRY_ENV);
   ACE_CHECK;
 
+  TAO_Target_Specification spec;
+  spec.target_specifier (this->profile_->object_key ());
   this->transport_->start_request (this->orb_core_,
-                                   this->profile_,
+                                   spec,
                                    this->out_stream_,
                                    ACE_TRY_ENV);
 }
@@ -920,8 +923,7 @@ TAO_GIOP_Oneway_Invocation (TAO_Stub *stub,
                             const char *operation,
                             TAO_ORB_Core *orb_core)
   : TAO_GIOP_Invocation (stub, operation, orb_core),
-    sync_scope_ (TAO::SYNC_WITH_TRANSPORT),
-    rd_ (orb_core, this->service_info_)
+    sync_scope_ (TAO::SYNC_WITH_TRANSPORT)
 {
 #if defined (TAO_HAS_CORBA_MESSAGING)
   TAO_Sync_Scope_Policy *ssp = stub->sync_scope ();
@@ -946,8 +948,11 @@ TAO_GIOP_Oneway_Invocation::start (CORBA::Environment &ACE_TRY_ENV)
   this->TAO_GIOP_Invocation::start (ACE_TRY_ENV);
   ACE_CHECK;
 
+  TAO_Target_Specification spec;
+  spec.target_specifier (this->profile_->object_key ());
+  
   this->transport_->start_request (this->orb_core_,
-                                   this->profile_,
+                                   spec,
                                    this->out_stream_,
                                    ACE_TRY_ENV);
 }
@@ -964,12 +969,16 @@ TAO_GIOP_Oneway_Invocation::invoke (CORBA::Environment &ACE_TRY_ENV)
                                           ACE_TRY_ENV);
     }
 
+  // Create this only if a reply is required.
+  TAO_Synch_Reply_Dispatcher rd (this->orb_core_, 
+                                 this->service_info_);
+
   // The rest of this function is very similar to
   // TWO_GIOP_Twoway_Invocation::invoke_i, because we must
   // wait for a reply. See comments in that code.
   int retval =
     this->transport_->tms ()->bind_dispatcher (this->request_id_,
-                                               &this->rd_);
+                                               &rd);
   if (retval == -1)
     {
       // @@ What is the right way to handle this error?
@@ -1001,7 +1010,7 @@ TAO_GIOP_Oneway_Invocation::invoke (CORBA::Environment &ACE_TRY_ENV)
 
   int reply_error =
     this->transport_->wait_strategy ()->wait (this->max_wait_time_,
-                                              this->rd_.reply_received ());
+                                              rd.reply_received ());
 
 
   if (TAO_debug_level > 0 && this->max_wait_time_ != 0)
@@ -1039,7 +1048,7 @@ TAO_GIOP_Oneway_Invocation::invoke (CORBA::Environment &ACE_TRY_ENV)
         TAO_INVOKE_EXCEPTION);
     }
 
-  CORBA::ULong reply_status = this->rd_.reply_status ();
+  CORBA::ULong reply_status = rd.reply_status ();
 
   switch (reply_status)
     {
@@ -1052,7 +1061,7 @@ TAO_GIOP_Oneway_Invocation::invoke (CORBA::Environment &ACE_TRY_ENV)
         // Pull the exception from the stream.
         CORBA::String_var buf;
 
-        if ((this->inp_stream () >> buf.inout ()) == 0)
+        if ((rd.reply_cdr () >> buf.inout ()) == 0)
           {
             // Could not demarshal the exception id, raise an local
             // CORBA::MARSHAL
@@ -1066,19 +1075,17 @@ TAO_GIOP_Oneway_Invocation::invoke (CORBA::Environment &ACE_TRY_ENV)
         ACE_THROW_RETURN (CORBA::UNKNOWN (TAO_DEFAULT_MINOR_CODE,
                                           CORBA::COMPLETED_YES),
                           TAO_INVOKE_EXCEPTION);
-
-        //        return TAO_INVOKE_EXCEPTION;
       }
 
     case TAO_GIOP_SYSTEM_EXCEPTION:
       {
-        // @@ Add the location macros for this exceptions...
+        // @@ Add the location macros for these exceptions...
 
         CORBA::String_var type_id;
 
-        if ((this->inp_stream () >> type_id.inout ()) == 0)
+        if ((rd.reply_cdr () >> type_id.inout ()) == 0)
           {
-            // Could not demarshal the exception id, raise an local
+            // Could not demarshal the exception id, raise a local
             // CORBA::MARSHAL
             ACE_THROW_RETURN (CORBA::MARSHAL (TAO_DEFAULT_MINOR_CODE,
                                               CORBA::COMPLETED_MAYBE),
@@ -1088,8 +1095,8 @@ TAO_GIOP_Oneway_Invocation::invoke (CORBA::Environment &ACE_TRY_ENV)
         CORBA::ULong minor = 0;
         CORBA::ULong completion = 0;
 
-        if ((this->inp_stream () >> minor) == 0
-            || (this->inp_stream () >> completion) == 0)
+        if ((rd.reply_cdr () >> minor) == 0
+            || (rd.reply_cdr () >> completion) == 0)
           ACE_THROW_RETURN (CORBA::MARSHAL (TAO_DEFAULT_MINOR_CODE,
                                             CORBA::COMPLETED_MAYBE),
                             TAO_INVOKE_OK);
@@ -1104,7 +1111,9 @@ TAO_GIOP_Oneway_Invocation::invoke (CORBA::Environment &ACE_TRY_ENV)
             // @@ We should raise a CORBA::NO_MEMORY, but we ran out
             //    of memory already. We need a pre-allocated, TSS,
             //    CORBA::NO_MEMORY instance
-            ACE_NEW_RETURN (ex, CORBA::UNKNOWN, TAO_INVOKE_EXCEPTION);
+            ACE_NEW_RETURN (ex, 
+                            CORBA::UNKNOWN, 
+                            TAO_INVOKE_EXCEPTION);
           }
 
         ex->minor (minor);
@@ -1120,7 +1129,7 @@ TAO_GIOP_Oneway_Invocation::invoke (CORBA::Environment &ACE_TRY_ENV)
     case TAO_GIOP_LOCATION_FORWARD:
       // Handle the forwarding and return so the stub restarts the
       // request!
-      return this->location_forward (this->inp_stream (),
+      return this->location_forward (rd.reply_cdr (),
                                      ACE_TRY_ENV);
     }
 
@@ -1143,8 +1152,10 @@ TAO_GIOP_Locate_Request_Invocation::start (CORBA::Environment &ACE_TRY_ENV)
   this->TAO_GIOP_Invocation::start (ACE_TRY_ENV);
   ACE_CHECK;
 
+  TAO_Target_Specification spec;
+  spec.target_specifier (this->profile_->object_key ());
   this->transport_->start_locate (this->orb_core_,
-                                  this->profile_,
+                                  spec,
                                   this->request_id_,
                                   this->out_stream_,
                                   ACE_TRY_ENV);

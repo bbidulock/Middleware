@@ -1,5 +1,5 @@
-// This may look like C, but it's really -*- C++ -*-
 // $Id$
+
 
 // ============================================================================
 //
@@ -36,7 +36,6 @@
 #endif /* ACE_LACKS_PRAGMA_ONCE */
 
 #include "tao/ORB_Core.h"
-#include "tao/GIOP.h"
 #include "tao/Any.h"
 #include "tao/Reply_Dispatcher.h"
 #include "tao/TAOC.h"
@@ -263,15 +262,9 @@ public:
 
   TAO::SyncScope sync_scope (void);
   // Acessor for private member.
-
-  TAO_InputCDR &inp_stream (void);
-  // return the underlying input stream
 private:
   TAO::SyncScope sync_scope_;
   // Our sync scope.
-
-  TAO_Synch_Reply_Dispatcher rd_;
-  // Reply dispatcher for the current synchronous invocation.
 };
 
 // ****************************************************************

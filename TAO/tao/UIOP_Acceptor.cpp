@@ -1,4 +1,3 @@
-// This may look like C, but it's really -*- C++ -*-
 // $Id$
 
 // ============================================================================
@@ -24,7 +23,6 @@
 #include "tao/UIOP_Profile.h"
 #include "tao/MProfile.h"
 #include "tao/ORB_Core.h"
-#include "tao/GIOP.h"
 #include "tao/Server_Strategy_Factory.h"
 #include "tao/debug.h"
 
@@ -57,7 +55,7 @@ template class TAO_Accept_Strategy<TAO_UIOP_Server_Connection_Handler, ACE_LSOCK
 #endif /* ACE_HAS_EXPLICIT_TEMPLATE_INSTANTIATION */
 
 TAO_UIOP_Acceptor::TAO_UIOP_Acceptor (void)
-  : TAO_Acceptor (TAO_IOP_TAG_UNIX_IOP),
+  : TAO_Acceptor (TAO_TAG_UIOP_PROFILE),
     base_acceptor_ (),
     creation_strategy_ (0),
     concurrency_strategy_ (0),

@@ -6,7 +6,6 @@
 #include "tao/MProfile.h"
 #include "tao/ORB_Core.h"
 #include "tao/Server_Strategy_Factory.h"
-#include "tao/GIOP.h"
 #include "tao/debug.h"
 
 #if !defined(__ACE_INLINE__)
@@ -42,7 +41,7 @@ template class TAO_Accept_Strategy<TAO_IIOP_Server_Connection_Handler, ACE_SOCK_
 #endif /* ACE_HAS_EXPLICIT_TEMPLATE_INSTANTIATION */
 
 TAO_IIOP_Acceptor::TAO_IIOP_Acceptor (void)
-  : TAO_Acceptor (TAO_IOP_TAG_INTERNET_IOP),
+  : TAO_Acceptor (TAO_TAG_IIOP_PROFILE),
     version_ (TAO_DEF_GIOP_MAJOR, TAO_DEF_GIOP_MINOR),
     orb_core_ (0),
     base_acceptor_ (),

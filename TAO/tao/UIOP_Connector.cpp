@@ -1,4 +1,3 @@
-// This may look like C, but it's really -*- C++ -*-
 // $Id$
 
 #include "tao/UIOP_Connector.h"
@@ -6,7 +5,6 @@
 #if defined (TAO_HAS_UIOP)
 
 #include "tao/UIOP_Profile.h"
-#include "tao/GIOP.h"
 #include "tao/debug.h"
 #include "tao/ORB_Core.h"
 #include "tao/Environment.h"
@@ -338,7 +336,7 @@ typedef ACE_Cached_Connect_Strategy<TAO_UIOP_Client_Connection_Handler,
 #endif /* ! TAO_USES_ROBUST_CONNECTION_MGMT */
 
 TAO_UIOP_Connector::TAO_UIOP_Connector (void)
-  : TAO_Connector (TAO_IOP_TAG_UNIX_IOP),
+  : TAO_Connector (TAO_TAG_UIOP_PROFILE),
     base_connector_ (),
     orb_core_ (0)
 #if defined (TAO_USES_ROBUST_CONNECTION_MGMT)
@@ -444,7 +442,7 @@ TAO_UIOP_Connector::connect (TAO_Profile *profile,
                              TAO_Transport *& transport,
                              ACE_Time_Value *max_wait_time)
 {
-  if (profile->tag () != TAO_IOP_TAG_UNIX_IOP)
+  if (profile->tag () != TAO_TAG_UIOP_PROFILE)
     return -1;
 
   TAO_UIOP_Profile *uiop_profile =

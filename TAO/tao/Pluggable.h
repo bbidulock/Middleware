@@ -1,4 +1,3 @@
-// This may look like C, but it's really -*- C++ -*-
 // $Id$
 
 // ============================================================================
@@ -31,6 +30,7 @@
 #include "tao/Typecode.h"
 #include "tao/IOPC.h"
 
+
 // Forward declarations.
 class ACE_Addr;
 class ACE_Reactor;
@@ -44,6 +44,9 @@ class TAO_Resource_Factory;
 class TAO_Reply_Dispatcher;
 class TAO_Transport_Mux_Strategy;
 class TAO_Wait_Strategy;
+
+class TAO_Pluggable_Message_Factory;
+class TAO_Target_Specification;
 
 typedef ACE_Message_Queue<ACE_NULL_SYNCH> TAO_Transport_Buffering_Queue;
 
@@ -84,9 +87,9 @@ public:
 
   virtual ssize_t send (TAO_Stub *stub,
                         const ACE_Message_Block *mblk,
-                        ACE_Time_Value *s = 0) = 0;
+                        const ACE_Time_Value *s = 0) = 0;
   virtual ssize_t send (const ACE_Message_Block *mblk,
-                        ACE_Time_Value *s = 0) = 0;
+                        const ACE_Time_Value *s = 0) = 0;
   // Write the complete Message_Block chain to the connection.
   // @@ The ACE_Time_Value *s is just a place holder for now.  It is
   // not clear this this is the best place to specify this.  The actual
@@ -94,31 +97,32 @@ public:
 
   virtual ssize_t send (const u_char *buf,
                         size_t len,
-                        ACE_Time_Value *s = 0) = 0;
+                        const ACE_Time_Value *s = 0) = 0;
   // Write the contents of the buffer of length len to the connection.
 
   virtual ssize_t recv (char *buf,
                         size_t len,
-                        ACE_Time_Value *s = 0) = 0;
+                        const ACE_Time_Value *s = 0) = 0;
   // Read len bytes from into buf.
   // @@ The ACE_Time_Value *s is just a place holder for now.  It is
   // not clear this this is the best place to specify this.  The actual
   // timeout values will be kept in the Policies.
 
+
   virtual void start_request (TAO_ORB_Core *orb_core,
-                              const TAO_Profile *profile,
+                              TAO_Target_Specification &spec,
                               TAO_OutputCDR &output,
                               CORBA::Environment &ACE_TRY_ENV =
-                                  TAO_default_environment ())
+                              TAO_default_environment ())
     ACE_THROW_SPEC ((CORBA::SystemException));
   // Fill into <output> the right headers to make a request.
 
   virtual void start_locate (TAO_ORB_Core *orb_core,
-                             const TAO_Profile *profile,
+                             TAO_Target_Specification &spec,
                              CORBA::ULong request_id,
                              TAO_OutputCDR &output,
                              CORBA::Environment &ACE_TRY_ENV =
-                                 TAO_default_environment ())
+                             TAO_default_environment ())
     ACE_THROW_SPEC ((CORBA::SystemException));
   // Fill into <output> the right headers to make a locate request.
 
@@ -133,6 +137,16 @@ public:
   // Using this method, instead of send(), allows the transport (and
   // wait strategy) to take appropiate action.
 
+  virtual CORBA::Boolean 
+  send_request_header (const IOP::ServiceContextList &svc_ctx,  
+                       CORBA::ULong request_id,
+                       CORBA::Octet response_flags,
+                       TAO_Target_Specification &spec,
+                       const char* opname,
+                       TAO_OutputCDR &msg) = 0;
+  // This is a request for the transport object to write a request
+  // header before it sends out a request
+                                
   TAO_ORB_Core *orb_core (void) const;
   // Access the ORB that owns this connection.
 
@@ -178,10 +192,18 @@ public:
   void buffering_timeout_value (const ACE_Time_Value &time);
   // Timeout value associated with buffering.
 
-  void flush_buffered_messages (void);
-  // Flush any messages that have been buffered.
+  ssize_t send_buffered_messages (const ACE_Time_Value *max_wait_time = 0);
+  // Send any messages that have been buffered.
 
 protected:
+
+  void dequeue_head (void);
+
+  void dequeue_all (void);
+
+  void reset_queued_message (ACE_Message_Block *message_block,
+                             size_t bytes_delivered);
+
   CORBA::ULong tag_;
   // IOP protocol tag.
 
@@ -279,7 +301,7 @@ public:
 
   CORBA::ULong tag (void) const;
   // The tag identifying the specific ORB transport layer protocol.
-  // For example TAO_IOP_TAG_INTERNET_IOP = 0.  The tag is used in the
+  // For example TAO_TAG_IIOP_PROFILE = 0.  The tag is used in the
   // IOR to identify the type of profile included. IOR -> {{tag0,
   // profile0} {tag1, profole1} ...}  GIOP.h defines typedef
   // CORBA::ULong TAO_IOP_Profile_ID;
