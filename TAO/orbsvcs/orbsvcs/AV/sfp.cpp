@@ -171,7 +171,7 @@ TAO_SFP::start_stream (const char *receiver_addr)
 
 // Start the passive end of the stream.
 int
-TAO_SFP::start_stream (const char *local_addr,int Credit)
+TAO_SFP::start_stream (const char *local_addr,int /* Credit */)
 {
   int result;
   ACE_INET_Addr sender;
@@ -557,8 +557,8 @@ TAO_SFP::send_startReply (void)
 }
 
 int
-TAO_SFP::handle_timeout (const ACE_Time_Value &tv,
-                     const void *arg)
+TAO_SFP::handle_timeout (const ACE_Time_Value &/* tv */,
+                         const void * /* arg */)
 {
   int result;
   // Handle the timeout for timeout1 and timeout2.
@@ -598,9 +598,9 @@ TAO_SFP::handle_timeout (const ACE_Time_Value &tv,
 // socket. Currently both the receiver and sender side input is
 // handled in this same handle_input ().
 int
-TAO_SFP::handle_input (ACE_HANDLE fd)
+TAO_SFP::handle_input (ACE_HANDLE /* fd */)
 {
-  ACE_DEBUG ((LM_DEBUG,"TAO_SFP::handle_input\n"));
+  //  ACE_DEBUG ((LM_DEBUG,"TAO_SFP::handle_input\n"));
   flowProtocol::MsgType msg_type = flowProtocol::Start_Msg;
   ACE_INET_Addr sender;
   char peek_buffer [MAGIC_NUMBER_LEN+2];// 2 is for flags + message_type.
@@ -630,7 +630,7 @@ TAO_SFP::handle_input (ACE_HANDLE fd)
     }
   else if (ACE_OS::strcmp (this->magic_number_,TAO_SFP_MAGIC_NUMBER) == 0)
     {
-      ACE_DEBUG ((LM_DEBUG,"(%P|%t) frameHeader received\n"));
+      //      ACE_DEBUG ((LM_DEBUG,"(%P|%t) frameHeader received\n"));
       //      msg_type = flowProtocol::SimpleFrame;
       msg_type = (flowProtocol::MsgType)peek_buffer [MESSAGE_TYPE_OFFSET];
       ACE_DEBUG ((LM_DEBUG,"Message Type = %d\n",msg_type));
@@ -948,7 +948,7 @@ TAO_SFP::read_frame_header (flowProtocol::frameHeader &frame_header)
         ACE_ERROR_RETURN ((LM_ERROR,"Message_Block::copy failed\n"),0);
       // buf[4] is the byte order.
       int byte_order = buf[4] & 0x1;
-      ACE_DEBUG ((LM_DEBUG,"mb len = %d,byte_order=%d\n",mb.length (),byte_order));
+      //      ACE_DEBUG ((LM_DEBUG,"mb len = %d,byte_order=%d\n",mb.length (),byte_order));
       TAO_InputCDR cdr (&mb,byte_order);
       //  cdr >>= frame_header;
       cdr.decode (flowProtocol::_tc_frameHeader,
@@ -1129,19 +1129,31 @@ TAO_SFP::dump_buf(char *buffer,int size)
 }
 
 #if defined (ACE_HAS_EXPLICIT_TEMPLATE_INSTANTIATION)
+
 template class ACE_DNode<TAO_SFP_Fragment_Node>;
+template class ACE_Equal_To<CORBA::ULong>;
 template class ACE_Ordered_MultiSet<TAO_SFP_Fragment_Node>;
 template class ACE_Ordered_MultiSet_Iterator<TAO_SFP_Fragment_Node>;
 template class ACE_Hash_Map_Manager<CORBA::ULong,TAO_SFP_Fragment_Table_Entry*,ACE_Null_Mutex>;
-template class ACE_Hash_Map_Manager_Ex<unsigned int, TAO_SFP_Fragment_Table_Entry *, ACE_Hash<unsigned int>, ACE_Equal_To<unsigned int>, ACE_Null_Mutex>;
-template class ACE_Hash_Map_Entry<unsigned int, TAO_SFP_Fragment_Table_Entry *>;
-template class ACE_Hash_Map_Iterator_Base_Ex<unsigned int, TAO_SFP_Fragment_Table_Entry *, ACE_Hash<unsigned int>, ACE_Equal_To<unsigned int>, ACE_Null_Mutex>;
+template class ACE_Hash_Map_Manager_Ex<CORBA::ULong, TAO_SFP_Fragment_Table_Entry *, ACE_Hash<CORBA::ULong>, ACE_Equal_To<CORBA::ULong>, ACE_Null_Mutex>;
+template class ACE_Hash_Map_Entry<CORBA::ULong, TAO_SFP_Fragment_Table_Entry *>;
+template class ACE_Hash_Map_Iterator_Base_Ex<CORBA::ULong, TAO_SFP_Fragment_Table_Entry *, ACE_Hash<CORBA::ULong>, ACE_Equal_To<CORBA::ULong>, ACE_Null_Mutex>;
+template class ACE_Hash_Map_Reverse_Iterator_Ex<CORBA::ULong,TAO_SFP_Fragment_Table_Entry*,ACE_Hash<CORBA::ULong>,ACE_Equal_To<CORBA::ULong>,ACE_Null_Mutex>;
+template class ACE_Hash_Map_Iterator_Ex<CORBA::ULong,TAO_SFP_Fragment_Table_Entry*,ACE_Hash<CORBA::ULong>,ACE_Equal_To<CORBA::ULong>,ACE_Null_Mutex>;
+template class ACE_Hash_Map_Iterator<CORBA::ULong,TAO_SFP_Fragment_Table_Entry *,ACE_Null_Mutex>;
+template class ACE_Hash_Map_Reverse_Iterator<CORBA::ULong,TAO_SFP_Fragment_Table_Entry *,ACE_Null_Mutex>;
 #elif defined (ACE_HAS_TEMPLATE_INSTANTIATION_PRAGMA)
+
 #pragma instantiate ACE_DNode<TAO_SFP_Fragment_Node>
 #pragma instantiate ACE_Ordered_MultiSet<TAO_SFP_Fragment_Node>
 #pragma instantiate ACE_Ordered_MultiSet_Iterator<TAO_SFP_Fragment_Node>
 #pragma instantiate ACE_Hash_Map_Manager<CORBA::ULong,TAO_SFP_Fragment_Table_Entry*,ACE_Null_Mutex>
-#pragma instantiate ACE_Hash_Map_Manager_Ex<unsigned int, TAO_SFP_Fragment_Table_Entry *, ACE_Hash<unsigned int>, ACE_Equal_To<unsigned int>, ACE_Null_Mutex>
-#pragma instantiate ACE_Hash_Map_Entry<unsigned int, TAO_SFP_Fragment_Table_Entry *>
-#pragma instantiate ACE_Hash_Map_Iterator_Base_Ex<unsigned int, TAO_SFP_Fragment_Table_Entry *, ACE_Hash<unsigned int>, ACE_Equal_To<unsigned int>, ACE_Null_Mutex>
+#pragma instantiate ACE_Hash_Map_Manager_Ex<CORBA::ULong, TAO_SFP_Fragment_Table_Entry *, ACE_Hash<CORBA::ULong>, ACE_Equal_To<CORBA::ULong>, ACE_Null_Mutex>
+#pragma instantiate ACE_Hash_Map_Entry<CORBA::ULong, TAO_SFP_Fragment_Table_Entry *>
+#pragma instantiate ACE_Hash_Map_Iterator_Base_Ex<CORBA::ULong, TAO_SFP_Fragment_Table_Entry *, ACE_Hash<CORBA::ULong>, ACE_Equal_To<CORBA::ULong>, ACE_Null_Mutex>
+#pragma instantiate ACE_Hash_Map_Reverse_Iterator_Ex<CORBA::ULong,TAO_SFP_Fragment_Table_Entry*,ACE_Hash<CORBA::ULong>,ACE_Equal_To<CORBA::ULong>,ACE_Null_Mutex>
+#pragma instantiate ACE_Hash_Map_Iterator_Ex<CORBA::ULong,TAO_SFP_Fragment_Table_Entry*,ACE_Hash<CORBA::ULong>,ACE_Equal_To<CORBA::ULong>,ACE_Null_Mutex>
+#pragma instantiate ACE_Equal_To<CORBA::ULong>
+#pragma instantiate ACE_Hash_Map_Iterator<CORBA::ULong,TAO_SFP_Fragment_Table_Entry *,ACE_Null_Mutex>
+#pragma instantiate ACE_Hash_Map_Reverse_Iterator<CORBA::ULong,TAO_SFP_Fragment_Table_Entry *,ACE_Null_Mutex>
 #endif /* ACE_HAS_EXPLICIT_TEMPLATE_INSTANTIATION */

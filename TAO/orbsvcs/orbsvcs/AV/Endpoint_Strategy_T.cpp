@@ -185,7 +185,7 @@ template <class T_StreamEndpoint, class T_VDev , class T_MediaCtrl>
 int
 TAO_AV_Endpoint_Reactive_Strategy_A<T_StreamEndpoint, T_VDev, T_MediaCtrl>::create_A (AVStreams::StreamEndPoint_A_ptr &stream_endpoint,
                                                                                       AVStreams::VDev_ptr &vdev,
-                                                                                      CORBA::Environment &ACE_TRY_ENV)
+                                                                                      CORBA::Environment &/* ACE_TRY_ENV */)
 {
   if (this->activate () == -1)
     ACE_ERROR_RETURN ((LM_ERROR,
@@ -285,7 +285,7 @@ template <class T_StreamEndpoint, class T_VDev , class T_MediaCtrl>
 int
 TAO_AV_Endpoint_Reactive_Strategy_B<T_StreamEndpoint, T_VDev, T_MediaCtrl>::create_B (AVStreams::StreamEndPoint_B_ptr &stream_endpoint,
                                                                                       AVStreams::VDev_ptr &vdev,
-                                                                                      CORBA::Environment &ACE_TRY_ENV)
+                                                                                      CORBA::Environment &/* ACE_TRY_ENV */)
 {
   if (this->activate () == -1)
     ACE_ERROR_RETURN ((LM_ERROR,
@@ -542,11 +542,12 @@ TAO_AV_Child_Process  <T_StreamEndpoint_B, T_VDev, T_MediaCtrl>::release_semapho
 {
   char sem_str [BUFSIZ];
 
+  long pid = this->pid_;
   sprintf (sem_str,
            "%s:%s:%ld",
            "TAO_AV_Process_Semaphore",
            this->host_,
-           this->pid_);
+           pid);
 
   ACE_DEBUG ((LM_DEBUG,
               "(%P|%t) semaphore is %s\n",
