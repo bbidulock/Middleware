@@ -73,6 +73,7 @@
 
 // Template _var and _out classes.
 #include "tao/Objref_VarOut_T.h"
+#include "tao/Pseudo_VarOut_T.h"
 #include "tao/Seq_Var_T.h"
 #include "tao/Seq_Out_T.h"
 #include "tao/Array_VarOut_T.h"

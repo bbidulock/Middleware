@@ -1,3 +1,46 @@
+Fri May  9 12:24:42 2003  Jeff Parsons <j.parsons@vanderbilt.edu>
+
+        * tao/corba.h:
+
+          Removed an include that was meant for a branch.
+
+Fri May  9 11:05:24 2003  Jeff Parsons <j.parsons@vanderbilt.edu>
+
+        * tao/corba.h:
+
+          Added "Pseudo_VarOut_T.h" to the #includes.
+
+Fri May 09 16:53:10 2003  Simon McQueen  <sm@prismtechnologies.com>
+
+        * examples/PluggableUDP/tests/Basic/client.dsp:
+        * examples/PluggableUDP/tests/Basic/server.dsp:
+        * examples/PluggableUDP/tests/Performance/client.dsp:
+        * examples/PluggableUDP/tests/Performance/server.dsp:
+        * examples/PluggableUDP/tests/SimplePerformance/client.dsp:
+        * examples/PluggableUDP/tests/SimplePerformance/server.dsp:
+        * examples/Simple/time/client_static.dsp:
+        * examples/Simple/time/server_static.dsp:
+        * orbsvcs/Event_Service/Event_Service_static.dsp:
+        * orbsvcs/LoadBalancer/LoadManager_Static.dsp:
+        * orbsvcs/LoadBalancer/LoadMonitor_Static.dsp:
+        * orbsvcs/Naming_Service/Naming_Server_static.dsp:
+        * orbsvcs/tests/Notify/Driver/Driver_Static.dsp:
+        * performance-tests/Cubit/TAO/DII_Cubit/client.dsp:
+        * performance-tests/Cubit/TAO/IDL_Cubit/server.dsp:
+
+          Fixed static build errors from TAO subsetting.
+
+Fri May  9 10:42:37 2003  Jeff Parsons <j.parsons@vanderbilt.edu>
+
+        * tao/Any.cpp:
+        * tao/Any.i:
+
+          In Any_var assignment operator from Any_var, and in the
+          Any_var copy constructor from Any_var, added a
+          check for a null rhs ptr_ member. Thanks to 
+          Huang-Ming Huang <hh1@cs.wustl.edu> for discovering
+          the problem. Also un-inlined the above copy constructor.
+
 Fri May  9 08:32:16 2003  Chad Elliott  <elliott_c@ociweb.com>
 
         * tests/ORT/ORT.mpc:
@@ -71,7 +114,8 @@ Wed May 07 22:32:49 2003  Balachandran Natarajan  <bala@dre.vanderbilt.edu>
           change should fix problems with servers crashing if remote peers
           dissappears under thread-per-connection strategy.
 
-          Thanks to <imburton@micron.com> for reporting this problem.
+          Thanks to Ira Burton <imburton@micron.com> for reporting this 
+	  problem.
 
 Wed May  7 17:56:08 2003  Jeff Parsons <j.parsons@vanderbilt.edu>
 
@@ -151,8 +195,8 @@ Tue May  6 17:52:53 2003  Balachandran Natarajan  <bala@dre.vanderbilt.edu>
         * tests/Faults/ping.cpp:
         * tests/Faults/ping_i.h:
         * tests/Faults/test_i.h: Fixed servant memory management
-          problems. Thanks to Ira <imburton@micron.com> for motivating to
-          take a look.
+          problems. Thanks to Ira Burton <imburton@micron.com> for motivating 
+	  to take a look.
 
 Tue May  6 15:52:42 2003  Ossama Othman  <ossama@dre.vanderbilt.edu>
 
