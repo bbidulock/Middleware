@@ -1,3 +1,2010 @@
+Wed Mar  6 07:29:19 2002  Douglas C. Schmidt  <schmidt@macarena.cs.wustl.edu>
+
+	* orbsvcs/orbsvcs/Property/CosPropertyService_i.h: Correctly push/pop
+	  the pragma that disables the annoying MSVC 4250 warning.  Thanks
+ 	  to Bruce McIntosh <Bruce.McIntosh@Australia.Boeing.com> for
+ 	  reporting this.
+
+Tue Mar  5 23:47:17 2002  Ossama Othman  <ossama@uci.edu>
+
+	* tao/Object.h:
+
+	  No need to include "Object_Proxy_Broker.h".  Forward declaring
+	  the TAO_Object_Proxy_Broker class is enough.  This should
+	  improve overall compile times slightly.
+
+	  (_incr_refcnt, _decr_refcnt, refcount_lock_, refcount_):
+
+	  Removed these CORBA::Object class members.  They are no longer
+	  used.  See below.
+
+	* tao/Object.i (_incr_refcnt, _decr_refcnt):
+
+	  Removed these internally used methods.  All reference counting
+	  is now deferred to the underlying TAO_Stub object.
+
+	* tao/Object.cpp (CORBA_Object):
+
+	  Fixed bug where the CORBA::Object instance be considered to be
+	  one that points to an unconstrained object instead of the
+	  locality-constrained one.  If the TAO_Stub pointer parameter is
+	  zero then the CORBA::Object instance represents a
+	  locality-constrained object.  Set the "is_local_" member
+	  appropriately.
+
+	  If the object is locality-constrained then do not attempt to
+	  initialize a remote proxy broker.
+
+	  (add_ref, remove_ref):
+
+	  Defer reference counting to the underlying TAO_Stub object.
+	  There is no need for the CORBA::Object class to maintain a
+	  separate reference count.  This reduces memory requirements
+	  slightly, in addition to improving object reference creation
+	  times for both unconstrained objects and locality-constrained
+	  objects (e.g. one lock initialization -- not acquisition --
+	  instead of two). 
+
+	  These changes are part of an optimization for creation of
+	  locality-constrained objects.  This is particularly useful for
+	  locality-constrained objects that are instantiated in the
+	  critical a path, such as the Portable Interceptor "RequestInfo"
+	  objects.  [Bug 874]
+
+	  (_hash):
+
+	  Added an implementation for locality-constrained objects.  It
+	  isn't strictly needed, but better to be consistent.
+
+	* tao/LocalObject.h (TAO_Local_RefCounted_Object):
+
+	  Added reference counting (lock and count variable) to this
+	  class.  It no longer relies on the CORBA::Object base class
+	  reference counting.
+
+	* tao/LocalObject.i (TAO_Local_RefCounted_Object):
+
+	  Initialize the reference counting lock and count variable
+	  appropriately.
+
+	* tao/LocalObject.cpp (_add_ref, _remove_ref):
+
+	  Implemented these methods in the TAO_Local_RefCounted_Object
+	  class using the newly added lock and reference count variable.
+
+Tue Mar 05 19:16:22 2002  Jaiganesh Balasubramanian  <jai@doc.ece.uci.edu>
+
+	* docs/tutorials/Quoter/AMI/server.dsp: 
+	* docs/tutorials/Quoter/AMI/client.dsp:
+	* docs/tutorials/Quoter/AMI/server.dsp:
+	* docs/tutorials/Quoter/On_Demand_Activation/server.dsp:
+	* examples/Buffered_AMI/client.dsp:
+	* examples/Buffered_AMI/server.dsp:
+	* examples/Buffered_Oneways/client.dsp:
+	* examples/Buffered_Oneways/server.dsp:
+	* examples/Content_Server/AMI_Iterator/client.dsp:
+	* examples/Content_Server/AMI_Iterator/server.dsp:
+	* examples/Content_Server/AMI_Observer/client.dsp:
+	* examples/Content_Server/AMI_Observer/server.dsp:
+	* examples/POA/DSI/client.dsp:
+	* examples/POA/DSI/server.dsp:
+	* examples/Simulator/Event_Supplier/DualEC_Sup.dsp:
+	* examples/Simulator/Event_Supplier/Event_Sup.dsp:
+	* examples/Simulator/Event_Supplier/Logging_Sup.dsp:
+	* orbsvcs/CosEvent_Service/CosEvent_Service.dsp:
+	* orbsvcs/Event_Service/Event_Service_static.dsp:
+	* orbsvcs/examples/CosEC/Factory/FactoryClient.dsp:
+	* orbsvcs/examples/CosEC/Factory/FactoryServer.dsp:
+	* orbsvcs/examples/CosEC/RtEC_Based/bin/RtEC_Based_CosEC.dsp:
+	* orbsvcs/examples/CosEC/RtEC_Based/tests/Basic/Basic.dsp:
+	* orbsvcs/examples/CosEC/Simple/CEC_Simple_Consumer.dsp:
+	* orbsvcs/examples/CosEC/Simple/CEC_Simple_Service.dsp:
+	* orbsvcs/examples/CosEC/Simple/CEC_Simple_Supplier.dsp:
+	* orbsvcs/examples/RtEC/MCast/MCast.dsp:
+	* orbsvcs/examples/RtEC/Schedule/EC_Schedule_Service.dsp:
+	* orbsvcs/examples/RtEC/Simple/EC_Simple_Consumer.dsp:
+	* orbsvcs/examples/RtEC/Simple/EC_Simple_Service.dsp:
+	* orbsvcs/examples/RtEC/Simple/EC_Simple_Supplier.dsp:
+	* orbsvcs/performance-tests/EC_Latency/client.dsp:
+	* orbsvcs/performance-tests/EC_Latency/server.dsp:
+	* orbsvcs/performance-tests/EC_Federated_Latency/client.dsp:
+	* orbsvcs/performance-tests/EC_Federated_Latency/server.dsp:
+	* orbsvcs/performance-tests/EC_Federated_Scalability/client.dsp:
+	* orbsvcs/performance-tests/EC_Federated_Scalability/server.dsp:
+	* orbsvcs/performance-tests/EC_Latency/client.dsp:
+	* orbsvcs/performance-tests/EC_Latency/server.dsp:
+	* orbsvcs/performance-tests/EC_Scalability/client.dsp:
+	* orbsvcs/performance-tests/EC_Scalability/server.dsp:
+	* orbsvcs/tests/EC_Mcast/EC_Mcast.dsp:
+	* orbsvcs/tests/EC_Throughput/ECT_Consumer.dsp:
+	* orbsvcs/tests/EC_Throughput/ECT_Supplier.dsp:
+	* orbsvcs/tests/EC_Throughput/ECT_Throughput.dsp:
+	* orbsvcs/tests/Event/Basic/Atomic_Reconnect.dsp:
+	* orbsvcs/tests/Event/Basic/BCast.dsp:
+	* orbsvcs/tests/Event/Basic/Bitmask.dsp:
+	* orbsvcs/tests/Event/Basic/Complex.dsp:
+	* orbsvcs/tests/Event/Basic/Control.dsp:
+	* orbsvcs/tests/Event/Basic/Disconnect.dsp:
+	* orbsvcs/tests/Event/Basic/Gateway.dsp:
+	* orbsvcs/tests/Event/Basic/MT_Disconnect.dsp:
+	* orbsvcs/tests/Event/Basic/Negation.dsp:
+	* orbsvcs/tests/Event/Basic/Observer.dsp:
+	* orbsvcs/tests/Event/Basic/Random.dsp:	
+	* orbsvcs/tests/Event/Basic/Reconnect.dsp:
+	* orbsvcs/tests/Event/Basic/Schedule.dsp:
+	* orbsvcs/tests/Event/Basic/Shutdown.dsp:
+	* orbsvcs/tests/Event/Basic/Timeout.dsp:
+	* orbsvcs/tests/Event/Basic/Wildcard.dsp:
+	* orbsvcs/tests/Event/Performance/Connect.dsp:
+	* orbsvcs/tests/Event/Performance/Inversion.dsp:
+	* orbsvcs/tests/Event/Performance/Latency.dsp:
+	* orbsvcs/tests/Event/Performance/Latency_Server.dsp:
+	* orbsvcs/tests/Event/Performance/Throughput.dsp:
+	* orbsvcs/tests/Notify/performance-tests/Throughput/Throughput.dsp:
+	* performance-tests/Callback/client.dsp:
+	* performance-tests/Callback/server.dsp:
+	* performance-tests/Latency/AMI/client.dsp:
+	* performance-tests/Latency/AMI/server.dsp:
+	* performance-tests/RTCorba/Oneways/Reliable/client.dsp:
+	* performance-tests/RTCorba/Oneways/Reliable/server.dsp:
+	* tests/AMI/AMI_Test_Client.dsp:
+	* tests/AMI/AMI_Test_Server.dsp:
+	* tests/AMI/AMI_Test_Simple_Client.dsp:
+	* tests/AMI_Buffering/admin.dsp:
+	* tests/AMI_Buffering/client.dsp:
+	* tests/AMI_Buffering/server.dsp:
+	* tests/AMI_Timeouts/client.dsp:
+	* tests/AMI_Timeouts/server.dsp:
+	* tests/Big_Request_Muxing/client.dsp:
+	* tests/Big_Request_Muxing/server.dsp:
+	* tests/Blocking_Sync_None/client.dsp:
+	* tests/Blocking_Sync_None/server.dsp:
+	* tests/Crashed_Callback/client.dsp:
+	* tests/Crashed_Callback/server.dsp:
+	* tests/DSI_Gateway/DSI_Gateway_Client.dsp:
+	* tests/DSI_Gateway/DSI_Gateway_Server.dsp:
+	* tests/DSI_Gateway/DSI_Gateway_Service.dsp:
+	* tests/LongUpcalls/ami_client.dsp:
+	* tests/LongUpcalls/ami_server.dsp:
+	* tests/LongUpcalls/blocking_client.dsp:
+	* tests/LongUpcalls/blocking_server.dsp:
+	* tests/MT_Timeout/MT_Timeout_Client.dsp:
+	* tests/MT_Timeout/MT_Timeout_Server.dsp:
+	* tests/Oneway_Buffering/admin.dsp:
+	* tests/Oneway_Buffering/client.dsp:
+	* tests/Oneway_Buffering/server.dsp:
+	* tests/Param_Test/anyop.dsp:
+	* tests/Param_Test/client.dsp:
+	* tests/Param_Test/server.dsp:
+	* tests/Policies/Manipulation.dsp:
+	* tests/Reliable_Oneways/client.dsp:
+	* tests/Reliable_Oneways/server.dsp:
+	* tests/Strategies/client.dsp:
+	* tests/Strategies/server.dsp:
+	* tests/Timed_Buffered_Oneways/client.dsp:
+	* tests/Timed_Buffered_Oneways/server.dsp:
+	* tests/Timeout/client.dsp:
+	* tests/Timeout/server.dsp	
+	  Added link to the new Messaging library.
+
+Tue Mar  5 17:32:35 2002  Jeff Parsons <parsons@cs.wustl.edu>
+
+        * TAO_IDL/fe/idl.ll:
+        * TAO_IDL/fe/lex.yy.cpp:
+
+          Fixed a bug in #pragma prefix implementation reported by
+          Craig Rodrigues <crodrigu@bbn.com>, who is using Red Hat
+          7.1 and an experimental configuration of gcc
+          (version 3.1 20020302 prerelease). The preprocessor output
+          of this configuration is radically different than any 
+          others we support, and an additional check was required to
+          prevent the current prefix from being popped off the stack
+          prematurely.
+
+Tue Mar  5 15:21:51 2002  Carlos O'Ryan  <coryan@uci.edu>
+
+	* orbsvcs/performance-tests/RTEvent/lib/Low_Priority_Setup.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Low_Priority_Setup.cpp:
+	  Improve the implementation of stop_all_threads(), it is more
+	  efficient to stop them all and then simultaneously wait for all
+	  the threads to finish.
+	  Fixed a number of bugs in the template, it was only working
+	  because some global variables were visible at the point of
+	  instantiation.
+
+	* orbsvcs/performance-tests/RTEvent/lib/RT_Class.cpp:
+	  Run the process at the right priority, it was runnning at the
+	  minimum priority + 1, while it is supposed to be (min+max)/2
+
+	* orbsvcs/performance-tests/RTEvent/lib/Send_Task.cpp:
+	  Do not return if there is a single exception, simply continue
+	  the loop.  Add a bunch of debug messages, only to find out that
+	  the ORB is dead-locking in the Leader/Followers code (yuck!)
+
+	* orbsvcs/performance-tests/RTEvent/Federated_Roundtrip/client.cpp:
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/client.cpp:
+	  Add debugging messages.
+	  Use the new Low_Priority_Setup constructor.
+
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/ec.dispatching_reactive.conf:
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/ec.dispatching_rtcorba.conf:
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/ec.dispatching_threaded.conf:
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/ec.supplier_filter_null.conf:
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/ec.supplier_filter_per_supplier.conf:
+	  Add service configurator files required for the test.
+
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/run_dispatching.sh:
+	  Add a simple test driver
+
+Tue Mar  5 11:37:52 2002  Jaiganesh Balasubramanian  <jai@doc.ece.uci.edu>
+
+	* orbsvcs/orbsvcs/Makefile:
+	  Made changes to have the Makefile.RTCORBAEvent used in
+	  compilation only when the option corba_messaging is set to 1.
+
+Tue Mar  5 10:52:44 2002  Ossama Othman  <ossama@uci.edu>
+
+	* orbsvcs/orbsvcs/Security/Security_PolicyFactory.cpp
+	  (create_policy):
+
+	  Enabled support for creation of the
+	  SecurityLevel2::InvocationCredentialsPolicy.
+
+	* orbsvcs/orbsvcs/SSLIOP/SSLIOP_Factory.cpp:
+	* orbsvcs/orbsvcs/SSLIOP/SSLIOP_Util.cpp:
+
+	  Include "tao/debug.h" to pull in "TAO_debug_level" declaration
+	  in minimum CORBA builds.  Thanks to Stan Sosnovsky
+	  <sosnovsky_stan@emc.com> for pointing out the problem.
+
+Tue Mar  5 12:52:30 2002  Chad Elliott  <elliott_c@ociweb.com>
+
+        * orbsvcs/ImplRepo_Service/Forwarder.cpp:
+        * orbsvcs/ImplRepo_Service/ImplRepo_i.cpp:
+
+          Fix some memory leaks due to misuse of CORBA memory management.
+
+Tue Mar  5 10:56:36 2002  Craig Rodrigues  <crodrigu@bbn.com>
+
+	* TAOACE.dsw: Make AV project depend on ACE_QoS project.
+	* orbsvcs/orbsvcs/AV.dsp: Add ACE_QoS library to link line.
+
+Tue Mar  5 13:52:12 2002  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+        * tao/Asynch_Reply_Dispatcher_Base.h:
+        * tao/Service_Callbacks.h:
+        * tao/TAO_Server_Request.h:
+        * tao/Adapter.h:
+        * tao/Resource_Factory.h:
+          Fixed small typing errors in comment
+
+Tue Mar  5 00:07:13 2002  Jaiganesh Balasubramanian  <jai@doc.ece.uci.edu>
+
+	* tests/LongUpcalls/Makefile:
+	  Added links to TAO_Messaging library.
+
+Mon Mar  4 15:35:08 2002  Jaiganesh Balasubramanian  <jai@doc.ece.uci.edu>
+
+	* tao/Messaging/MessagingC.cpp:
+	* tao/Messaging/MessagingC.h:
+	* tao/Messaging/MessagingC.i:
+	* tao/Messaging/MessagingS.cpp:
+	* tao/Messaging/MessagingS.h:
+	* tao/Messaging/MessagingS_T.h:
+	* tao/Messaging/MessagingS_T.i:
+	  Made changes to have the code compile when the TAO_HAS_AMI
+	  option is 0.
+
+Mon Mar  4 14:43:11 2002  Carlos O'Ryan  <coryan@uci.edu>
+
+	* orbsvcs/orbsvcs/Makefile.RTCORBAEvent:
+	  Update dependencies
+
+Mon Mar 04 17:29:25 2002  Carlos O'Ryan  <coryan@uci.edu>
+
+	* orbsvcs/performance-tests/RTEvent/lib/Makefile:
+	* orbsvcs/performance-tests/RTEvent/lib/TAO_RTEC_Perf.dsp:
+	* orbsvcs/performance-tests/RTEvent/lib/EC_Destroyer.h:
+	* orbsvcs/performance-tests/RTEvent/lib/EC_Destroyer.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/EC_Destroyer.cpp:
+	  Factor out code to destroy the EC into an exception safe class.
+
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/client.cpp:
+	* orbsvcs/performance-tests/RTEvent/Federated_Roundtrip/client.cpp:
+	  Use new EC_Destroyer class.
+
+Mon Mar  4 13:38:11 2002  Jaiganesh Balasubramanian  <jai@doc.ece.uci.edu>
+
+	* tests/Hello/Makefile:
+	* tests/LongUpcalls/Makefile:
+	* tests/Two_Objects/Makefile:
+	  Removed the links to TAO_Messaging library.
+
+Mon Mar  4 11:49:27 2002  Jaiganesh Balasubramanian  <jai@doc.ece.uci.edu>
+
+	* orbsvcs/orbsvcs/Makefile.CosNaming:
+	* orbsvcs/orbsvcs/Makefile.PortableGroup:
+	* orbsvcs/orbsvcs/Makefile.Security:
+	  Removed links to TAO_Messaging library.
+
+	* orbsvcs/orbsvcs/PortableGroup/UIPMC_Connection_Handler.cpp:
+	* orbsvcs/orbsvcs/SSLIOP/SSLIOP_Connection_Handler.cpp:
+	  Removed #include tao/Messaging/Messaging_Policy_i.h
+	  as that is not used anywhere in the code.
+
+Mon Mar  4 12:24:52 2002  Jeff Parsons <parsons@cs.wustl.edu>
+
+        * tao.Any.h:
+        * tao/Any.i:
+
+          Removed Any_out's assignment operator from const Any *. The C++
+          mapping for Any_out is supposed to be the same as for any T_out
+          class, which contains no such assignment operator. Thanks to
+          Don Hinton <dhinton@ieee.org> for pointing this out.
+
+Mon Mar  4 11:47:17 2002  Jeff Parsons <parsons@cs.wustl.edu>
+
+        * orbsvcs/orbsvcs/Trader/Service_Type_Repository.h:
+
+          Changed a label at the middle of the class declaration from
+          'public' to 'private'. This got rid of link errors caused
+          by a copy constructor and assignment operator declared below
+          which were not defined, and doesn't seem to cause any other errors
+          in the Trading Service build.
+
+        * orbsvcs/orbsvcs/CosEvent.dsp:
+        * TAOACE.dsw:
+
+          Added link to the new Messaging library, and added the dependency
+          to the workspace.
+
+Mon Mar  4 12:11:05 2002  Carlos O'Ryan  <coryan@uci.edu>
+
+	* orbsvcs/performance-tests/RTEvent/lib/SyncScope_Setup.cpp:
+	  Fixed merge problems.
+
+	* orbsvcs/performance-tests/RTEvent/lib/Makefile:
+	  Add missing RTServer_Setup to the library.
+	  Updated dependencies.
+
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/Makefile:
+	* orbsvcs/performance-tests/RTEvent/Federated_Roundtrip/Makefile:
+	  Updated dependencies.
+
+Mon Mar 04 11:35:34 2002  Carlos O'Ryan  <coryan@uci.edu>
+
+	* orbsvcs/performance-tests/RTEvent/Federated_Roundtrip/Federated_Roundtrip.dsw:
+	* orbsvcs/performance-tests/RTEvent/Federated_Roundtrip/client.dsp:
+	* orbsvcs/performance-tests/RTEvent/Federated_Roundtrip/server.dsp:
+	  Add project files and workspaces for the Federated_Roundtrip test.
+
+	* orbsvcs/performance-tests/RTEvent/RTEvent.dsw:
+	  Add big workspace to simplify compilation.
+
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/client.dsp:
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/server.dsp:
+
+	* orbsvcs/performance-tests/RTEvent/lib/Client_Pair.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Client_Pair.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/Client_Pair.cpp:
+	  Add new class to factor out the code required to setup a
+	  Supplier/Consumer pair (without the loopback).
+
+	* orbsvcs/performance-tests/RTEvent/lib/Loopback_Pair.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Loopback_Pair.cpp:
+	  Add support to activate the loopack on a creator-supplied POA.
+
+	* orbsvcs/performance-tests/RTEvent/lib/Client_Group.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Client_Group.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/Client_Group.cpp:
+	  Use the Client_Pair class to implement this one.
+
+	* orbsvcs/performance-tests/RTEvent/lib/Consumer.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Consumer.cpp:
+	* orbsvcs/performance-tests/RTEvent/lib/Supplier.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Supplier.cpp:
+	* orbsvcs/performance-tests/RTEvent/lib/Loopback_Consumer.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Loopback_Consumer.cpp:
+	* orbsvcs/performance-tests/RTEvent/lib/Loopback_Supplier.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Loopback_Supplier.cpp:
+	  Add support to activate the object on a creator-supplier POA.
+
+	* orbsvcs/performance-tests/RTEvent/lib/Low_Priority_Setup.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Low_Priority_Setup.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/Low_Priority_Setup.cpp:
+	  New helper class to initialize the low priority consumers often
+	  found in the EC tests.  It creates the supplier/consumer pairs,
+	  connects them to the EC (and automatically disconnects them),
+	  activate a thread for each supplier, and if needed it can
+	  collect statistics about all of them.
+
+	* orbsvcs/performance-tests/RTEvent/lib/PriorityBand_Setup.h:
+	* orbsvcs/performance-tests/RTEvent/lib/PriorityBand_Setup.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/PriorityBand_Setup.cpp:
+	  New class to setup the PriorityBand policy.
+
+	* orbsvcs/performance-tests/RTEvent/lib/RTCORBA_Setup.h:
+	* orbsvcs/performance-tests/RTEvent/lib/RTCORBA_Setup.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/RTCORBA_Setup.cpp:
+	  New accessor to find the process priority.
+
+	* orbsvcs/performance-tests/RTEvent/lib/ORB_Task.h:
+	* orbsvcs/performance-tests/RTEvent/lib/ORB_Task.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/ORB_Task.cpp:
+	  Add smart-pointer operator-> to find the underlying ORB.
+
+	* orbsvcs/performance-tests/RTEvent/lib/ORB_Task_Activator.h:
+	* orbsvcs/performance-tests/RTEvent/lib/ORB_Task_Activator.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/ORB_Task_Activator.cpp:
+	  New helper class to automatically startup the ORB::run() method
+	  on a different thread, shutdown the ORB and wait until it
+	  completes the event loop.
+
+	* orbsvcs/performance-tests/RTEvent/lib/RTPOA_Setup.h:
+	* orbsvcs/performance-tests/RTEvent/lib/RTPOA_Setup.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/RTPOA_Setup.cpp:
+	  New helper class to configure a POA with the correct Real-time
+	  properties.
+
+	* orbsvcs/performance-tests/RTEvent/lib/RTServer_Setup.h:
+	* orbsvcs/performance-tests/RTEvent/lib/RTServer_Setup.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/RTServer_Setup.cpp:
+	  Meta-configuration class, it is a single stop shopping class to
+	  configure the POA, the policies, RTCORBA, etc. etc.
+
+	* orbsvcs/performance-tests/RTEvent/lib/Send_Task_Stopper.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Send_Task_Stopper.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/Send_Task_Stopper.cpp:
+	  Add helper class to automatically startup a Send_Task, and then
+	  stop it and wait for it (in the destructor).
+
+	* orbsvcs/performance-tests/RTEvent/lib/Send_Task.cpp:
+	  Improved code to handle the case where the number of iterations
+	  is 0, i.e. it must run forever.
+
+	* orbsvcs/performance-tests/RTEvent/lib/SyncScope_Setup.h:
+	* orbsvcs/performance-tests/RTEvent/lib/SyncScope_Setup.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/SyncScope_Setup.cpp:
+	  Fixed constructor with multiple defaults.
+
+	* orbsvcs/performance-tests/RTEvent/lib/Makefile:
+	* orbsvcs/performance-tests/RTEvent/lib/TAO_RTEC_Perf.dsp:
+	  Add all new files to the project file and (hopefully!) to the
+	  Makefile too.
+
+	* orbsvcs/performance-tests/RTEvent/lib/Task_Activator.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Task_Activator.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/Task_Activator.cpp:
+	  Helper class to activate an ACE_Task in the constructor, and
+	  wait for it in the destructor.
+
+	* orbsvcs/performance-tests/RTEvent/Federated_Roundtrip/client.cpp:
+	* orbsvcs/performance-tests/RTEvent/Federated_Roundtrip/server.cpp:
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/client.cpp:
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/server.cpp:
+	  Use all the new helper classes to re-write both tests.  The
+	  resulting code is shorter, more exception-safe/neutral and it
+	  actually runs on NT :-)
+
+Mon Mar 04 11:30:06 2002  Carlos O'Ryan  <coryan@uci.edu>
+
+	* orbsvcs/orbsvcs/Makefile:
+	  Enable RTCORBAEvent by default.
+
+	* orbsvcs/orbsvcs/Event/EC_RTCORBA_Dispatching.cpp:
+	  Fixed initialization
+
+	* orbsvcs/orbsvcs/Event/EC_Event_Channel.h:
+	* orbsvcs/orbsvcs/Event/EC_Event_Channel.i:
+	* orbsvcs/orbsvcs/Event/EC_Event_Channel.cpp:
+	  Keep track of the event channel status (IDLE -> ACTIVE ->
+	  DESTROYED).  This is important for applications and tests that
+	  need to shutdown when the event channel has been destroyed.
+
+Mon Mar  4 09:14:36 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
+
+	* orbsvcs/performance-tests/RTEvent/lib/SyncScope_Setup.inl: Fixed
+	  a fuzz error.
+
+Mon Mar  4 08:32:37 2002  Craig Rodrigues  <crodrigu@bbn.com>
+
+	* orbsvcs/performance-tests/RTEvent/lib/RIR_Narrow.cpp:
+	  Add ACE_TRY block to resolve().
+	* orbsvcs/performance-tests/RTEvent/lib/RTEC_Initializer.cpp:
+	  Pass ACE_ENV_ARG_DECL_NOT_USED to create().
+	* orbsvcs/performance-tests/RTEvent/lib/SyncScope_Setup.cpp:
+	  Comment out unused parameter.
+
+Mon Mar  4 08:10:12 2002  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+        * tao/DynamicInterface/Makefile.bor:
+          Removed messaging cflags and added portableserver cflags
+
+Sun Mar  3 18:18:08 2002  Jaiganesh Balasubramanian  <jai@doc.ece.uci.edu>
+
+	* tao/Makefile:
+	* tests/Makefile:
+	  Undo the changes on the Makefile that cause the conditional
+	  compile of the files depending on Messaging library.
+
+Sun Mar  3 17:51:37 2002  Jaiganesh Balasubramanian  <jai@doc.ece.uci.edu>
+
+	* tao/DynamicInterface/Makefile:
+	  updated the dependencies.
+
+Sun Mar  3 17:48:19 2002  Craig Rodrigues  <crodrigu@bbn.com>
+
+	* tao/DynamicInterface/DII_Reply_Dispatcher.h:
+	  Remove include of "tao/Messaging/Asynch_Reply_Dispatcher.h"
+
+	* tao/DynamicInterface/Request.h:
+	  Remove include of "tao/Messaging/MessagingC.h"
+
+	* tao/DynamicInterface/Makefile:
+	* tao/DynamicInterface/Makefile.bor:
+	  Remove TAO_Messaging library.
+
+Sun Mar  3 17:35:32 2002  Craig Rodrigues  <crodrigu@bbn.com>
+
+	* orbsvcs/performance-tests/EC_Federated_Scalability/Makefile:
+	  Add -lTAO_Messaging.
+
+Sun Mar  3 16:09:14 2002  Craig Rodrigues  <crodrigu@bbn.com>
+
+	* orbsvcs/performance-tests/RTEvent/lib/RTCORBA_Setup.cpp:
+	* orbsvcs/performance-tests/RTEvent/lib/RTCORBA_Setup.h:
+	  Add ACE_ENV_ARG_DECL parameters to setup_lane().
+
+	* orbsvcs/performance-tests/RTEvent/lib/Send_Task.cpp:
+	  Add ACE exception handling macros in svc() method.
+
+	* orbsvcs/performance-tests/RTEvent/lib/SyncScope_Setup.cpp:
+	  Change ACE_ENV_ARG_PARAMETER to
+	  ACE_SINGLE_ENV_ARG_PARAMETER  in call to policy_list->destroy().
+
+Sun Mar  3 10:20:23 2002  Craig Rodrigues  <crodrigu@bbn.com>
+
+	* orbsvcs/performance-tests/RTEvent/lib/RIR_Narrow.cpp:
+	  Add ACE_TYPENAME to RIR_Narrow<Interface>::resolve()
+	  to eliminate gcc 3.1 warning:
+	  "typename RIR_Narrow<Interface>::Interface_ptr'
+	  is implicitly a typename"
+
+Sun Mar  3 10:19:12 2002  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+        * examples/Content_Server/SMI_Iterator/client.bor:
+        * examples/Content_Server/SMI_Iterator/server.bor:
+          Added TAO_Messaging library
+
+        * orbsvcs/tests/AVStreams/Simple_Two_Stage_With_QoS/*.bor:
+          Created BCB makefiles for this test
+
+        * orbsvcs/tests/AVStreams/Makefile.bor:
+          Added the Simple_Two_Stage_With_QoS directory
+
+Sat Mar  2 17:08:47 2002  Mayur Deshpande  <mayur@ics.uci.edu>
+
+	* docs/releasenotes/amh.html:
+	  'Converted' the Word generated HTML document to 'plain'
+	  HTML.  Also added links to the two AMH papers.
+
+Sat Mar  2 16:27:16 2002  Jaiganesh Balasubramanian  <jai@doc.ece.uci.edu>
+
+	* orbsvcs/CosEvent_Service/Makefile:
+	* orbsvcs/Event_Service/Makefile:
+	* orbsvcs/examples/CosEC/Factory/Makefile:
+	* orbsvcs/examples/CosEC/RtEC_Based/tests/Basic/Makefile:
+	* orbsvcs/examples/CosEC/Simple/Makefile:
+	* orbsvcs/examples/RtEC/MCast/Makefile:
+	* orbsvcs/examples/RtEC/Schedule/Makefile:
+	* orbsvcs/examples/RtEC/Simple/Makefile:
+	* orbsvcs/tests/EC_Mcast/Makefile:
+	* orbsvcs/tests/EC_Throughput/Makefile:
+	  Made changes to include the Messaging library.
+
+Sat Mar  2 14:53:44 2002  Craig Rodrigues  <crodrigu@bbn.com>
+
+	* orbsvcs/performance-tests/EC_Scalability/Makefile:
+	* orbsvcs/tests/CosEvent/Basic/Makefile:
+	* orbsvcs/tests/Event/Basic/Makefile:
+	* orbsvcs/examples/CosEC/RtEC_Based/bin/Makefile:
+
+	  Add -lTAO_Messaging
+
+Sat Mar  2 20:37:12 2002  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+        * orbsvcs/tests/Notify/performance-tests/Throughput/Makefile.bor:
+          Added TAO_Messaging library
+
+Sat Mar  2 14:32:32 2002  Craig Rodrigues  <crodrigu@bbn.com>
+
+	* orbsvcs/performance-tests/RTEvent/lib/ORB_Holder.h (ORB_Holder) :
+	  Change ACE_ENV_ARG_DECL to ACE_ENV_ARG_DECL_WITH_DEFAULTS.
+
+	* orbsvcs/performance-tests/RTEvent/lib/RTCORBA_Setup.cpp (RTCORBA_Setup::RTCORBA_Setup):
+
+	  Change ACE_ENV_ARG_DECL to ACE_ENV_ARG_PARAMETER.
+
+	* orbsvcs/performance-tests/RTEvent/lib/Send_Task.cpp (Send_Task::svc):
+
+	  Add  ACE_DECLARE_NEW_CORBA_ENV.
+
+	* orbsvcs/performance-tests/RTEvent/lib/SyncScope_Setup.h (SyncScope_Setup):
+	  Change ACE_ENV_ARG_DECL to ACE_ENV_ARG_DECL_WITH_DEFAULTS.
+
+Sat Mar  2 19:26:34 2002  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+        * performance-tests/Latency/AMH/Single_Threaded/client.bor:
+        * performance-tests/Latency/AMH/Single_Threaded/server.bor:
+          Added TAO_Messaging library
+
+Sat Mar  2 09:30:35 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
+
+	* tao/Stub.cpp (sync_scope): Do not check for policies at other
+	  levels if the policy has been cached in the stubs. This helps
+	  to fix a problem, which prevented applications to set policies
+	  at the object level.
+
+Sat Mar  2 13:30:12 2002  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+        * examples/Buffered_Oneways/Buffered_Oneways_client.bor:
+        * examples/Buffered_Oneways/Buffered_Oneways_server.bor:
+        * performance-tests/Callback/client.bor:
+        * performance-tests/Callback/server.bor:
+        * performance-tests/Latency/AMI/client.bor:
+        * performance-tests/Latency/AMI/server.bor:
+        * performance-tests/RTCorba/Oneways/Reliable/client.bor:
+        * performance-tests/RTCorba/Oneways/Reliable/server.bor:
+        * orbsvcs/tests/Event/Performance/Connect.bor:
+        * orbsvcs/tests/Event/Performance/Inversion.bor:
+        * orbsvcs/tests/Event/Performance/Latency.bor:
+        * orbsvcs/tests/Event/Performance/Latency_Server.bor:
+        * orbsvcs/tests/Event/Performance/Throughput.bor:
+          Added TAO_Messaging library
+
+Fri Mar  1 17:42:54 2002  Jaiganesh Balasubramanian  <jai@doc.ece.uci.edu>
+
+	* tao/Makefile:
+	  Made changes to get Messaging library compiled always.
+
+Fri Mar  1 18:56:21 2002  Carlos O'Ryan  <coryan@uci.edu>
+
+	* orbsvcs/performance-tests/RTEvent/lib/Auto_Disconnect.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Auto_Disconnect.cpp:
+	  Add methods to reset the contained pointer, useful when
+	  declaring arrays of Auto_Disconnect objects.
+
+	* orbsvcs/performance-tests/RTEvent/lib/Makefile:
+	* orbsvcs/performance-tests/RTEvent/lib/Loopback_Pair.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Loopback_Pair.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/Loopback_Pair.cpp:
+	* orbsvcs/performance-tests/RTEvent/lib/Client_Group.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Client_Group.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/Client_Group.cpp:
+	  Factor out code to create a Loopback_Consumer/Loopback_Supplier
+	  pair.
+
+	* orbsvcs/performance-tests/RTEvent/lib/Makefile:
+	* orbsvcs/performance-tests/RTEvent/lib/SyncScope_Setup.h:
+	* orbsvcs/performance-tests/RTEvent/lib/SyncScope_Setup.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/SyncScope_Setup.cpp:
+	  New helper class to set the SyncScope policy.
+
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/Makefile:
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/client.cpp:
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/server.cpp:
+	  Take advantage of the new classes to implement the client and
+	  server.
+
+	* orbsvcs/performance-tests/RTEvent/Federated_Roundtrip/Makefile:
+	* orbsvcs/performance-tests/RTEvent/Federated_Roundtrip/client.cpp:
+	* orbsvcs/performance-tests/RTEvent/Federated_Roundtrip/server.cpp:
+	  Start new test to measure the roundtrip delay (and scalability)
+	  of the federated architecture.
+
+Fri Mar  1 15:17:27 2002  Jaiganesh Balasubramanian  <jai@doc.ece.uci.edu>
+
+	* tao/Messaging/Messaging.cpp:
+	* tao/Messaging/MessagingC.cpp:
+	* tao/Messaging/MessagingC.h:
+	* tao/Messaging/MessagingC.i:
+	* tao/Messaging/MessagingS.cpp:
+	* tao/Messaging/Messaging_PolicyFactory.cpp
+	  Made changes to fix the compiler errors for MINIMUM_CORBA
+	  and CORBA_MESSAGING.
+
+Fri Mar  1 11:59:30 2002  Jaiganesh Balasubramanian  <jai@doc.ece.uci.edu>
+
+	* tao/Messaging/MessagingC.cpp:
+	  Fixed the compiler warnings.
+
+Fri Mar  1 11:12:30 2002  Ossama Othman  <ossama@uci.edu>
+
+	* orbsvcs/tests/Security/Callback/Makefile (TAO_IDLFLAGS):
+
+	  Removed the "-GC" flag.  This test does not require AMI
+	  callbacks.  Fixes link-time errors.  Thanks to Priyanka for
+	  reminding me that I needed a ChangeLog entry.  :-)
+
+Fri Mar  1 10:41:58 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
+
+	* tao/GIOP_Message_Base.cpp:
+	* tao/GIOP_Message_Generator_Parser.cpp:
+	* tao/GIOP_Message_Generator_Parser_12.cpp:
+	* tao/GIOP_Message_Lite.cpp:
+	* tao/Tagged_Profile.cpp: Made some cosmetic fixes. Further, made
+	  sure that return values in case of errors are consistent, for the
+	  sake of uniformity. Thanks to Don Hinton for pointing this out.
+
+Fri Mar  1 07:56:43 2002  Carlos O'Ryan  <coryan@uci.edu>
+
+	* orbsvcs/performance-tests/Makefile:
+	  Add new RTEvent directory to the Makefile.
+
+	* orbsvcs/performance-tests/EC_Colocated_Latency/Makefile:
+	* orbsvcs/performance-tests/EC_Colocated_Latency/run_dispatching.sh:
+	* orbsvcs/performance-tests/EC_Colocated_Latency/Consumer.cpp:
+	* orbsvcs/performance-tests/EC_Colocated_Latency/Consumer.h:
+	* orbsvcs/performance-tests/EC_Colocated_Latency/Send_Task.cpp:
+	* orbsvcs/performance-tests/EC_Colocated_Latency/Send_Task.h:
+	* orbsvcs/performance-tests/EC_Colocated_Latency/driver.cpp:
+	* orbsvcs/performance-tests/EC_Colocated_Latency/ec.dispatching_reactive.conf:
+	* orbsvcs/performance-tests/EC_Colocated_Latency/ec.dispatching_rtcorba.conf:
+	* orbsvcs/performance-tests/EC_Colocated_Latency/ec.dispatching_threaded.conf:
+	* orbsvcs/performance-tests/EC_Colocated_Latency/ec.supplier_filter_null.conf:
+	* orbsvcs/performance-tests/EC_Colocated_Latency/ec.supplier_filter_per_supplier.conf:
+	* orbsvcs/performance-tests/EC_Colocated_Latency/run_supplier_filtering.sh:
+	  The Colocated Latency test was greatly expanded to search for
+	  priority inversions, however, it turns out that this is not a
+	  good configuration for that benchmark.
+	  A new series of tests, with better code re-use (among other
+	  coding practice improvements) is being developed under the
+	  RTEvent directory.  The current tests are saved for historical
+	  reasons, but will soon be removed.
+
+Fri Mar  1 07:47:07 2002  Carlos O'Ryan  <coryan@uci.edu>
+
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/Makefile:
+	* orbsvcs/performance-tests/RTEvent/lib/Makefile:
+	  Add TAO_Messaging to the list of libraries.
+	  Update dependencies.
+
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/server.cpp:
+	  Include "RTPortableServer.h", otherwise the internal Service
+	  Configurator initialization may be incomplete on static builds.
+	  Initialize the event service default services.
+
+Fri Mar 01 13:30:12 2002  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+        * tao/DynamicInterface/Makefile.bor:
+        * orbsvcs/orbsvcs/RTEvent.bor:
+        * orbsvcs/orbsvcs/CosEvent.bor:
+        * tests/AMI/client.bor:
+        * tests/AMI/server.bor:
+        * tests/AMI/simple_server.bor:
+        * tests/AMI_Buffering/admin.bor:
+        * tests/AMI_Buffering/client.bor:
+        * tests/AMI_Buffering/server.bor:
+        * tests/AMI_Timeouts/client.bor:
+        * tests/AMI_Timeouts/server.bor:
+        * tests/Big_Request_Muxing/client.bor:
+        * tests/Big_Request_Muxing/server.bor:
+        * tests/Blocking_Sync_None/client.bor:
+        * tests/Blocking_Sync_None/server.bor:
+        * tests/Crashed_Callback/client.bor:
+        * tests/Crashed_Callback/server.bor:
+        * tests/LongUpcalls/ami_client.bor:
+        * tests/LongUpcalls/ami_server.bor:
+        * tests/LongUpcalls/blocking_client.bor:
+        * tests/LongUpcalls/blocking_server.bor:
+        * tests/MT_Timeout/client.bor:
+        * tests/MT_Timeout/server.bor:
+        * tests/Oneway_Buffering/admin.bor:
+        * tests/Oneway_Buffering/client.bor:
+        * tests/Oneway_Buffering/server.bor:
+        * tests/Policies/Makefile.bor:
+        * tests/Reliable_Oneways/client.bor:
+        * tests/Reliable_Oneways/server.bor:
+        * tests/Timed_Buffered_Oneways/client.bor:
+        * tests/Timed_Buffered_Oneways/server.bor:
+        * tests/Timeout/client.bor:
+        * tests/Timeout/server.bor:
+        * examples/Buffered_AMI/client.bor
+        * examples/Buffered_AMI/server.bor
+          Added TAO_Messaging library
+
+Thu Feb 28 20:25:00 2002  Jaiganesh Balasubramanian  <jai@doc.ece.uci.edu>
+
+	* tests/Makefile (DIRS):
+
+	  Conditionally compile tests that require the TAO_Messaging
+	  library on the "corba_messaging" make variable.  Fixes compile
+	  and link-time errors in builds that disable CORBA Messaging.
+
+Thu Feb 28 19:59:45 2002  Jaiganesh Balasubramanian  <jai@doc.ece.uci.edu>
+
+	* tao/Makefile:
+
+	  Only compile Messaging and DynamicInterface directories if
+	  "corba_messaging" make variable is set to 1.
+
+	* tao/Messaging/Messaging.cpp:
+	* tao/Messaging/MessagingC.cpp:
+	* tao/Messaging/MessagingC.h:
+	* tao/Messaging/MessagingS.h:
+	* tao/Messaging/Messaging_ORBInitializer.cpp:
+	* tao/Messaging/Messaging_ORBInitializer.h:
+	* tao/Messaging/Messaging_PolicyFactory.cpp:
+	* tao/Messaging/Messaging_PolicyFactory.h:
+
+	  No need to protect these sources with "TAO_HAS_CORBA_MESSAGING"
+	  preprocessor blocks since the CORBA Messaging code is now in a
+	  separate library.
+
+	* tao/Strategies/DIOP_Connection_Handler.cpp:
+	* tao/Strategies/SHMIOP_Connection_Handler.cpp:
+	* tao/Strategies/UIOP_Connection_Handler.cpp:
+
+	  Removed vestigial include of `Messaging_Policy_i.h'.  Fixes
+	  compile-time errors.
+
+	* tao/Strategies/Makefile:
+
+  	  Updated dependencies.
+
+Thu Feb 28 13:15:39 2002  Jaiganesh Balasubramanian  <jai@kelvar.ece.uci.edu>
+
+        * tests/DLL_ORB/Makefile.Test_Client_Module:
+        * tests/DLL_ORB/Makefile.Test_Server_Module:
+	  updated the Makefile dependencies.
+
+Thu Feb 28 11:55:39 2002  Jaiganesh Balasubramanian  <jai@kelvar.ece.uci.edu>
+
+        * orbsvcs/examples/CosEC/Factory/Makefile:
+        * orbsvcs/examples/Security/Send_File/Makefile:
+        * tests/IDL_Test/Makefile:
+        * tests/DLL_ORB/Makefile:
+        * orbsvcs/tests/Security/Big_Request/Makefile:
+        * orbsvcs/tests/Security/Callback/Makefile:
+        * orbsvcs/tests/Security/Secure_Invocation/Makefile:
+        * orbsvcs/tests/Security/SecurityLevel1/Makefile:
+	  updated the Makefile dependencies.
+
+Thu Feb 28 15:12:35 2002  Carlos O'Ryan  <coryan@uci.edu>
+
+	* orbsvcs/performance-tests/RTEvent/lib/TAO_RTEC_Perf.dsp:
+	* orbsvcs/performance-tests/RTEvent/lib/TAO_RTEC_Perf.dsw:
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/Roundtrip.dsw:
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/client.dsp:
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/server.dsp:
+	  Add MSVC project files and workspaces.
+
+	* TAOACE.dsw:
+	* TAOACE_Static.dsw:
+	* orbsvcs/orbsvcs/orbsvcs.dsw:
+	* orbsvcs/orbsvcs/orbsvcs_static.dsw:
+	* orbsvcs/orbsvcs/RTCORBAEvent.dsp:
+	* orbsvcs/orbsvcs/RTCORBAEvent_Static.dsp:
+	  Add new project files for the RTCORBAEvent library, and insert
+	  the project in the corresponding workspaces.
+
+	* orbsvcs/orbsvcs/Event/EC_Event_Channel.h:
+	* orbsvcs/orbsvcs/Event/EC_Event_Channel.i:
+	* orbsvcs/orbsvcs/Event/EC_Event_Channel.cpp:
+	  Add PortableServer::RefCountServantBase mixin.
+	  Add new method to check if an event channel is getting
+	  destroyed.
+
+	* orbsvcs/orbsvcs/Event/rtcorba_event_export.h:
+	* orbsvcs/orbsvcs/Event/EC_RTCORBA_Dispatching.h:
+	* orbsvcs/orbsvcs/Event/EC_RTCORBA_Factory.h:
+	  Fixed export macros.
+
+	* orbsvcs/orbsvcs/Event/EC_RTCORBA_Factory.cpp:
+	  Fixed misuse of return statement in void functions.
+
+	* tao/Messaging/MessagingC.h:
+	  The code did not link on NT because a couple of CDR operators
+	  are declared, but not defined nor used. I removed offending code
+	  until Jaiganesh can introduce a complete fix.
+
+	* orbsvcs/orbsvcs/RTEvent.dsp:
+	  The RTEvent library needs the TAO_Messaging library to work
+	  correctly.
+
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/client.cpp:
+	  Fixed #include for Messaging.h
+	  Fixed problems with explicit auto_ptr<> constructors.
+	  Create special thread for ORB::run()
+
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/server.cpp:
+	  Fixed #include for Messaging.h
+	  Fixed problems with explicit auto_ptr<> constructors.
+	  Stop the event loop if the event channel is destroyed.
+
+	* orbsvcs/performance-tests/RTEvent/lib/rtec_perf_export.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Client_Group.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Consumer.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Loopback_Consumer.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Loopback_Supplier.h:
+	* orbsvcs/performance-tests/RTEvent/lib/ORB_Holder.h:
+	* orbsvcs/performance-tests/RTEvent/lib/RTEC_Initializer.h:
+	* orbsvcs/performance-tests/RTEvent/lib/RT_Class.h:
+	* orbsvcs/performance-tests/RTEvent/lib/RTCORBA_Setup.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Send_Task.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Supplier.h:
+	  Create export macro file for the benchmark library.
+	  Add export macros to all the classes.
+
+	* orbsvcs/performance-tests/RTEvent/lib/Makefile:
+	* orbsvcs/performance-tests/RTEvent/lib/ORB_Task.h:
+	* orbsvcs/performance-tests/RTEvent/lib/ORB_Task.cpp:
+	  Add new files to the Makefile too!
+
+	* orbsvcs/performance-tests/RTEvent/lib/Client_Group.cpp:
+	  Fixed event types in the loopback supplier.
+
+	* orbsvcs/performance-tests/RTEvent/lib/RTCORBA_Setup.cpp:
+	  Fixed problems with explicit auto_ptr<> constructors.
+	  I used ACE_THROW_RETURN() where an ACE_THROW() was needed.
+
+	* orbsvcs/performance-tests/RTEvent/lib/RTEC_Initializer.cpp:
+	* orbsvcs/performance-tests/RTEvent/lib/Send_Task.cpp:
+	  Fixed problems with explicit auto_ptr<> constructors.
+
+Thu Feb 28 13:51:30 2002  Jeff Parsons <parsons@cs.wustl.edu>
+
+        * TAO_IDL/be/be_interface.cpp:
+
+          Fixed a typo on a previous fix I checked in for QNX. Thanks to
+          Sean I. Luzader <sean.i.luzader@lmco.com> for catching it.
+
+Thu Feb 28 11:50:39 2002  Jaiganesh Balasubramanian  <jai@kelvar.ece.uci.edu>
+
+	* orbsvcs/orbsvcs/Makefile.Security:
+	  updated the Makefile dependencies.
+
+Thu Feb 28 11:40:19 2002  Jaiganesh Balasubramanian  <jai@kelvar.ece.uci.edu>
+
+	* tests/AMI_Buffering/Makefile:
+	  updated the Makefile dependencies.
+
+Thu Feb 28 11:38:51 2002  Priyanka Gontla  <pgontla@ece.uci.edu>
+
+	* orbsvcs/orbsvcs/Makefile.SSLIOP:
+	  Updated the dependencies.
+
+Thu Feb 28 07:44:12 2002  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+        * tao/Messaging/Makefile.bor:
+          Added missing files that I forgot to add when creating this makefile.
+          Thanks to Jaiganesh for noticing this.
+
+Wed Feb 27 20:20:19 2002  Jaiganesh Balasubramanian  <jai@kelvar.ece.uci.edu>
+
+	* orbsvcs/orbsvcs/SSLIOP/SSLIOP_Connection_Handler.cpp:
+	  Changed the include to point to the Messaging directory.
+
+Wed Feb 27 20:24:12 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
+
+	* orbsvcs/performance-tests/RTEvent/lib/RTCORBA_Setup.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/RT_Class.inl: Fixed fuzz
+	  errors.
+
+
+Wed Feb 27 15:20:19 2002  Jaiganesh Balasubramanian  <jai@kelvar.ece.uci.edu>
+
+	* tao/Messaging/Messaging.cpp:
+	  Added code to check for exceptions.
+
+	* orbsvcs/orbsvcs/Makefile.Security:
+	  Added code to link to the new Messaging library.
+
+Wed Feb 27 14:30:21 2002  Jaiganesh Balasubramanian  <jai@kelvar.ece.uci.edu>
+
+	* tests/Two_Objects/Makefile:
+	* tao/Makefile:
+	  Added links to the new Messaging library.
+
+Wed Feb 27 10:50:45 2002  Carlos O'Ryan  <coryan@uci.edu>
+
+	* orbsvcs/orbsvcs/Makefile.RTCORBAEvent:
+	  Update depdendencies
+
+	* orbsvcs/orbsvcs/Event/EC_Event_Channel.h:
+	  Derive the event channel from the
+	  PortableServer::RefCountServantBase mixin, it makes lifecycle
+	  management much easier.
+
+	* orbsvcs/orbsvcs/Event/EC_RTCORBA_Dispatching.cpp:
+	  Fixed thread activation properties.
+
+Wed Feb 27 03:59:35 2002  Carlos O'Ryan  <coryan@uci.edu>
+
+	* TAOACE.dsw:
+	* TAOACE_Static.dsw:
+	* tao/TAO.dsw:
+	* tao/Messaging/TAO_Messaging.dsp:
+	* tao/Messaging/TAO_Messaging_Static.dsp:
+	  Add new project files for the TAO_Messaging library.
+	  Add the projects to the workspaces and fixed dependencies.
+
+	* tao/TAO.dsp:
+	* tao/TAO_Static.dsp:
+	* tao/PortableServer/TAO_PortableServer.dsp:
+	* tao/PortableServer/TAO_PortableServer_Static.dsp:
+	  Remove files that are now on the TAO_Messaging library, add new
+	  files.
+
+	* tao/Messaging/Messaging.h:
+	  Fixed TAO_Export macros.
+
+Wed Feb 27 10:39:12 2002  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+        * tao/Messaging/Asynch_Timeout_Handler.h:
+          Replaced the old TAO_Export macro with the TAO_Messaging_Export
+          macro
+
+Wed Feb 27 01:33:44 2002  Carlos O'Ryan  <coryan@uci.edu>
+
+	* orbsvcs/performance-tests/RTEvent/Makefile:
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/Makefile:
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/client.cpp:
+	* orbsvcs/performance-tests/RTEvent/Roundtrip/server.cpp:
+	* orbsvcs/performance-tests/RTEvent/lib/Makefile:
+	* orbsvcs/performance-tests/RTEvent/lib/Auto_Disconnect.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Auto_Disconnect.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/Auto_Disconnect.cpp:
+	* orbsvcs/performance-tests/RTEvent/lib/Client_Group.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Client_Group.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/Client_Group.cpp:
+	* orbsvcs/performance-tests/RTEvent/lib/Consumer.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Consumer.cpp:
+	* orbsvcs/performance-tests/RTEvent/lib/Loopback_Consumer.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Loopback_Consumer.cpp:
+	* orbsvcs/performance-tests/RTEvent/lib/Loopback_Supplier.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Loopback_Supplier.cpp:
+	* orbsvcs/performance-tests/RTEvent/lib/ORB_Holder.h:
+	* orbsvcs/performance-tests/RTEvent/lib/ORB_Holder.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/ORB_Holder.cpp:
+	* orbsvcs/performance-tests/RTEvent/lib/RIR_Narrow.h:
+	* orbsvcs/performance-tests/RTEvent/lib/RIR_Narrow.cpp:
+	* orbsvcs/performance-tests/RTEvent/lib/RTCORBA_Setup.h:
+	* orbsvcs/performance-tests/RTEvent/lib/RTCORBA_Setup.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/RTCORBA_Setup.cpp:
+	* orbsvcs/performance-tests/RTEvent/lib/RTEC_Initializer.h:
+	* orbsvcs/performance-tests/RTEvent/lib/RTEC_Initializer.cpp:
+	* orbsvcs/performance-tests/RTEvent/lib/RT_Class.h:
+	* orbsvcs/performance-tests/RTEvent/lib/RT_Class.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/RT_Class.cpp:
+	* orbsvcs/performance-tests/RTEvent/lib/Send_Task.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Send_Task.cpp:
+	* orbsvcs/performance-tests/RTEvent/lib/Servant_var.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Servant_var.inl:
+	* orbsvcs/performance-tests/RTEvent/lib/Servant_var.cpp:
+	* orbsvcs/performance-tests/RTEvent/lib/Supplier.h:
+	* orbsvcs/performance-tests/RTEvent/lib/Supplier.cpp:
+	  Add new test library to capture shared code, start new Roundtrip
+	  delay test.
+
+Wed Feb 27 09:32:12 2002  Johnny Willemsen <jwillemsen@remedy.nl>
+
+        * tao/Messaging/Makefile.bor:
+          Added new BCB makefile for this library
+
+        * tao/Messaging/TAO_Messaging.rc:
+          Added resource file for this library
+
+        * tao/Messaging/Asynch_Reply_Dispatcher.cpp:
+          Fixed compile error when __ACE_INLINE__ is not defined
+
+        * tao/Makefile.bor:
+          Added new Messaging directory and removed all files that where
+          moved to the new subdirectory
+
+Tue Feb 26 21:29:05 2002  Ossama Othman  <ossama@uci.edu>
+
+	* TAO_IDL/be/be_visitor_interface/any_op_cs.cpp (visit_interface):
+
+	  Corrected code that exhibited a warning with some compilers.
+	  Generate code that returns a value for local interfaces, too.
+
+Mon Feb 26 18:10:24 2002 Jaiganesh Balasubramanian <jai@kelvar.ece.uci.edu>
+
+	* tao/Asynch_Invocation.h:
+	* tao/Asynch_Invocation.i:
+	* tao/Asynch_Invocation.cpp:
+	  Moved the TAO_GIOP_Twoway_Asynch_Invocation to its own file in
+	  the Messaging directory.
+
+	* tao/Asynch_Reply_Dispatcher.cpp:
+	* tao/Asynch_Reply_Dispatcher.h:
+	* tao/Asynch_Reply_Dispatcher.i:
+	  Moved the TAO_Asynch_Reply_Dispatcher class to this file in the
+	  Messaging directory.
+
+	* tao/Asynch_Reply_Dispatcher_Base.cpp:
+	* tao/Asynch_Reply_Dispatcher_Base.h:
+	* tao/Asynch_Reply_Dispatcher_Base.i:
+	  Moved the TAO_Asynch_Reply_Dispatcher class to its own file in the
+	  Messaging directory and the class TAO_Asynch_Reply_Dispatcher_Base
+	  remained in this file.
+
+	* tao/Asynch_Timeout_Handler.cpp:
+	* tao/Asynch_Timeout_Handler.h:
+	  Moved the class TAO_Asynch_Timeout_Handler to its own file in the
+	  Messaging directory.
+
+	* tao/Connection_Handler.cpp:
+	* tao/IIOP_Connection_Handler.cpp:
+	* tao/Invocation.cpp:
+	* tao/Policy_Manager.cpp:
+	* tao/Stub.cpp:
+	  There is no need to #include tao/Messaging_Policy_i.h, the classes
+	  in that file are not used at all, probably old code left
+	  around.
+
+	* tao/Makefile:
+	* tao/Makefile.am:
+	  Removed all links to the Messaging files in the Makefile.
+	  Links are made to the new Messading directory.
+
+	* tao/Messaging.cpp:
+	* tao/Messaging.h:
+	* tao/Messaging.pidl:
+	* tao/MessagingC.cpp:
+	* tao/MessagingC.h:
+	* tao/MessagingC.i:
+	* tao/Messaging_ORBInitializer.cpp:
+	* tao/Messaging_ORBInitializer.h:
+	* tao/Messaging_PolicyFactory.cpp:
+	* tao/Messaging_PolicyFactory.h:
+	* tao/Messaging_PolicyValue.pidl:
+	* tao/Messaging_PolicyValueC.cpp:
+	* tao/Messaging_PolicyValueC.h:
+	* tao/Messaging_PolicyValueC.i:
+	* tao/Messaging_Policy_i.cpp:
+	* tao/Messaging_Policy_i.h:
+	* tao/Messaging_Policy_i.i:
+	  Moved all the Messaging classes in the Messaging NAMESPACE except
+	  the variables SyncScope and SynScope_out to the new Messaging
+	  directory. The variables SyncScope and SyncScope_out are needed
+	  by the ORB. So they are moved to a new file
+	  Messaging_SyncScopeC.h in the TAO/tao directory.
+
+	* tao/Messaging_SyncScope.pidl:
+	* tao/Messaging_SyncScopeC.cpp:
+	* tao/Messaging_SyncScopeC.h:
+	* tao/Messaging_SyncScopeC.i:
+	  The variables SyncScope and SyncScope_out in the Messaging
+	  NAMESPACE are needed by the ORB. So they are not moved to the new
+	  Messaging directory and are moved to these new files in the
+	  TAO/tao directory.
+
+	* tao/ORB.cpp:
+	  Moved the ORB_Initializer for the Messaging class to the
+	  Messaging directory.
+
+	* tao/PortableInterceptor.pidl:
+	  Removed the #include "Messaging.pidl and added the
+	  #include "Messaging_SyncScope.idl". THe new idl file is used
+	  to create the idl stubs for just the SyncScope and the SyncScope_out
+	  variables in the Messaging class.
+
+	* tao/PortableInterceptorC.h:
+	* tao/Profile.cpp:
+	  Added #include Messaging_SyncScopeC.h and removed
+	  #include MessagingC.h to include only those variables in the
+	  Messaging namespace that are not in the new Messaging directory.
+
+	* tao/DynamicInterface/Makefile:
+	* tao/BiDir_GIOP/Makefile:
+	* tao/Domain/Makefile:
+	* tao/DynamicAny/Makefile:
+	* tao/IFR_Client/Makefile:
+	* tao/IORManipulation/Makefile:
+	* tao/IORTable/Makefile:
+	  Make changes in the Makefile to link the new TAO_Messaging library.
+
+	* tao/DynamicInterface/DII_Reply_Dispatcher.h:
+	* tao/DynamicInterface/Request.h:
+	  Change all #includes to point to the new Messaging directory.
+	  For example, change #include MessagingC.h to
+	  #include tao/Messaging/MessagingC.h.
+
+	* tao/Messaging/Asynch_Reply_Dispatcher.cpp:
+	* tao/Messaging/Asynch_Reply_Dispatcher.h:
+	* tao/Messaging/Asynch_Reply_Dispatcher.i:
+	  Moved the TAO_Asynch_Reply_Dispatcher class to its own file
+	  in the Messaging directory.
+
+	* tao/Messaging/Asynch_Timeout_Handler.cpp:
+	* tao/Messaging/Asynch_Timeout_Handler.h:
+	  Moved the TAO_Asynch_Timeout_Handler to its own file in the
+	  Messaging directory.
+
+	* tao/Messaging/Makefile:
+	  Added a new Makefile in the Messaging directory to create the
+	  new library TAO_messaging.
+
+	* tao/Messaging/Messaging.cpp:
+	* tao/Messaging/Messaging.h:
+	* tao/Messaging/Messaging.pidl:
+	* tao/Messaging/MessagingC.cpp:
+	* tao/Messaging/MessagingC.h:
+	* tao/Messaging/MessagingC.i:
+	* tao/Messaging/MessagingS.cpp:
+	* tao/Messaging/MessagingS.h:
+	* tao/Messaging/MessagingS.i:
+	* tao/Messaging/MessagingS_T.cpp:
+	* tao/Messaging/MessagingS_T.h:
+	* tao/Messaging/MessagingS_T.i:
+	* tao/Messaging/Messaging_ORBInitializer.cpp:
+	* tao/Messaging/Messaging_ORBInitializer.h:
+	* tao/Messaging/Messaging_PolicyFactory.cpp:
+	* tao/Messaging/Messaging_PolicyFactory.h:
+	* tao/Messaging/Messaging_Policy_i.cpp:
+	* tao/Messaging/Messaging_Policy_i.h:
+	* tao/Messaging/Messaging_Policy_i.i:
+	  Moved all the Messaging classes in the Messaging NAMESPACE except
+	  the variables SyncScope and SynScope_out to the new Messaging
+	  directory. The variables SyncScope and SyncScope_out are needed
+	  by the ORB. So they are moved to a new file
+	  Messaging_SyncScopeC.h in the TAO/tao directory.
+
+	* tao/Messaging/Twoway_Asynch_Invocation.cpp:
+	* tao/Messaging/Twoway_Asynch_Invocation.h:
+	* tao/Messaging/Twoway_Asynch_Invocation.i:
+	  Moved the TAO_GIOP_Twoway_Asynch_Invocation to its own file in
+	  the Messaging directory.
+
+	* tao/Messaging/messaging_export.h:
+	  Created a new TAO_Messaging_Export type in the new Messaging
+	  library.
+
+	* tao/Messaging/diffs/Messaging.diff:
+	  Added a new diffs directory for the new Messaging directory and
+	  generated new diff files for future use.
+
+	* tao/PortableServer/Makefile:
+	* tao/PortableServer/Makefile.bor:
+	  Changed the Makefile to remove links to the Messaging files.
+	  All the Messaging files in this directory are moved to their
+	  own files in the Messaging directory.
+
+	* tao/PortableServer/MessagingS.cpp:
+	* tao/PortableServer/MessagingS.h:
+	* tao/PortableServer/MessagingS.i:
+	* tao/PortableServer/MessagingS_T.cpp:
+	* tao/PortableServer/MessagingS_T.h:
+	* tao/PortableServer/MessagingS_T.i:
+	  Moved all the Messaging files in the PortableServer directory
+	  to their own files in the Messaging directory.
+
+	* tao/RTCORBA/Makefile:
+	* tao/RTPortableServer/Makefile:
+	* tao/SmartProxies/Makefile:
+	* tao/Strategies/Makefile:
+	* tao/TypeCodeFactory/Makefile:
+	  Made changes to link to the messaging SyncScope files in the
+	  tao directory.
+
+	* tao/Strategies/DIOP_Connection_Handler.cpp:
+	* tao/Strategies/SHMIOP_Connection_Handler.cpp:
+	* tao/Strategies/UIOP_Connection_Handler.cpp:
+	* TAO/TAO_IDL/Makefile.BE:
+	* TAO/TAO_IDL/Makefile.EXE:
+	* TAO/TAO_IDL/Makefile.FE:
+	* TAO/TAO_IDL/be/be_codegen.cpp:
+	* TAO/docs/tutorials/Quoter/AMI/Makefile:
+	* TAO/docs/tutorials/Quoter/Event_Service/Makefile:
+	* TAO/docs/tutorials/Quoter/Naming_Service/Makefile:
+	* TAO/docs/tutorials/Quoter/On_Demand_Activation/Makefile:
+	* TAO/docs/tutorials/Quoter/RT_Event_Service/Makefile:
+	* TAO/docs/tutorials/Quoter/Simple/Client/Makefile:
+	* TAO/docs/tutorials/Quoter/Simple/Impl-Repo/Makefile:
+	* TAO/docs/tutorials/Quoter/Simple/ImprovedServer/Makefile:
+	* TAO/docs/tutorials/Quoter/Simple/Persistent/Makefile:
+	* TAO/docs/tutorials/Quoter/Simple/Server/Makefile:
+	* TAO/docs/tutorials/Quoter/idl/Makefile:
+	* TAO/examples/AMI/FL_Callback/Makefile:
+	* TAO/examples/Buffered_AMI/Makefile:
+	* TAO/examples/Buffered_AMI/client.cpp:
+	* TAO/examples/Buffered_Oneways/Makefile:
+	* TAO/examples/Buffered_Oneways/client.cpp:
+	* TAO/examples/Callback_Quoter/Makefile:
+	* TAO/examples/Content_Server/AMI_Iterator/Makefile:
+	* TAO/examples/Content_Server/AMI_Observer/Makefile:
+	* TAO/examples/Content_Server/SMI_Iterator/Makefile:
+	* TAO/examples/Event_Comm/Makefile:
+	* TAO/examples/Load_Balancing/Makefile:
+	* TAO/examples/Load_Balancing_persistent/Makefile:
+	* TAO/examples/Logging/Makefile:
+	* TAO/examples/OBV/Typed_Events/Makefile:
+	* TAO/examples/POA/Adapter_Activator/Makefile:
+	* TAO/examples/POA/DSI/Makefile:
+	* TAO/examples/POA/Default_Servant/Makefile:
+	* TAO/examples/POA/Explicit_Activation/Makefile:
+	* TAO/examples/POA/FindPOA/Makefile:
+	* TAO/examples/POA/Forwarding/Makefile:
+	* TAO/examples/POA/Generic_Servant/Makefile:
+	* TAO/examples/POA/Loader/Makefile:
+	* TAO/examples/POA/NewPOA/Makefile:
+	* TAO/examples/POA/On_Demand_Activation/Makefile:
+	* TAO/examples/POA/On_Demand_Loading/Makefile:
+	* TAO/examples/POA/Reference_Counted_Servant/Makefile:
+	* TAO/examples/POA/RootPOA/Makefile:
+	* TAO/examples/POA/TIE/Makefile:
+	* TAO/examples/Persistent_Grid/Makefile:
+	* TAO/examples/PluggableUDP/tests/Basic/Makefile:
+	* TAO/examples/PluggableUDP/tests/Performance/Makefile:
+	* TAO/examples/PluggableUDP/tests/SimplePerformance/Makefile:
+	* TAO/examples/Quoter/Makefile:
+	* TAO/examples/RTCORBA/Activity/Makefile:
+	* TAO/examples/Simple/bank/Makefile:
+	* TAO/examples/Simple/chat/Makefile:
+	* TAO/examples/Simple/echo/Makefile:
+	* TAO/examples/Simple/grid/Makefile:
+	* TAO/examples/Simple/time/Makefile:
+	* TAO/examples/Simple/time-date/Makefile:
+	* TAO/examples/Simulator/Event_Supplier/Makefile:
+	* TAO/examples/TypeCode_Creation/Makefile:
+	* TAO/orbsvcs/Concurrency_Service/Makefile:
+	* TAO/orbsvcs/CosEvent_Service/Makefile:
+	* TAO/orbsvcs/Dump_Schedule/Makefile:
+	* TAO/orbsvcs/Event_Service/Makefile:
+	* TAO/orbsvcs/IFR_Service/Makefile.BE:
+	* TAO/orbsvcs/IFR_Service/Makefile.EX:
+	* TAO/orbsvcs/IFR_Service/Makefile.IFR_Service:
+	* TAO/orbsvcs/ImplRepo_Service/Makefile:
+	* TAO/orbsvcs/LifeCycle_Service/Makefile:
+	* TAO/orbsvcs/LoadBalancer/Makefile:
+	* TAO/orbsvcs/Logging_Service/Makefile:
+	* TAO/orbsvcs/Naming_Service/Makefile:
+	* TAO/orbsvcs/Notify_Service/Makefile:
+	* TAO/orbsvcs/Scheduling_Service/Makefile:
+	* TAO/orbsvcs/TAO_Service/Makefile:
+	* TAO/orbsvcs/Time_Service/Makefile:
+	* TAO/orbsvcs/Trading_Service/Makefile:
+	* TAO/orbsvcs/examples/CosEC/Factory/Makefile:
+	* TAO/orbsvcs/examples/CosEC/RtEC_Based/bin/Makefile:
+	* TAO/orbsvcs/examples/CosEC/RtEC_Based/lib/Makefile:
+	* TAO/orbsvcs/examples/CosEC/RtEC_Based/tests/Basic/Makefile:
+	* TAO/orbsvcs/examples/CosEC/RtEC_Based/tests/Multiple/Makefile:
+	* TAO/orbsvcs/examples/CosEC/Simple/Makefile:
+	* TAO/orbsvcs/examples/Log/Client/Makefile:
+	* TAO/orbsvcs/examples/Log/test/Makefile:
+	* TAO/orbsvcs/examples/Notify/Filter/Makefile:
+	* TAO/orbsvcs/examples/Notify/Subscribe/Makefile:
+	* TAO/orbsvcs/examples/RtEC/MCast/Makefile:
+	* TAO/orbsvcs/examples/RtEC/Schedule/Makefile:
+	* TAO/orbsvcs/examples/RtEC/Simple/Makefile:
+	* TAO/orbsvcs/examples/Security/Send_File/Makefile:
+	* TAO/orbsvcs/orbsvcs/Makefile.CosConcurrency:
+	* TAO/orbsvcs/orbsvcs/Makefile.CosEvent:
+	* TAO/orbsvcs/orbsvcs/Makefile.CosLifeCycle:
+	* TAO/orbsvcs/orbsvcs/Makefile.CosNaming:
+	* TAO/orbsvcs/orbsvcs/Makefile.CosNotification:
+	* TAO/orbsvcs/orbsvcs/Makefile.CosProperty:
+	* TAO/orbsvcs/orbsvcs/Makefile.CosTime:
+	* TAO/orbsvcs/orbsvcs/Makefile.CosTrading:
+	* TAO/orbsvcs/orbsvcs/Makefile.DsLogAdmin:
+	* TAO/orbsvcs/orbsvcs/Makefile.ETCL:
+	* TAO/orbsvcs/orbsvcs/Makefile.FTORB:
+	* TAO/orbsvcs/orbsvcs/Makefile.FaultTolerance:
+	* TAO/orbsvcs/orbsvcs/Makefile.LoadBalancing:
+	* TAO/orbsvcs/orbsvcs/Makefile.PortableGroup:
+	* TAO/orbsvcs/orbsvcs/Makefile.RTEvent:
+	* TAO/orbsvcs/orbsvcs/Makefile.RTOLDEvent:
+	* TAO/orbsvcs/orbsvcs/Makefile.RTSched:
+	* TAO/orbsvcs/orbsvcs/Makefile.RTSchedEvent:
+	* TAO/orbsvcs/orbsvcs/Makefile.SSLIOP:
+	* TAO/orbsvcs/orbsvcs/Makefile.Svc_Utils:
+	* TAO/orbsvcs/orbsvcs/Makefile.av:
+	* TAO/orbsvcs/orbsvcs/CosEvent/CEC_Reactive_ConsumerControl.cpp:
+	* TAO/orbsvcs/orbsvcs/CosEvent/CEC_Reactive_Pulling_Strategy.cpp:
+	* TAO/orbsvcs/orbsvcs/CosEvent/CEC_Reactive_SupplierControl.cpp:
+	* TAO/orbsvcs/orbsvcs/Event/EC_Reactive_ConsumerControl.cpp:
+	* TAO/orbsvcs/orbsvcs/Event/EC_Reactive_SupplierControl.cpp:
+	* TAO/orbsvcs/orbsvcs/PortableGroup/UIPMC_Connection_Handler.cpp:
+	* TAO/orbsvcs/orbsvcs/Sched/DynSched.cpp:
+	* TAO/orbsvcs/performance-tests/EC_Federated_Latency/Makefile:
+	* TAO/orbsvcs/performance-tests/EC_Federated_Latency/client.cpp:
+	* TAO/orbsvcs/performance-tests/EC_Federated_Latency/server.cpp:
+	* TAO/orbsvcs/performance-tests/EC_Federated_Scalability/Makefile:
+	* TAO/orbsvcs/performance-tests/EC_Federated_Scalability/client.cpp:
+	* TAO/orbsvcs/performance-tests/EC_Federated_Scalability/server.cpp:
+	* TAO/orbsvcs/performance-tests/EC_Latency/Makefile:
+	* TAO/orbsvcs/performance-tests/EC_Latency/client.cpp:
+	* TAO/orbsvcs/performance-tests/EC_Latency/server.cpp:
+	* TAO/orbsvcs/performance-tests/EC_Scalability/Makefile:
+	* TAO/orbsvcs/performance-tests/EC_Scalability/client.cpp:
+	* TAO/orbsvcs/performance-tests/EC_Scalability/server.cpp:
+	* TAO/orbsvcs/tests/AVStreams/Asynch_Three_Stage/Makefile:
+	* TAO/orbsvcs/tests/AVStreams/Component_Switching/Makefile:
+	* TAO/orbsvcs/tests/AVStreams/Full_Profile/Makefile:
+	* TAO/orbsvcs/tests/AVStreams/Latency/Makefile:
+	* TAO/orbsvcs/tests/AVStreams/Multicast/Makefile:
+	* TAO/orbsvcs/tests/AVStreams/Multicast_Full_Profile/Makefile:
+	* TAO/orbsvcs/tests/AVStreams/Pluggable/Makefile:
+	* TAO/orbsvcs/tests/AVStreams/Simple_Three_Stage/Makefile:
+	* TAO/orbsvcs/tests/AVStreams/Simple_Two_Stage/Makefile:
+	* TAO/orbsvcs/tests/Concurrency/Makefile:
+	* TAO/orbsvcs/tests/CosEvent/Basic/Makefile:
+	* TAO/orbsvcs/tests/CosEvent/lib/Makefile:
+	* TAO/orbsvcs/tests/EC_Custom_Marshal/Makefile:
+	* TAO/orbsvcs/tests/EC_Mcast/Makefile:
+	* TAO/orbsvcs/tests/EC_Multiple/Makefile:
+	* TAO/orbsvcs/tests/EC_Throughput/Makefile:
+	* TAO/orbsvcs/tests/Event/Basic/Makefile:
+	* TAO/orbsvcs/tests/Event/Performance/Latency.cpp:
+	* TAO/orbsvcs/tests/Event/Performance/Latency_Server.cpp:
+	* TAO/orbsvcs/tests/Event/Performance/Makefile:
+	* TAO/orbsvcs/tests/Event/lib/Makefile:
+	* TAO/orbsvcs/tests/FaultTolerance/IOGR/Makefile:
+	* TAO/orbsvcs/tests/FaultTolerance/IOGRManipulation/Makefile:
+	* TAO/orbsvcs/tests/ImplRepo/Makefile:
+	* TAO/orbsvcs/tests/ImplRepo/NameService/Makefile:
+	* TAO/orbsvcs/tests/InterfaceRepo/Application_Test/Makefile:
+	* TAO/orbsvcs/tests/InterfaceRepo/IFR_Test/Makefile:
+	* TAO/orbsvcs/tests/InterfaceRepo/Persistence_Test/Makefile:
+	* TAO/orbsvcs/tests/Interoperable_Naming/Makefile:
+	* TAO/orbsvcs/tests/LoadBalancing/Makefile:
+	* TAO/orbsvcs/tests/Miop/McastHello/Makefile:
+	* TAO/orbsvcs/tests/Notify/Basic/Makefile:
+	* TAO/orbsvcs/tests/Notify/Blocking/Makefile:
+	* TAO/orbsvcs/tests/Notify/Discarding/Makefile:
+	* TAO/orbsvcs/tests/Notify/MT_Dispatching/Makefile:
+	* TAO/orbsvcs/tests/Notify/Ordering/Makefile:
+	* TAO/orbsvcs/tests/Notify/Sequence_Multi_ETCL_Filter/Makefile:
+	* TAO/orbsvcs/tests/Notify/Sequence_Multi_Filter/Makefile:
+	* TAO/orbsvcs/tests/Notify/Structured_Filter/Makefile:
+	* TAO/orbsvcs/tests/Notify/Structured_Multi_Filter/Makefile:
+	* TAO/orbsvcs/tests/Notify/lib/Makefile:
+	* TAO/orbsvcs/tests/Notify/performance-tests/Filter/Makefile:
+	* TAO/orbsvcs/tests/Notify/performance-tests/RedGreen/Makefile:
+	* TAO/orbsvcs/tests/Notify/performance-tests/Throughput/Makefile:
+	* TAO/orbsvcs/tests/Notify/performance-tests/Throughput/Throughput.cpp:
+	* TAO/orbsvcs/tests/Property/Makefile:
+	* TAO/orbsvcs/tests/Sched/Makefile:
+	* TAO/orbsvcs/tests/Sched_Conf/Makefile:
+	* TAO/orbsvcs/tests/Security/Big_Request/Makefile:
+	* TAO/orbsvcs/tests/Security/Callback/Makefile:
+	* TAO/orbsvcs/tests/Security/MT_SSLIOP/Makefile:
+	* TAO/orbsvcs/tests/Security/Secure_Invocation/Makefile:
+	* TAO/orbsvcs/tests/Security/SecurityLevel1/Makefile:
+	* TAO/orbsvcs/tests/Simple_Naming/Makefile:
+	* TAO/orbsvcs/tests/Time/Makefile:
+	* TAO/orbsvcs/tests/Trading/Makefile:
+	* TAO/orbsvcs/tests/ior_corbaname/Makefile::
+	* TAO/orbsvcs/tests/tests_svc_loader/Makefile:
+	* TAO/performance-tests/Callback/Makefile:
+	* TAO/performance-tests/Callback/client.cpp:
+	* TAO/performance-tests/Callback/server.cpp:
+	* TAO/performance-tests/Cubit/TAO/DII_Cubit/Makefile:
+	* TAO/performance-tests/Cubit/TAO/IDL_Cubit/Makefile:
+	* TAO/performance-tests/Cubit/TAO/MT_Cubit/Makefile:
+	* TAO/performance-tests/Latency/AMH/Single_Threaded/Makefile:
+	* TAO/performance-tests/Latency/AMI/Makefile:
+	* TAO/performance-tests/Latency/DII/Makefile:
+	* TAO/performance-tests/Latency/DSI/Makefile:
+	* TAO/performance-tests/Latency/Deferred/Makefile:
+	* TAO/performance-tests/Latency/Single_Threaded/Makefile:
+	* TAO/performance-tests/Latency/Thread_Per_Connection/Makefile:
+	* TAO/performance-tests/Latency/Thread_Pool/Makefile:
+	* TAO/performance-tests/POA/Create_Reference/Makefile:
+	* TAO/performance-tests/POA/Demux/Makefile:
+	* TAO/performance-tests/POA/Implicit_Activation/Makefile:
+	* TAO/performance-tests/POA/Object_Creation_And_Registration/Makefile:
+	* TAO/performance-tests/Pluggable/Makefile:
+	* TAO/performance-tests/RTCorba/Multiple_Endpoints/Common/Makefile:
+	* TAO/performance-tests/RTCorba/Multiple_Endpoints/Orb_Per_Priority/Makefile:
+	* TAO/performance-tests/RTCorba/Multiple_Endpoints/Single_Endpoint/Makefile:
+	* TAO/performance-tests/RTCorba/Oneways/Reliable/Makefile:
+	* TAO/performance-tests/RTCorba/Oneways/Reliable/client.cpp:
+	* TAO/performance-tests/Throughput/Makefile:
+	* TAO/tests/AMI/Makefile:
+	* TAO/tests/AMI_Buffering/Makefile:
+	* TAO/tests/AMI_Buffering/client.cpp:
+	* TAO/tests/AMI_Timeouts/Makefile:
+	* TAO/tests/AMI_Timeouts/timeout_client.cpp:
+	* TAO/tests/BiDirectional/Makefile:
+	* TAO/tests/BiDirectional_NestedUpcall/Makefile:
+	* TAO/tests/Big_Oneways/Makefile:
+	* TAO/tests/Big_Reply/Makefile:
+	* TAO/tests/Big_Request_Muxing/Client_Task.h:
+	* TAO/tests/Big_Request_Muxing/Makefile:
+	* TAO/tests/Big_Request_Muxing/client.cpp:
+	* TAO/tests/Big_Twoways/Makefile:
+	* TAO/tests/Blocking_Sync_None/Makefile:
+	* TAO/tests/Blocking_Sync_None/client.cpp:
+	* TAO/tests/CDR/Makefile:
+	* TAO/tests/Cache_Growth_Test/Makefile:
+	* TAO/tests/Client_Leaks/Makefile:
+	* TAO/tests/Codec/Makefile:
+	* TAO/tests/Collocation/Makefile.impl:
+	* TAO/tests/Collocation/Makefile.stub:
+	* TAO/tests/Collocation/Makefile.test:
+	* TAO/tests/Connection_Purging/Makefile:
+	* TAO/tests/Crash_On_Write/Makefile:
+	* TAO/tests/Crashed_Callback/Makefile:
+	* TAO/tests/Crashed_Callback/client.cpp:
+	* TAO/tests/Crashed_Callback/server.cpp:
+	* TAO/tests/DLL_ORB/Makefile.Test_Client_Module:
+	* TAO/tests/DLL_ORB/Makefile.Test_Server_Module:
+	* TAO/tests/DSI_Gateway/Makefile:
+	* TAO/tests/DynAny_Test/Makefile:
+	* TAO/tests/Explicit_Event_Loop/Makefile:
+	* TAO/tests/Exposed_Policies/Makefile:
+	* TAO/tests/FL_Cube/Makefile:
+	* TAO/tests/Faults/Makefile:
+	* TAO/tests/File_IO/Makefile:
+	* TAO/tests/Forwarding/Makefile:
+	* TAO/tests/Hello/Makefile:
+	* TAO/tests/IDL_Test/Makefile:
+	* TAO/tests/IORManipulation/Makefile:
+	* TAO/tests/InterOp-Naming/Makefile:
+	* TAO/tests/Leader_Followers/Makefile:
+	* TAO/tests/LongUpcalls/Makefile:
+	* TAO/tests/MProfile/Makefile:
+	* TAO/tests/MProfile_Forwarding/Makefile:
+	* TAO/tests/MT_Client/Makefile:
+	* TAO/tests/MT_Server/Makefile:
+	* TAO/tests/MT_Timeout/Client_Task.cpp:
+	* TAO/tests/MT_Timeout/Makefile:
+	* TAO/tests/Multiple/Makefile:
+	* TAO/tests/Multiple_Inheritance/Makefile:
+	* TAO/tests/Muxing/Makefile:
+	* TAO/tests/Native_Exceptions/Makefile:
+	* TAO/tests/NestedUpcall/MT_Client_Test/Makefile:
+	* TAO/tests/NestedUpcall/Simple/Makefile:
+	* TAO/tests/NestedUpcall/Triangle_Test/Makefile:
+	* TAO/tests/Nested_Event_Loop/Makefile:
+	* TAO/tests/OBV/Any/Makefile:
+	* TAO/tests/OBV/Factory/Makefile:
+	* TAO/tests/OBV/Forward/Makefile:
+	* TAO/tests/ORB_destroy/Makefile:
+	* TAO/tests/ORB_init/Makefile:
+	* TAO/tests/Object_Loader/Makefile:
+	* TAO/tests/Objref_Sequence_Test/Makefile:
+	* TAO/tests/OctetSeq/Makefile:
+	* TAO/tests/Oneway_Buffering/Makefile:
+	* TAO/tests/Oneway_Buffering/client.cpp:
+	* TAO/tests/Oneways_Invoking_Twoways/Makefile:
+	* TAO/tests/POA/Etherealization/Makefile:
+	* TAO/tests/POA/Excessive_Object_Deactivations/Makefile:
+	* TAO/tests/POA/Identity/Makefile:
+	* TAO/tests/POA/Non_Servant_Upcalls/Makefile:
+	* TAO/tests/POA/Object_Reactivation/Makefile:
+	* TAO/tests/POA/POA_Destruction/Makefile:
+	* TAO/tests/POA/Single_Threaded_POA/Makefile:
+	* TAO/tests/POA/wait_for_completion/Makefile:
+	* TAO/tests/Param_Test/Makefile:
+	* TAO/tests/Policies/Makefile:
+	* TAO/tests/Policies/Manipulation.cpp:
+	* TAO/tests/Portable_Interceptors/Benchmark/Makefile:
+	* TAO/tests/Portable_Interceptors/Dynamic/Makefile:
+	* TAO/tests/Portable_Interceptors/ForwardRequest/Makefile:
+	* TAO/tests/Portable_Interceptors/IORInterceptor/Makefile:
+	* TAO/tests/Portable_Interceptors/PICurrent/Makefile:
+	* TAO/tests/Portable_Interceptors/Request_Interceptor_Flow/Makefile:
+	* TAO/tests/Portable_Interceptors/Service_Context_Manipulation/Makefile:
+	* TAO/tests/QtTests/Makefile:
+	* TAO/tests/Queued_Message_Test/Makefile:
+	* TAO/tests/RTCORBA/Banded_Connections/Makefile:
+	* TAO/tests/RTCORBA/Client_Propagated/Makefile:
+	* TAO/tests/RTCORBA/Client_Protocol/Makefile:
+	* TAO/tests/RTCORBA/Collocation/Makefile:
+	* TAO/tests/RTCORBA/Destroy_Thread_Pool/Makefile:
+	* TAO/tests/RTCORBA/Explicit_Binding/Makefile:
+	* TAO/tests/RTCORBA/Linear_Priority/Makefile:
+	* TAO/tests/RTCORBA/MT_Client_Protocol_Priority/Makefile:
+	* TAO/tests/RTCORBA/ORB_init/Makefile:
+	* TAO/tests/RTCORBA/Persistent_IOR/Makefile:
+	* TAO/tests/RTCORBA/Policy_Combinations/Makefile:
+	* TAO/tests/RTCORBA/Private_Connection/Makefile:
+	* TAO/tests/RTCORBA/RTMutex/Makefile:
+	* TAO/tests/RTCORBA/Server_Declared/Makefile:
+	* TAO/tests/RTCORBA/Server_Protocol/Makefile:
+	* TAO/tests/RTCORBA/Thread_Pool/Makefile:
+	* TAO/tests/Reliable_Oneways/Makefile:
+	* TAO/tests/Reliable_Oneways/client.cpp:
+	* TAO/tests/Server_Leaks/Makefile:
+	* TAO/tests/Single_Read/Makefile:
+	* TAO/tests/Smart_Proxies/Makefile:
+	* TAO/tests/Smart_Proxies/On_Demand/Makefile:
+	* TAO/tests/Strategies/Makefile:
+	* TAO/tests/Timed_Buffered_Oneways/Makefile:
+	* TAO/tests/Timed_Buffered_Oneways/client.cpp:
+	* TAO/tests/Timeout/Makefile:
+	* TAO/tests/Timeout/client.cpp:
+	* TAO/tests/Xt_Stopwatch/Makefile:
+	* TAO/utils/IOR-parser/Makefile:
+	* TAO/utils/catior/Makefile:
+	* TAO/utils/nslist/Makefile:
+	  Change all #includes to point to the new Messaging directory.
+	  For example, change #include MessagingC.h to
+	  #include tao/Messaging/MessagingC.h.
+
+	* tao/diffs/MessagingC.cpp.diff:
+	* tao/diffs/MessagingC.h.diff:
+	* tao/diffs/MessagingC.i.diff:
+	* tao/diffs/MessagingS.cpp.diff:
+	* tao/diffs/MessagingS.h.diff:
+	* tao/diffs/MessagingS.i.diff:
+	* tao/diffs/MessagingS_T.cpp.diff:
+	* tao/diffs/MessagingS_T.h.diff:
+	* tao/diffs/MessagingS_T.i.diff:
+	* tao/diffs/Messaging_PolicyValue.diff:
+	* tao/diffs/Messaging_SyncScope.diff:
+	  Added a new diffs directory for the new Messaging directory and
+	  generated new diff files for future use.
+
+	* TAO_IDL/be/be_codegen.cpp:
+	  Modified the file to point to the new Messaging directory.
+
+Mon Feb 25 19:25:27 2002 UTC  Don Hinton <dhinton@ieee.org>
+
+	* tao/default_resource.cpp (allocate_reactor_impl):
+	* tao/Strategies/advanced_resource.cpp (allocate_reactor_impl):
+	  Modified the ctors for the multi-threaded Select_Reactor
+	  and TP_Reactor to use the new ACE_Token::LIFO queueing strategy.
+
+Fri Feb 22 19:07:36 2002  Christopher Kohlhoff  <chris@kohlhoff.com>
+
+        * tao/Any.cpp:
+        * tao/CDR_Encaps_Codec.cpp:
+          Need to allow up to 2*ACE_CDR::MAX_ALIGNMENT bytes of extra space in
+          the message block to accommodate all rd_ptr() alignment adjustments.
+
+        * tao/TypeCodeFactory/TypeCodeFactory_i.cpp:
+          Pass the message block's rd_ptr(), rather than base(), to the
+          CORBA_TypeCode constructor. An earlier call to ACE_CDR::consolidate()
+          may have already shifted the rd_ptr, so we cannot rely on the buffer
+          returned by base() being correct.
+
+Fri Feb 22 16:32:17 2002  Craig Rodrigues  <crodrigu@bbn.com>
+
+	* orbsvcs/orbsvcs/Notify/Notify_Constraint_Visitors.cpp:
+	  Add template instantiations needed for
+	  ACE_Hash_Map_Manager <ACE_CString, structured_event_field,
+          TAO_SYNCH_MUTEX>.
+
+Thu Feb 21 15:46:52 2002  Ossama Othman  <ossama@uci.edu>
+
+	* orbsvcs/orbsvcs/SSLIOP/SSLIOP_Connector.cpp:
+
+	  Removed unnused
+	  ACE_Auto_Basic_Array_Ptr<TAO_SSLIOP_Connection_Handler*>
+	  template instantiation.
+
+Thu Feb 21 15:37:37 2002  Ossama Othman  <ossama@uci.edu>
+
+	* orbsvcs/orbsvcs/SSLIOP/SSLIOP_Connector.cpp (ssliop_connect):
+
+	  If trust in neither the client nor the target is explicitly
+	  specified, then use the default setting found in the
+	  ACE_SSL_Context singleton.  Fixes a problem a where client side
+	  authentication was always disabled if not explicitly enabled via
+	  the SecurityLevel2::EstablishTrustPolicy.  Thanks to Tom
+	  Venturella at OCI for pointing out this problem.
+
+Thu Feb 21 13:15:50 2002  Chris Cleeland  <cleeland_c@ociweb.com>
+
+	* orbsvcs/orbsvcs/SSLIOP/SSLIOP_Factory.cpp (init): Added new
+	option, -SSLDHparams, to permit explicit specification of a
+	Diffie-Hellman parameters file.
+
+	Also, it will now try to load DH parameters from the certificate
+	file if the -SSLDHparams options isn't used.
+
+	This all fixes a problem where DSA certificates couldn't be used
+	because no ephemeral DH keys could be exchanged since no
+	parameters had been loaded.
+
+Thu Feb 21 09:34:41 2002  Douglas C. Schmidt  <schmidt@macarena.cs.wustl.edu>
+
+	* tao/ORB_Core.cpp (init): Added an (ACE_SignalHandler) cast to
+	  SIG_IGN to avoid problems with GCC 3.0.1 on IRIX 6.5.  Thanks to
+ 	  Dan Green <dan.c.green@lmco.com> for reporting this.
+
+Wed Feb 20 11:20:00 2002  Daniel Troesser  <troesser_d@ociweb.com>
+
+        * Fixing Bugzilla Bug 1139:
+
+	* tests/RTCORBA/check_supported_priorities.cpp
+
+	  Changed to return a value of 2 when priorities are not supported.
+
+	* tests/RTCORBA/Banded_Connections/run_test.pl
+	* tests/RTCORBA/Client_Propagated/run_test.pl
+	* tests/RTCORBA/Collocation/Collocation.cpp
+	* tests/RTCORBA/Collocation/run_test.pl
+	* tests/RTCORBA/Linear_Priority/run_test.pl
+        * tests/RTCORBA/MT_Client_Protocol_Priority/run_test.pl
+	* tests/RTCORBA/Policy_Combinations/run_test.pl
+	* tests/RTCORBA/Server_Declared/run_test.pl
+	* tests/RTCORBA/Thread_Pool/run_test.pl
+
+	  Changed run_test.pl scripts to exit gracefully, without error,
+	  if multiple priorities are not supported.
+
+Tue Feb 19 17:57:37 2002  Jeff Parsons <parsons@cs.wustl.edu>
+
+        * tao/CORBA_String.cpp:
+
+          Fixed istream extraction operators to CORBA::String_var
+          and CORBA::String out. Thanks to Patrick J Lardieri
+          <plardier@atl.lmco.com> for reporting the problem and to
+          Carlos for suggesting the fix.
+
+Tue Feb 19 09:11:12 2002  Johnny Willemsen <jwillemsen@remedy.nl>
+
+        * orbsvcs/orbsvcs/AV.bor:
+          Added ACE_QoS library
+
+Tue Feb 19 08:58:34 2002  Johnny Willemsen <jwillemsen@remedy.nl>
+
+        * tao/GIOP_Message_State.cpp:
+          Removed a space in the ACE_DEBUG macro for getting the byte order
+          info.
+
+Mon Feb 18 19:38:12 2002  Johnny Willemsen <jwillemsen@remedy.nl>
+
+        * TAO_IDL/be/be_visitor_interface/tie_sh.cpp:
+        * orbsvcs/orbsvcs/PortableGroup/UIPMC_Transport.h:
+        * tao/IIOP_Transport.h:
+        * tao/Domain/DomainS_T.h:
+        * tao/PortableServer/ImplRepoS_T.h:
+        * tao/PortableServer/MessagingS_T.h:
+        * tao/PortableServer/PolicyS_T.h:
+        * tao/Strategies/DIOP_Transport.h:
+        * tao/Strategies/SHMIOP_Transport.h:
+        * TAO-INSTALL.html:
+
+          Made TAO compiling with the Microsoft Visual C++ 7 compiler.
+          Template classes cannot be exported when doing a dynamic build, so
+          removed some export macro's from template definitions. When a class
+          is derived from a class template then the class template must be
+          explicit instantiated and be exported. To make sure that we only do
+          this when a compiler supports this we introduced the new define
+          ACE_HAS_EXPLICIT_TEMPLATE_INSTANTIATION_EXPORT.
+
+Mon Feb 18 11:27:00 2002  Craig Rodrigues  <crodrigu@bbn.com>
+
+	* orbsvcs/orbsvcs/AV/AV_Core.cpp:
+	* orbsvcs/orbsvcs/AV/Transport.cpp:
+	  Check for ACE_HAS_WINSOCK2_GQOS in addition to ACE_HAS_RAPI
+	  for compiling QoS enabled code.
+
+	* orbsvcs/orbsvcs/AV/QoS_UDP.cpp:
+	* orbsvcs/orbsvcs/AV/QoS_UDP.h:
+	  Check for ACE_HAS_WINSOCK2_GQOS in addition to ACE_HAS_RAPI
+	  for compiling QoS enabled code.
+	  Add TAO_AV_UDP_QoS_Acceptor::qos_acceptor_addr_.  Populate
+	  this address with localhost in open_default(), instead of the
+	  any address (0.0.0.0).
+
+	* orbsvcs/orbsvcs/AV/AV_Static.dsp:
+	* orbsvcs/orbsvcs/AV/AV.dsp:
+	* orbsvcs/orbsvcs/AV/AV.bor:
+	  Add Fill_ACE_QoS.* and QoS_UDP.* to Win32 makefiles.
+
+	* TAOACE.dsw:
+	  Add ACE_QoS.dsp to workspace.
+
+Mon Feb 18 09:26:02 2002  Jeff Parsons <parsons@cs.wustl.edu>
+
+        * orbsvcs/orbsvcs/ETCL/ETCL.dsp:
+        * orbsvcs/orbsvcs/ETCL/ETCL_Constraint.cpp:
+        * orbsvcs/orbsvcs/Notify/Notify_Constraint_Visitors.cpp:
+        * orbsvcs/orbsvcs/Notify/Notify_Constraint_Visitors.h:
+
+          Modified constraints and visitor to recognize values
+          from all the fields of a structured event, not just
+          'filterable_data', if they occur in a filter string.
+          Also modified visitor's handling of enum values so no
+          cast to CORBA::ULong is required when setting an enum
+          value in a structured event. In the filter string,
+          however, any rhs value to be compared against an enum
+          value must still be a CORBA::ULong, since the spec
+          does not allow enum values as valid literals in a filter
+          string. Thanks to Bhaskara Rao G <bhaskar@mihy.mot.com>
+          for reporting the problem with enums, and to Chad Elliott
+          <elliott_c@ociweb.com> for reporting the problem with
+          fields of the structured event.
+
+
+Mon Feb 18 09:14:47 2002  Jeff Parsons <parsons@cs.wustl.edu>
+
+        * TAO_IDL/ast/ast_array.cpp:
+
+	  Fixed arrays to be marked as 'local' if they
+	  contain a local type at some level.
+
+	* TAO_IDL/be/be_visitor_array/any_op_ch.cpp:
+	* TAO_IDL/be/be_visitor_array/any_op_cs.cpp:
+        * TAO_IDL/be/be_visitor_array/array_ch.cpp:
+        * TAO_IDL/be/be_visitor_array/array_cs.cpp:
+        * TAO_IDL/be/be_visitor_array/cdr_op_ch.cpp:
+        * TAO_IDL/be/be_visitor_array/cdr_op_ci.cpp:
+        * TAO_IDL/be/be_visitor_array/cdr_op_cs.cpp:
+        * TAO_IDL/be/be_visitor_enum/any_op_ch.cpp:
+        * TAO_IDL/be/be_visitor_enum/any_op_cs.cpp:
+        * TAO_IDL/be/be_visitor_exception/any_op_ch.cpp:
+        * TAO_IDL/be/be_visitor_exception/any_op_cs.cpp:
+        * TAO_IDL/be/be_visitor_exception/exception_ch.cpp:
+        * TAO_IDL/be/be_visitor_exception/exception_cs.cpp:
+        * TAO_IDL/be/be_visitor_interface/any_op_ch.cpp:
+        * TAO_IDL/be/be_visitor_interface/any_op_cs.cpp:
+        * TAO_IDL/be/be_visitor_interface/interface_ch.cpp:
+        * TAO_IDL/be/be_visitor_interface/interface_cs.cpp:
+        * TAO_IDL/be/be_visitor_interface_fwd/any_op_ch.cpp:
+        * TAO_IDL/be/be_visitor_sequence/any_op_ch.cpp:
+        * TAO_IDL/be/be_visitor_sequence/any_op_cs.cpp:
+        * TAO_IDL/be/be_visitor_structure/any_op_ch.cpp:
+        * TAO_IDL/be/be_visitor_structure/any_op_cs.cpp:
+        * TAO_IDL/be/be_visitor_structure/structure_ch.cpp:
+        * TAO_IDL/be/be_visitor_structure/structure_cs.cpp:
+        * TAO_IDL/be/be_visitor_typedef/typedef_ch.cpp:
+        * TAO_IDL/be/be_visitor_typedef/typedef_cs.cpp:
+        * TAO_IDL/be/be_visitor_union/any_op_ch.cpp:
+        * TAO_IDL/be/be_visitor_union/any_op_cs.cpp:
+        * TAO_IDL/be/be_visitor_union/union_ch.cpp:
+        * TAO_IDL/be/be_visitor_union/union_cs.cpp:
+        * TAO_IDL/be/be_visitor_valuetype/any_op_ch.cpp:
+        * TAO_IDL/be/be_visitor_valuetype/any_op_cs.cpp:
+
+	  Added typecode generation and Any operator generation
+	  for all local types. Sometimes these may have to be
+	  inserted into CORBA policies, and for that we need
+	  the Any operators.
+
+        * tao/Any.h:
+        * tao/Any.i:
+        * tao/Any.cpp:
+
+          Added a new flag that is set by an insertion operator when
+          inserting a local type. Then the flag is checked when
+          marshaling the Any to return 0 if the Any contains a local
+          type at some level.
+
+Mon Feb 18 08:53:14 2002  Jeff Parsons <parsons@cs.wustl.edu>
+
+        * TAO_IDL/tao_idl_static.dsp:
+        * TAO_IDL/driver/drv_init.cpp:
+
+          Made some changes to the project settings, and added an error
+	  message if no valid preprocessor path is set on Windows. Thanks
+	  to Joe Hayes <Joe.Hayes@lmco.com> for reporting the problem.
+
+Sun Feb 17 11:52:36 2002  Douglas C. Schmidt  <schmidt@macarena.cs.wustl.edu>
+
+	* orbsvcs/examples/Notify/Subscribe/Subscribe.cpp (Subscribe):
+	  Initialize done_ to 0.  Thanks to Markus Wild
+	  <markus.wild@homag.de> for reporting this.
+
+Mon Feb 18 08:37:26 2002  Jeff Parsons <parsons@cs.wustl.edu>
+
+        * TAO_IDL/ast/ast_decl.cpp:
+        * TAO_IDL/be/be_visitor_typecode/typecode_defn.cpp:
+
+          Fixed typecode generation and repo id calculation to remove
+          the '_cxx_' prepended by the IDL compiler if the identifier
+          is a C++ keyword. The prefix is necessary for C++ compilation
+          of generated code, but should not go out over the wire. Thanks
+          to Torsten Kuepper <Torsten.Kuepper@nokia.com> for pointing this
+          out.
+
+Mon Feb 18 01:45:07 2002  Christopher Kohlhoff  <chris@kohlhoff.com>
+
+        * orbsvcs/orbsvcs/Sched/DynSched.cpp:
+        * orbsvcs/orbsvcs/Sched/Reconfig_Scheduler_T.cpp:
+        * orbsvcs/orbsvcs/Sched/Strategy_Scheduler.cpp:
+          Use ACE_OS::qsort() instead of global qsort() to fix build error
+          with Borland C++Builder 6.
+
+Sun Feb 17 16:32:32 2002  Venkita  <venkita@cs.wustl.edu>
+
+        * TAO version 1.2.2 released.
+
+Fri Feb 15 07:01:28 2002  Douglas C. Schmidt  <schmidt@macarena.cs.wustl.edu>
+
+	* orbsvcs/orbsvcs/AV/AVStreams_i.cpp: Added fixes for the NULL ptr
+ 	  being accessed when stopping associated flows to a stream.
+  	  Thanks to Martin Johnson for these fixes.
+
+Thu Feb 14 17:03:48 2002  Carlos O'Ryan  <coryan@uci.edu>
+
+	* orbsvcs/orbsvcs/Event/EC_Reactive_ConsumerControl.cpp (shutdown):
+	* orbsvcs/orbsvcs/Event/EC_Reactive_SupplierControl.cpp (shutdown):
+	  Fixed event channel shutdown problems:  the event channel
+	  removes some Event_Handlers from the Reactor, but did not reset
+	  the reactor pointer in those Event_Handlers. If the ORB Reactor is
+	  deleted before the event channel (not that strange in some cases
+	  because the Reactor) the Event_Handler destructor tries to
+	  remove itself from the Reactor, and all hell breaks loose.
+
+Thu Feb 14 15:20:19 2002  Carlos O'Ryan  <coryan@uci.edu>
+
+	* orbsvcs/orbsvcs/CosEvent/CEC_ProxyPushConsumer.cpp (supplier_non_existent):
+	* orbsvcs/orbsvcs/CosEvent/CEC_ProxyPushSupplier.cpp (consumer_non_existent):
+	* orbsvcs/orbsvcs/CosEvent/CEC_ProxyPullConsumer.cpp (supplier_non_existent):
+	* orbsvcs/orbsvcs/CosEvent/CEC_ProxyPullSupplier.cpp (consumer_non_existent):
+	  Do not hold the mutex while checking if the peer stil exists.
+	  Doing so can result in dead-locks whenever there is a nested
+	  upcall as part of the request.
+	  Thanks to Mark Hoffmann <Mark.Hoffmann@Axcelis.com> for
+	  reporting this one.
+
+	* orbsvcs/orbsvcs/CosEvent/CEC_Reactive_ConsumerControl.cpp:
+	* orbsvcs/orbsvcs/CosEvent/CEC_Reactive_SupplierControl.cpp:
+	* orbsvcs/orbsvcs/CosEvent/CEC_Reactive_Pulling_Strategy.cpp:
+	  Fixed shutdown() method, removing an Event_Handler from the
+	  Reactor does not reset the reactor() pointer to 0, unfortunately
+	  that means that the Event_Handler destructor tries to remove the
+	  handler *again*, at which point the reactor may have been
+	  destroyed.
+
+Thu Feb 14 14:21:31 2002  Priyanka Gontla  <pgontla@ece.uci.edu>
+
+	* tao/PortableServer/POA.cpp:
+	* tao/ORB_Core.cpp:
+	  Committing the files again. Somehow they didnt go to the repo
+	  yesterday.
+
+Thu Feb 14 16:16:33 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
+
+	* COPYING: Updated copyright years.
+
+Thu Feb 14 01:12:23 2002  Nanbor Wang  <nanbor@cs.wustl.edu>
+
+	* Makefile.bor: Renamed XML directory to ACEXML.  Thanks to Johnny
+	  Willemsen for reminding this.
+
+Wed Feb 13 17:21:00 2002  Priyanka Gontla  <pgontla@ece.uci.edu>
+
+	* tao/PortableServer/POA.cpp :
+	* tao/ORB_Core.cpp :
+	  Moved code related to adding the policies to the mprofile
+	  to TAO_ORB_Core::create_stub_object from
+	  TAO_POA::create_stub_object to get the RTCORBA tests running.
+	  The control wasnt coming to the TAO_POA::create_stub_object
+	  and hence the policies were not added correctly.
+
+Wed Feb 13 18:39:01 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
+
+	* orbsvcs/tests/Miop/McastHello/Makefile: Added a check for
+	  compilation.
+	* orbsvcs/orbsvcs/Makefile.PortableGroup: Added CosNaming to list
+	  of libraries against which this needs to be linked.
+
+Wed Feb 13 12:47:46 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
+
+	* orbsvcs/IFR_Service/ConstantDef_i.cpp: Changed the usage of
+	  Auto_Basic_Ptr to Auto_Basic_Array_Ptr. Thanks to Johnny for
+	  reporting this problem.
+
+Tue Feb 12 17:53:31 2002  Priyanka Gontla  <pgontla@ece.uci.edu>
+
+	* tao/PortableServer/POA.cpp (destroy_i):
+	  Got a duplicate before releasing the poa so that it stays around
+	  while we change its status and call the corresponding
+	  interceptor's adapter_state_changed methods.
+
+Tue Feb 12 16:01:25 2002  Ossama Othman  <ossama@uci.edu>
+
+	* tao/PICurrent.cpp (copy):
+
+	  Now that the code has been greatly simplified, an ACE_TRY block
+	  is no longer necessary.  Fixes an "unused label" warning in
+	  emulated exception builds.
+
+Tue Feb 12 15:02:38 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
+
+	* tao/ObjectReferenceTemplateC.i: Regenerated the code after the
+	  change to the IDL compiler.
+
 Tue Feb 12 14:52:36 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
 
 	* TAO_IDL/be/be_valuetype.cpp (gen_helper_inline): Hacked up the
@@ -15,7 +2022,7 @@ Tue Feb 12 06:01:12 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
 
 	* orbsvcs/examples/RtEC/MCast/MCast.cpp: Making this checkin for
 	  Oliver Kellogg. Fixed comments about exception handling in the
-	  code. 
+	  code.
 
 Mon Feb 11 16:32:00 2002  Ossama Othman  <ossama@uci.edu>
 
@@ -77,7 +2084,7 @@ Mon Feb 11 16:32:00 2002  Ossama Othman  <ossama@uci.edu>
 	  (pi_current_):
 
 	  Cache a reference to the PICurrent object.
-	
+
 	* tests/Portable_Interceptors/PICurrent/ServerRequestInterceptor.cpp
 	  (send_reply):
 
@@ -97,19 +2104,19 @@ Mon Feb 11 16:32:00 2002  Ossama Othman  <ossama@uci.edu>
 
 Mon Feb 11 18:20:33 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
 
-	* tests/ORT/ORT_test_IORInterceptor.h: 
+	* tests/ORT/ORT_test_IORInterceptor.h:
 	* orbsvcs/examples/ORT/Server_IORInterceptor.h:
 	* tao/PortableServer/Object_Adapter.h:
 	* tao/PortableServer/ObjectReferenceFactory.h:
-	* tao/PortableServer/ObjectReferenceTemplate.h: More fuzz errors. 
+	* tao/PortableServer/ObjectReferenceTemplate.h: More fuzz errors.
 
 Mon Feb 11 18:02:18 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
 
-	* tao/PortableServer/POAManager.h: 
+	* tao/PortableServer/POAManager.h:
 	* tests/Oneways_Invoking_Twoways/Receiver_i.h :
 	* tests/Oneways_Invoking_Twoways/Sender_i.h:
 	* orbsvcs/tests/FaultTolerance/IOGR/Client_i.h:
-	* orbsvcs/tests/FaultTolerance/IOGR/Manager.h: More fuzz errors. 
+	* orbsvcs/tests/FaultTolerance/IOGR/Manager.h: More fuzz errors.
 
 Mon Feb 11 17:56:14 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
 
@@ -122,7 +2129,7 @@ Mon Feb 11 17:56:14 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
 
 Mon Feb 11 16:04:20 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
 
-	* tao/Fault_Tolerance_Service.h: 
+	* tao/Fault_Tolerance_Service.h:
 	* tao/Connection_Handler.h:
 	* tao/Fault_Tolerance_Service.h:
 	* tao/GIOP_Message_Generator_Parser.h:
@@ -130,7 +2137,7 @@ Mon Feb 11 16:04:20 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
 	* tao/GIOP_Message_Generator_Parser_11.h:
 	* tao/GIOP_Message_Generator_Parser_12.h: Removed the #pragma
 	  warning (push) from the above files as they are not needed in
-	  the first place. Thanks to Ossama for pointing these out. 
+	  the first place. Thanks to Ossama for pointing these out.
 
 Sun Feb 10 13:16:45 2002  Carlos O'Ryan  <coryan@uci.edu>
 
@@ -213,22 +2220,22 @@ Sat Feb  9 15:21:52 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
 
 	* TAO_IDL/be/be_valuetype.cpp: Added the keywords
 	  TAO_NAMESPACE_STORAGE_CLASS to the declarations of add_ref ()
-	  and remove_ref (). This should fix link errors in Win32. 
+	  and remove_ref (). This should fix link errors in Win32.
 
 	* tao/ObjectReferenceTemplateC.h:
 	* tao/ObjectReferenceTemplateC.i: Regenerated code for this
-	  class. Looks like other classes dont need regeneration. 
+	  class. Looks like other classes dont need regeneration.
 
 Sat Feb  9 09:36:08 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
 
 	* docs/releasenotes/amh.html (href): Removed some wizard generated
-	  stuff. Still a lot more remains. 
-	
+	  stuff. Still a lot more remains.
+
 Sat Feb  9 08:24:08 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
 
 	* docs/releasenotes/amh.html: Removed references to pages in the
 	  docs section through Dr.Schmidt's home page. This also fixes
-	  fuzz errors. 
+	  fuzz errors.
 
 Sat Feb 09 01:58:00 2002  Ossama Othman  <ossama@uci.edu>
 
@@ -241,7 +2248,7 @@ Sat Feb 09 00:30:38 2002  Mayur Deshpande  <mayur@ics.uci.edu@>
 
 	* docs/releasenotes/index.html:
 	* docs/releasenotes/amh.html:
-          
+
           Release Notes for Asynchronous Method Handling (AMH)
 
 Fri Feb 08 22:20:38 2002  Carlos O'Ryan  <coryan@uci.edu>
@@ -264,12 +2271,12 @@ Sat Feb  9 04:57:45 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
 
 	* tao/PortableServer/POA.cpp: Added a template instantiation for
 	  ACE_Array_Base <IOP::ProfileId>. This shold fix link errors in
-	  Sun CC builds. 
+	  Sun CC builds.
 
 Fri Feb  8 21:51:05 2002  Balachandran Natarajan  <bala@cs.wustl.edu>
 
 	* tao/PortableServer/POA.cpp: Fixed a redefinition error in
-	  Win32. 
+	  Win32.
 
 Fri Feb  8 19:36:33 2002  Ossama Othman  <ossama@uci.edu>
 
@@ -304,10 +2311,10 @@ Fri Feb  8 18:27:13 2002  Ossama Othman  <ossama@uci.edu>
 	  generate_manager_id() method to generate an ID in an atomic
 	  way.  Fixes a race condition.
 
-	* tao/PortableServer/POA.i (get_manager_id): 
-	* tao/PortableServer/POA.cpp (set_obj_ref_factory): 
+	* tao/PortableServer/POA.i (get_manager_id):
+	* tao/PortableServer/POA.cpp (set_obj_ref_factory):
 	* tao/PortableServer/POAManager.cpp
-	  (activate_i, discard_requests_i): 
+	  (activate_i, discard_requests_i):
 	* tao/PortableServer/ObjectReferenceTemplate.cpp (adapter_name):
 
 	  Fixed syntax errors related to emulated exceptions.
