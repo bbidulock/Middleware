@@ -1,3 +1,59 @@
+Thu Aug 25 15:26:25 2005  Nanbor Wang  <nanbor@exothermic.txcorp.com>
+
+	* DAnCE/ciao/ServerResources.idl: Added the missing <stacksize>
+	  attribute to ORS_ThreadpoolWithLanes struct.  Thanks to Will
+	  Otte for catching this.
+
+Wed Aug 24 20:41:59 UTC 2005  Jeff Parsons <j.parsons@vanderbilt.edu>
+
+        * CIDLC/ExecImplHeaderGenerator.cpp:
+        * CIDLC/ExecImplSourceGenerator.cpp:
+        * CIDLC/ServantHeaderGenerator.cpp:
+        * CIDLC/ServantSourceGenerator.cpp:
+        
+          Removed commented-out code.
+
+Tue Aug 23 20:09:59 2005  Ossama Othman  <ossama@dre.vanderbilt.edu>
+
+	* DAnCE/Old_Config_Handlers/DT_Handler.h:
+	* DAnCE/RTNodeApplication/RTServer_Impl.h:
+	* DAnCE/ciao/Container_Base.h:
+	* DAnCE/ciao/Context_Impl_Base.h:
+	* DAnCE/ciao/NodeApplication_Impl.h:
+
+	  Reordered include directives to make sure all necessary
+	  non-dependent names are parsed before the templates that use
+	  them.  Addresses g++ 3.4.x or better compile-time errors.
+
+Tue Aug 23 19:29:12 UTC 2005  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+        * DAnCE/DeploymentManager/DeploymentManager.mpc:
+          Add dummy_label to all projects, this don't build, this is
+          the fast way to get the scoreboard green. Already one project
+          had this in the file.
+
+Mon Aug 22 10:59:18 2005  William Otte  <wotte@dre.vanderbilt.edu>
+
+	* DAnCE/DeploymentManager/DeploymentManager.cidl
+	* DAnCE/DeploymentManager/DeploymentManager.idl
+	* DAnCE/DeploymentManager/DeploymentManager.mpc
+	* DAnCE/DeploymentManager/DeploymentManager_Impl.cpp
+	* DAnCE/DeploymentManager/DeploymentManager_Impl.h
+	* DAnCE/DeploymentManager/DeploymentManager_exec_export.h
+	* DAnCE/DeploymentManager/DeploymentManager_stub_export.h
+	* DAnCE/DeploymentManager/DeploymentManager_svnt_export.h
+
+	Preliminary skeleton for the DeploymentManager.
+
+Fri Aug 19 07:56:12 UTC 2005  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+        * DAnCE/Config_Handlers/Any_Handler.cpp:
+        * DAnCE/Config_Handlers/DataType_Handler.cpp:
+        * DAnCE/Old_Config_Handlers/DT_Handler.cpp:
+        * DAnCE/ciao/ComponentsC.h:
+        * ciao/ComponentsC.h:
+          Updated for AnyTypeCode refactoring
+
 Tue Aug 16 15:16:10 2005  Nanbor Wang  <nanbor@exothermic.txcorp.com>
 
 	* docs/schema/CIAOServerResources.xsd: Changed to define most of
@@ -41,8 +97,8 @@ Mon Aug 15 12:03:43 2005  William Otte  <wotte@dre.vanderbilt.edu>
 	* DAnCE/Config_Handlers/test.cpp
 
 	Checked in support for IDL->XSC->XML mapping.  Thanks to Lucas
-	Seibert <heynonynony at yahoo dot com> for completing this work. 
-	
+	Seibert <heynonynony at yahoo dot com> for completing this work.
+
 Mon Aug 15 00:01:01 2005  Boris Kolpackov  <boris@kolpackov.net>
 
 	* CIDLC/cidlc.cpp: Made ErrorHandler auto-detach itself
