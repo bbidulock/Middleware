@@ -1,5 +1,5 @@
 //$Id$
-project : csd_framework {
+project : csd_framework, core {
   sharedname   = TAO_CSD_ThreadPool
   dynamicflags = TAO_CSD_TP_BUILD_DLL
   includes    += $(TAO_ROOT)/tao
@@ -30,5 +30,9 @@ project : csd_framework {
 
   PIDL_Files {
     CSD_ThreadPool
+  }
+
+  Pkgconfig_Files {
+    CSD_ThreadPool/TAO_CSD_ThreadPool.pc.in
   }
 }
