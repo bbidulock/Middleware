@@ -1,7 +1,7 @@
 // -*- MPC -*-
 // $Id$
 
-project(ExecutionManager): ciao_deployment_stub, dance_extension_stub {
+project(ExecutionManager): ciao_component_dnc, dance_extension_stub {
 
   exename = Execution_Manager
 
@@ -12,7 +12,7 @@ project(ExecutionManager): ciao_deployment_stub, dance_extension_stub {
   }
 
   Source_Files {
-    ../Interfaces/ExecutionManagerDaemonS.cpp
+    ../Interfaces/ExecutionManagerS.cpp
     Execution_Manager.cpp
     Execution_Manager_Impl.cpp
     DAM_Map.cpp
