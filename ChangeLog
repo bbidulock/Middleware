@@ -1,3 +1,43 @@
+Mon Jul 24 15:45:34 UTC 2006  William R. Otte  <wotte@dre.vanderbilt.edu>
+        
+        * Subversion conversion completed at revision 73730
+        
+Sun Jul 23 15:44:43 UTC 2006  William R. Otte  <wotte@dre.vanderbilt.edu>
+
+        * Repository frozen for repository conversion
+
+Sun Jul 23 11:17:31 UTC 2006  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+        * bin/make_release:
+          Don't exclude the other mwc files for vc71/vc8, this will create then
+          some more workspace files which just contain a subset of the projects
+
+Sun Jul 23 09:25:12 UTC 2006  Olli Savia  <ops@iki.fi>
+
+        * NEWS:
+          Added a note about TTY_IO API change.
+
+Sat Jul 22 19:12:10 UTC 2006  William R. Otte  <wotte@dre.vanderbilt.edu>
+
+        * docs/svn/config
+        * docs/svn/svn-prefs.reg
+
+          These are client side configuration files for Subversion. Currently,
+          the automate setting svn:eol-style and svn:executable properties on
+          newly added files.
+
+Sat Jul 22 18:28:33 UTC 2006  William R. Otte  <wotte@dre.vanderbilt.edu>
+
+        * bin/sets-manager.py
+
+          First cut of a branching script for subverion.  Pass --help
+          to get documentation.
+
+Fri Jul 21 13:28:31 UTC 2006  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+        * bin/MakeProjectCreator/config/taoidldefaults.mpb:
+          Updated because of -oS addition to tao_idl
+
 Fri Jul 21 13:17:31 UTC 2006  Johnny Willemsen  <jwillemsen@remedy.nl>
 
         * ace/OS_NS_unistd.cpp:
