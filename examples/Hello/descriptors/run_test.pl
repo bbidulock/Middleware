@@ -74,7 +74,7 @@ sub run_node_daemons {
       $node_app = "$CIAO_ROOT/bin/NodeApplication";
 
       $d_cmd = "$CIAO_ROOT/bin/NodeManager";
-      $d_param = "-ORBEndpoint $iiop -s $node_app -o $iorfile -d 30";
+      $d_param = "-ORBEndpoint $iiop -c svc_node_manager.conf -s $node_app -o $iorfile -d 30";
 
       $Daemons[$i] = new PerlACE::Process ($d_cmd, $d_param);
       $result = $Daemons[$i]->Spawn ();
@@ -166,6 +166,9 @@ if (PerlACE::waitforfile_timed ("Sender.ior",
     kill_open_processes ();
     exit 1;
 }
+
+#wait for a character
+$key = getc(STDIN);
 
 print "Invoking the controller\n";
 $controller = new PerlACE::Process ("$controller_exec", "-k file://Sender.ior");

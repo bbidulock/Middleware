@@ -54,7 +54,7 @@
   <instance id="Hello-Sender-idd">
     <name>Hello-Sender-idd</name>
     <node>SenderNode</node>
-    <source><!-- @@ What goes here --></source>
+    <source>_ZTv0_n16_N16CIDL_Sender_Impl13Sender_exec_i5startEv<!-- @@ What goes here --></source>
     <implementation>Hello-Sender-mdd</implementation>
 
     <!-- Add this property if you want to write component reference to IOR -->
@@ -121,7 +121,7 @@
   <instance id="Hello-Receiver-idd">
     <name>Hello-Receiver-idd</name>
     <node>ReceiverNode</node>
-    <source><!-- @@ What goes here --></source>
+    <source>_ZN18CIDL_Receiver_Impl15Receiver_exec_i13push_click_inEPN5Hello7TimeOutE<!-- @@ What goes here --></source>
     <implementation>Hello-Receiver-mdd</implementation>
     <configProperty>
       <name>ComponentIOR</name>

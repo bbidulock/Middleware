@@ -35,13 +35,14 @@
 
 #include "NodeManager_svnt_export.h"
 #include "NAM_Map.h"
-#include "MonitorController.h"
 #include "ace/Vector_T.h"
+//#include "MonitorController.h"
 
 namespace CIAO
 {
   class NodeApplicationManager_Impl_Base;
 
+  class MonitorController;
   /**
    * @class NodeManager_Impl
    *
@@ -134,13 +135,16 @@ namespace CIAO
     struct Component_Ids
     {
       ACE_Unbounded_Set <ACE_CString> cid_seq_;
-      pid_t process_id_;
+      ACE_Unbounded_Set <pid_t> process_ids_;
     };
 
     virtual void push_component_id_info (Component_Ids comps);
 
 
     Component_Ids get_component_detail ();
+
+    /// return the obj ref of the NAM
+    ::CORBA::Object_ptr get_NAM (const ACE_CString& plan_node);
 
   private:
     /// Validate the child deployment plan. In particular, we are
@@ -234,6 +238,7 @@ namespace CIAO
 
     /// The MonitorController pointer
     auto_ptr <MonitorController> monitor_controller_;
+//    MonitorController* monitor_controller_;
 
     /// The set of Components
     Component_Ids components_;

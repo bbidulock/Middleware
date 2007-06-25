@@ -36,6 +36,11 @@ namespace CIDL_Receiver_Impl
     CORBA::String_var str =
       rev->get_message ();
 
+    for (long i = 0;i < 1000000;i++)
+    {
+      ACE::is_prime (16127, 2, 16127 / 2);
+    }
+
     ACE_DEBUG ((LM_DEBUG,
                 "Receiver - Got message from the server [%s] \n",
                 str.in () ));
@@ -111,4 +116,3 @@ namespace CIDL_Receiver_Impl
     return new ReceiverHome_exec_i ();
   }
 }
-

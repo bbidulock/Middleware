@@ -129,6 +129,9 @@ namespace CIAO
         const char * cid,
         const ::Deployment::Sched_Params & params);
 
+    virtual ::CORBA::Object_ptr monitor_qos (
+        const ::Deployment::DeploymentPlan & plan);
+
   protected:
     /// Destructor
     virtual ~NodeApplicationManager_Impl_Base (void);
@@ -302,6 +305,9 @@ namespace CIAO
      * @param process_id The id of the process of NodeApplication
      */
     void push_component_info (pid_t process_id);
+
+    /// The process id set
+    ACE_Unbounded_Set<pid_t> process_ids_;
 
     /// The signal handler
     NAM_Handler child_handler_;
