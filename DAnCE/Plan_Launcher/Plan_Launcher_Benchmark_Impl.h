@@ -33,6 +33,8 @@ namespace CIAO
        * @returns a string containing the UUID of the plan. Null indicates failure.
        */
       virtual const char * launch_plan (const ::Deployment::DeploymentPlan &plan);
+
+      const char * launch_plan_i (const ::Deployment::DeploymentPlan &plan);
       
     protected:
 

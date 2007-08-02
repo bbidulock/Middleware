@@ -29,6 +29,7 @@ namespace CIAO
     const char* dap_ior = 0;
     bool do_benchmarking = false;
     size_t niterations = 0;
+    size_t nthreads = 1;
     CORBA::Short priority = 0;
 
     enum mode_type {
@@ -73,7 +74,7 @@ namespace CIAO
     {
       ACE_Get_Opt get_opt (argc,
                            argv,
-                           ACE_TEXT ("a:b:e:p:nk:l:v:t:o:i:r:z:h"));
+                           ACE_TEXT ("a:b:c:e:p:nk:l:v:t:o:i:r:z:h"));
       int c;
 
       while ((c = get_opt ()) != EOF)
@@ -87,6 +88,9 @@ namespace CIAO
               case 'b':
                 do_benchmarking = true;
                 niterations = ACE_OS::atoi (get_opt.opt_arg ());
+                break;
+              case 'c':
+                nthreads  = ACE_OS::atoi (get_opt.opt_arg ());
                 break;
               case 'e':
                 package_types = get_opt.opt_arg ();
@@ -217,7 +221,8 @@ namespace CIAO
                                rm_use_naming,
                                rm_use_naming ? repoman_name_ : rm_ior_file,
                                priority,
-                               niterations))
+                               niterations,
+                               nthreads))
             {
               ACE_ERROR ((LM_ERROR, "(%P|%t) Plan_Launcher: Error initializing the EM.\n"));
               return -1;

@@ -71,6 +71,7 @@ namespace CIAO
                                  "-i <installation data filename>\n"
                                  "-n <use naming service>\n"
                                  "-p <filename to output the process id>\n"
+                                 "-r : RT-CORBA enabled\n"
                                  "\n",
                                  argv [0]),
                                 false);
@@ -200,19 +201,57 @@ namespace CIAO
           PortableServer::POA_var child_poa;
           if (rt_corba_enabled)
             {
-              // Create child POA with RTCORBA::ClientProtocolPolicy set.
+              ///  Create thread pool with lanes  /////
+              ///
+
+              CORBA::ULong TOTAL_LANES = 2; // avoid magic number
+              RTCORBA::ThreadpoolLanes lanes (TOTAL_LANES);
+              lanes.length (TOTAL_LANES);
+
+              // Initialize the lane information
+              for (CORBA::ULong i = 0; i < TOTAL_LANES; ++i)
+                {
+                  lanes[i].static_threads = 1;
+                  lanes[i].dynamic_threads = 0;
+                }
+
+              // Set lane priroties
+              object = orb->resolve_initial_references ("RTCurrent");
+
+              RTCORBA::Current_var current =
+                RTCORBA::Current::_narrow (object.in ());
+
+              RTCORBA::Priority default_thread_priority =
+                current->the_priority ();
+
+              lanes[0].lane_priority = default_thread_priority;
+              lanes[1].lane_priority = default_thread_priority + 1;
+
+
+              RTCORBA::ThreadpoolId threadpool_id =
+                rt_orb->create_threadpool_with_lanes (0, //static size
+                                                      lanes,
+                                                      0, //allow borrowing
+                                                      0, //allow request buffering
+                                                      0, //max buffered requests
+                                                      0);//max request buffer size
+              // create a policy list
               CORBA::PolicyList poa_policy_list;
-              poa_policy_list.length (1);
+              poa_policy_list.length (2);
+
+              // Set the priority model
+              // Create child POA with RTCORBA::ClientProtocolPolicy set.
               poa_policy_list[0] =
                 rt_orb->create_priority_model_policy (RTCORBA::CLIENT_PROPAGATED,
                                                       0);
+
+              poa_policy_list[1] =
+                rt_orb->create_threadpool_policy (threadpool_id);
 
               child_poa =
                 root_poa->create_POA ("Child_POA",
                                       poa_manager.in (),
                                       poa_policy_list);
-
-
             }
           else
             {

@@ -50,10 +50,12 @@ namespace CIAO
                            bool rm_use_naming,
                            const char *rm_name,
                            CORBA::Short priority,
-                           size_t niterations)
+                           size_t niterations,
+                           size_t nthreads)
     {
       this->orb_ = CORBA::ORB::_duplicate  (orb);
       this->niterations_ = niterations;
+      this->nthreads_ = nthreads;
       this->desired_priority_ = priority;
 
       CORBA::Object_var obj;
@@ -505,6 +507,7 @@ namespace CIAO
        int sched_policy =
         this->orb_->orb_core ()->orb_params ()->ace_sched_policy ();
 
+       /*
       int max_priority =
         ACE_Sched_Params::priority_max (sched_policy);
       int min_priority =
@@ -518,6 +521,7 @@ namespace CIAO
                            "Cannot convert native priority %d to corba priority\n",
                            native_priority),
                            false);
+      */
 
       current->the_priority (desired_priority);
 

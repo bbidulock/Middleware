@@ -286,7 +286,7 @@ namespace CIAO
     ec_servant->activate ();
     this->rt_event_channel_ = ec_servant->_this ();
 
-    if (false)
+    if (true)
       {
         // Find the Naming Service.
         CORBA::Object_var obj = orb_->resolve_initial_references("NameService");

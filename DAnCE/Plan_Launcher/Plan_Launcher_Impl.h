@@ -46,7 +46,8 @@ namespace CIAO
                  bool rm_use_naming = false,
                  const char *rm_name = 0,
                  CORBA::Short priority = 0,
-                 size_t niterations = 0);
+                 size_t niterations = 0,
+                 size_t nthreads = 1);
 
       /**
        * @brief Launch a plan, given a deployment plan URI
@@ -108,6 +109,10 @@ namespace CIAO
 
       /// Number of iterations to run benchmarking, if specified
       size_t niterations_;
+
+      /// Total number of threads to spawn inside plan_launcher
+      size_t nthreads_;
+
     };
 
   }
