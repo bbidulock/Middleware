@@ -177,7 +177,36 @@ bgcolor="#ffffff">
         For an example header file using Doxygen-style comments,
         please refer to <a href="../ace/ACE.h">ACE.h</a>.<p>
 
-    <LI>All binary options for ACE and TAO should be specified in
+    <li>The header file comment should at least contain the following
+        entries:
+        <pre>
+        /**
+         * @file Foo.h
+         * @author Authors Name &lt;author@email.org&gt;
+         *
+         *  A few words describing the file.
+         */
+        </pre></p>
+
+    <li>A class should be commented this way:
+        <pre>
+        /**
+         * @class Foo_Impl
+         * @brief A brief description of the class
+         *
+         * A more detailed description.
+         */
+        </pre></p>
+
+     <li>The preferred way to document methods is:
+         <pre>
+         /// This function foos the bars
+         /// another line of documentation if necessary
+         /// @param bar The bar you want to foo
+         void foo (int bar);
+         </pre></p>
+
+    <li>All binary options for ACE and TAO should be specified in
         terms of the integral values 0 and 1, rather than "true" and
         "false" or "yes" and "no".  All TAO options should be
         documented in the <A HREF="../TAO/docs/Options.html">online
@@ -192,9 +221,16 @@ bgcolor="#ffffff">
         those files #include the correct headers.  If you do not do
         this, your code will not compile with the Standard C++ Library.<p>
 
+    <li>Always use <strong><code>#if defined (MACRONAME)</code></strong>
+        to test if a macro is defined, rather than the simpler
+        <strong><code>#if MACRONAME</code></strong>. Doxygen requires this.
+        The one exception to this the macros used to prevent multiple
+        inclusion of header files, as shown below.
+
     <li>Always follow a preprocessor <strong><code>#endif</code></strong>
-        with a <strong><code>/*  */</code></strong> C-style comment.  It
-        should correspond to the condition in the matching
+        with a <strong><code>/*  */</code></strong> C-style comment. Using
+        C-style comments with preprocessor code is required for some old
+        compilers. It should correspond to the condition in the matching
         <strong><code>#if</code></strong> directive.  For example,
         <pre>
         #if defined (ACE_HAS_THREADS)
@@ -562,11 +598,11 @@ Foo::bar ()
     <li>Mutators and accessors should be of this form:<p>
 
         <pre>
+        /// Sets @c object_addr_ cache from @c host and @c port.
         void object_addr (const ACE_INET_Addr &);
-        // Sets &lt;object_addr_&gt; cache from &lt;host&gt; and &lt;port&gt;.
 
+        /// Returns the ACE_INET_Addr for this profile.
         const ACE_INET_Addr &object_addr const (void);
-        // Returns the &lt;ACE_INET_Addr&gt; for this profile.
         </pre><p>
 
         instead of the "set_" and "get_" form.<p>
@@ -600,9 +636,11 @@ Foo::bar ()
         of <strong>NULL</strong> is implementation dependent, so it is
         difficult to use portably without casting.<p>
 
-    <li>Never cast a pointer to or from an <strong><code>int</code></strong>.
-        On all currently supported ACE platforms, it is safe to cast
-        a pointer to or from a <strong><code>long</code></strong>.<p>
+    <li>Never cast a pointer to or from an <strong><code>int</code></strong>
+        or a <strong><code>long</code></strong>.  On all currently supported
+        ACE platforms, it is safe to cast a pointer to or from
+        <strong><code>intptr_t</code></strong> or
+        <strong><code>uintptr_t</code></strong> (include ace/Basic_Types.h).<p>
 
     <li>Be very careful when selecting an integer type that must be a
         certain size, <em>e.g.</em>, 4 bytes.  <strong>long</strong> is
@@ -754,7 +792,7 @@ Foo::bar ()
         <pre>
         template&lt;typename S_var, size_t BOUND, template &lt;typename&gt; class Insert_Policy&gt; class A {};
         </pre>
-
+  </ul>
   <li><strong>I/O</strong><p>
   <ul>
      <li>Use <strong><code>ACE_DEBUG</code></strong> for printouts,

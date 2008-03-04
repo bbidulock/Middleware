@@ -18,12 +18,12 @@
 #include /**/ "ace/config-all.h"
 #include "ace/Default_Constants.h"
 #include "ace/Service_Gestalt.h"
+#include "ace/TSS_T.h"
 
 #if !defined (ACE_LACKS_PRAGMA_ONCE)
 # pragma once
 #endif /* ACE_LACKS_PRAGMA_ONCE */
 
-#include "ace/SString.h"
 #include "ace/OS_NS_signal.h"
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
@@ -40,37 +40,49 @@ class ACE_Thread_Manager;
 class ACE_DLL;
 
 #if (ACE_USES_CLASSIC_SVC_CONF == 1)
+#define ACE_STATIC_SERVICE_DIRECTIVE(ident, parameters) \
+  ACE_TEXT ("static ") \
+  ACE_TEXT (ident) \
+  ACE_TEXT (" \"") \
+  ACE_TEXT (parameters) \
+  ACE_TEXT ("\"")
 #define ACE_DYNAMIC_SERVICE_DIRECTIVE(ident, libpathname, objectclass, parameters) \
-  ACE_LIB_TEXT ("dynamic ") \
-  ACE_LIB_TEXT (ident) \
-  ACE_LIB_TEXT (" Service_Object * ") \
-  ACE_LIB_TEXT (libpathname) \
-  ACE_LIB_TEXT (":") \
-  ACE_LIB_TEXT (objectclass) \
-  ACE_LIB_TEXT ("() \"") \
-  ACE_LIB_TEXT (parameters) \
-  ACE_LIB_TEXT ("\"")
+  ACE_TEXT ("dynamic ") \
+  ACE_TEXT (ident) \
+  ACE_TEXT (" Service_Object * ") \
+  ACE_TEXT (libpathname) \
+  ACE_TEXT (":") \
+  ACE_TEXT (objectclass) \
+  ACE_TEXT ("() \"") \
+  ACE_TEXT (parameters) \
+  ACE_TEXT ("\"")
 #define ACE_REMOVE_SERVICE_DIRECTIVE(ident) \
-  ACE_LIB_TEXT ("remove ") \
-  ACE_LIB_TEXT (ident)
+  ACE_TEXT ("remove ") \
+  ACE_TEXT (ident)
 class ACE_Svc_Conf_Param;
 #else
+#define ACE_STATIC_SERVICE_DIRECTIVE(ident, parameters) \
+  ACE_TEXT ("<ACE_Svc_Conf><static id=\"") \
+  ACE_TEXT (ident) \
+  ACE_TEXT ("\" params=\"") \
+  ACE_TEXT (parameters) \
+  ACE_TEXT ("\"/></ACE_Svc_Conf>")
 #define ACE_DYNAMIC_SERVICE_DIRECTIVE(ident, libpathname, objectclass, parameters) \
-  ACE_LIB_TEXT ("<ACE_Svc_Conf><dynamic id=\"") \
-  ACE_LIB_TEXT (ident) \
-  ACE_LIB_TEXT ("\" type=\"Service_Object\">") \
-  ACE_LIB_TEXT ("<initializer path=\"") \
-  ACE_LIB_TEXT (libpathname) \
-  ACE_LIB_TEXT ("\" init=\"") \
-  ACE_LIB_TEXT (objectclass) \
-  ACE_LIB_TEXT ("\"") \
-  ACE_LIB_TEXT (" params=\"") \
-  ACE_LIB_TEXT (parameters) \
-  ACE_LIB_TEXT ("\"/></dynamic></ACE_Svc_Conf>")
+  ACE_TEXT ("<ACE_Svc_Conf><dynamic id=\"") \
+  ACE_TEXT (ident) \
+  ACE_TEXT ("\" type=\"Service_Object\">") \
+  ACE_TEXT ("<initializer path=\"") \
+  ACE_TEXT (libpathname) \
+  ACE_TEXT ("\" init=\"") \
+  ACE_TEXT (objectclass) \
+  ACE_TEXT ("\"") \
+  ACE_TEXT (" params=\"") \
+  ACE_TEXT (parameters) \
+  ACE_TEXT ("\"/></dynamic></ACE_Svc_Conf>")
 #define ACE_REMOVE_SERVICE_DIRECTIVE(ident) \
-  ACE_LIB_TEXT ("<ACE_Svc_Conf><remove id=\"") \
-  ACE_LIB_TEXT (ident) \
-  ACE_LIB_TEXT ("\"></remove></ACE_Svc_Conf>")
+  ACE_TEXT ("<ACE_Svc_Conf><remove id=\"") \
+  ACE_TEXT (ident) \
+  ACE_TEXT ("\"></remove></ACE_Svc_Conf>")
 class ACE_XML_Svc_Conf;
 #endif /* ACE_USES_CLASSIC_SVC_CONF == 1 */
 
@@ -166,7 +178,7 @@ public:
    * signum to a negative number will prevent a signal handler being
    * registered when the repository is opened.
    */
-  ACE_Service_Config (int ignore_static_svcs = 1,
+  ACE_Service_Config (bool ignore_static_svcs = true,
                       size_t size = ACE_Service_Gestalt::MAX_SERVICES,
                       int signum = SIGHUP);
 
@@ -209,60 +221,57 @@ protected:
    */
   virtual int parse_args_i (int argc, ACE_TCHAR *argv[]);
 
+  /**
+   * A Wrapper for the TSS-stored pointer to the "current"
+   * configuration Gestalt. Static initializers from any DLL loaded
+   * through the SC will find the SC instance through the TSS pointer,
+   * instead of the global singleton. This makes it possible to ensure
+   * that the new services are loaded in the correct Gestalt,
+   * independent of which thread is actually using the SC at the time
+   * to do so.
+   */
+  ACE_TSS <ACE_Service_Gestalt> tss_;
+
   /// = Static interfaces
 
-private:
-
-  /// A Wrapper for the TSS-stored pointer.
-  struct TSS_Resources {
-    TSS_Resources (void) : ptr_ (0) {}
-    ACE_Service_Gestalt *ptr_;
-  };
-
-  /// A type for the TSS-stored resources. The typedef helps to
-  /// abstract from the particularities of single-threaded vs
-  /// multi-threaded environments.
-  typedef ACE_TSS_TYPE (ACE_Service_Config::TSS_Resources) TSS_Service_Gestalt_Ptr;
-
-  /// Provides access to the static ptr, containing the TSS
-  /// accessor. Ensures the desired order of initialization, even when
-  /// other static initializers need the value.
-  static TSS_Service_Gestalt_Ptr * impl_ (void);
-
-protected:
-
-  /// Mutator to set the (TSS) global instance. Intended for use by helper
-  /// classes, like ACE_Service_Config_Guard which when instantiated on the
-  /// stack, can temporarily change which gestalt instance is viewed as
-  /// global from the point of view of the static initializers in DLLs.
+public:
+  /**
+   * Mutator to set the (TSS) global instance. Intended for use by
+   * helper classes like @see ACE_Service_Config_Guard. Stack-based
+   * instances of it can temporarily change which Gestalt is
+   * considered global by any static initializer (especially those in
+   * DLLs, loaded at run-time).
+   */
   static ACE_Service_Gestalt* current (ACE_Service_Gestalt*);
 
-public:
+  /**
+   * Returns a process-wide global singleton instance in contrast with
+   * current (), which may return a different instance at different
+   * times, dependent on the context. Use of this method is
+   * discouraged as it allows circumvention of the mechanism for
+   * dynamically loading services. Use with extreme caution!
+   */
+  static ACE_Service_Config* global (void);
 
-  /// If not yet initialized, creates a process-wide instance
-  /// global instance, which is registered with the ACE_Object_Manager,
-  /// via ACE_Singleton. Note that this is allways the same instance,
-  /// in contrast with current (), which may be different instance at
-  /// different times, dependent on the context.
-  static  ACE_Service_Gestalt* global (void);
-
-  /// Accessor for the "current" service repository through a pointer
-  /// held in TSS.
+  /// Accessor for the "current" service gestalt
   static ACE_Service_Gestalt* current (void);
 
-  /// This is what the static service initializators are hard-wired
-  /// to use, so in order to keep interface changes to a minimum this
-  /// method merely forwards to current(). Thus it is possible to
-  /// temporarily replace what those initializers think is the global
-  /// service repository, for instance when dynamically loading a
-  /// service from a DLL, which in turn, contains its own static services.
+  /**
+   * This is what the static service initializators are hard-wired to
+   * use, so in order to avoid interface changes this method merely
+   * forwards to @c ACE_Service_Config::current. This enables us to
+   * enforce which Service Gestalt is used for services registering
+   * through static initializers. Especially important for DLL-based
+   * dynamic services, which can contain their own static services and
+   * static initializers.
+   */
   static  ACE_Service_Gestalt* instance (void);
 
   /**
    * Performs an open without parsing command-line arguments.  The
    * @a logger_key indicates where to write the logging output, which
    * is typically either a STREAM pipe or a socket address.  If
-   * @a ignore_static_svcs is 1 then static services are not loaded,
+   * @a ignore_static_svcs is true then static services are not loaded,
    * otherwise, they are loaded.  If @a ignore_default_svc_conf_file is
    * non-0 then the <svc.conf> configuration file will be ignored.
    * Returns zero upon success, -1 if the file is not found or cannot
@@ -314,11 +323,11 @@ public:
    * @param logger_key   Indicates where to write the logging output,
    *                     which is typically either a STREAM pipe or a
    *                     socket address.
-   * @param ignore_static_svcs   If 1 then static services are not loaded,
+   * @param ignore_static_svcs   If true then static services are not loaded,
    *                             otherwise, they are loaded.
    * @param ignore_default_svc_conf_file  If non-0 then the @c svc.conf
    *                                      configuration file will be ignored.
-   * @param ignore_debug_flag If non-0 then the application is responsible
+   * @param ignore_debug_flag If true then the application is responsible
    *                          for setting the @c ACE_Log_Msg::priority_mask
    *                          appropriately.
    *
@@ -336,7 +345,7 @@ public:
                    bool ignore_debug_flag = false);
 
   /// Tidy up and perform last rites when ACE_Service_Config is shut
-  /// down.  This method calls <close_svcs>.  Returns 0.
+  /// down.  This method calls close_svcs().  Returns 0.
   static int close (void);
 
   /// Perform user-specified close hooks and possibly delete all of the
@@ -457,7 +466,7 @@ public:
    * @return Returns -1 if the service cannot be 'loaded'.
    */
   static int process_directive (const ACE_Static_Svc_Descriptor &ssd,
-                                int force_replace = 0);
+                                bool force_replace = false);
 
   /**
    * Process (or re-process) service configuration requests that are
@@ -529,7 +538,7 @@ private:
 
   // = Set by command-line options.
   /// Shall we become a daemon process?
-  static int be_a_daemon_;
+  static bool be_a_daemon_;
 
   /// Pathname of file to write process id.
   static ACE_TCHAR *pid_file_name_;

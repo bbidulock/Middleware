@@ -30,13 +30,9 @@
 #   if defined (ACE_HAS_EXCEPTIONS)
 #     define ACE_NEW_THROWS_EXCEPTIONS
 #   endif /* ACE_HAS_EXCEPTIONS */
-#   if !defined (__RTTI)
-#     define ACE_LACKS_RTTI
-#   endif
 #   define ACE_HAS_STANDARD_CPP_LIBRARY 1
 #   define ACE_HAS_TEMPLATE_SPECIALIZATION
 #   define ACE_HAS_TEMPLATE_TYPEDEFS
-#   define ACE_HAS_TYPENAME_KEYWORD
 
 #   define ACE_ENDLESS_LOOP \
       unsigned int ace_endless_loop____ = 0; if (ace_endless_loop____) break;
@@ -61,6 +57,8 @@
 #   pragma message disable basclsnondto
 #   pragma message disable boolexprconst
 #   pragma message disable undpreid
+#   pragma message disable notusetmpfunprm
+#   pragma message disable bltinclnk
 
 #   if (__DECCXX_VER >= 60190029)
       // 6.1-029 and later support msg 1136.  Disable it because it

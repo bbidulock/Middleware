@@ -39,6 +39,7 @@ libACE_la_SOURCES = \
   ACE.cpp \
   ACE_crc32.cpp \
   ACE_crc_ccitt.cpp \
+  ace_wchar.cpp \
   ATM_Acceptor.cpp \
   ATM_Addr.cpp \
   ATM_Connector.cpp \
@@ -90,6 +91,7 @@ libACE_la_SOURCES = \
   Dirent_Selector.cpp \
   Dump.cpp \
   Dynamic.cpp \
+  Dynamic_Message_Strategy.cpp \
   Dynamic_Service_Base.cpp \
   Dynamic_Service_Dependency.cpp \
   Encoding_Converter.cpp \
@@ -155,6 +157,8 @@ libACE_la_SOURCES = \
   Mem_Map.cpp \
   Message_Block.cpp \
   Message_Queue.cpp \
+  Message_Queue_NT.cpp \
+  Message_Queue_Vx.cpp \
   Method_Request.cpp \
   Msg_WFMO_Reactor.cpp \
   Multihomed_INET_Addr.cpp \
@@ -166,6 +170,7 @@ libACE_la_SOURCES = \
   Naming_Context.cpp \
   Netlink_Addr.cpp \
   Notification_Strategy.cpp \
+  Notification_Queue.cpp \
   OS_Errno.cpp \
   OS_Log_Msg_Attributes.cpp \
   OS_NS_Thread.cpp \
@@ -307,14 +312,9 @@ libACE_la_SOURCES = \
   Thread_Manager.cpp \
   Thread_Mutex.cpp \
   Thread_Semaphore.cpp \
-  Time_Request_Reply.cpp \
+  Throughput_Stats.cpp \
   Time_Value.cpp \
   Timeprobe.cpp \
-  Timer_Hash.cpp \
-  Timer_Heap.cpp \
-  Timer_List.cpp \
-  Timer_Queue.cpp \
-  Timer_Wheel.cpp \
   Token.cpp \
   Token_Collection.cpp \
   Token_Invariants.cpp \
@@ -489,6 +489,8 @@ nobase_include_HEADERS += \
   Dump_T.h \
   Dynamic.h \
   Dynamic.inl \
+  Dynamic_Message_Strategy.h \
+  Dynamic_Message_Strategy.inl \
   Dynamic_Service.cpp \
   Dynamic_Service.h \
   Dynamic_Service.inl \
@@ -622,6 +624,7 @@ nobase_include_HEADERS += \
   Lock_Adapter_T.h \
   Lock_Adapter_T.inl \
   Log_Msg.h \
+  Log_Msg.inl \
   Log_Msg_Backend.h \
   Log_Msg_Callback.h \
   Log_Msg_IPC.h \
@@ -674,6 +677,8 @@ nobase_include_HEADERS += \
   Message_Block_T.inl \
   Message_Queue.h \
   Message_Queue.inl \
+  Message_Queue_Vx.h \
+  Message_Queue_Vx.inl \
   Message_Queue_T.cpp \
   Message_Queue_T.h \
   Method_Object.h \
@@ -700,6 +705,8 @@ nobase_include_HEADERS += \
   Node.h \
   Notification_Strategy.h \
   Notification_Strategy.inl \
+  Notification_Queue.h \
+  Notification_Queue.inl \
   Null_Barrier.h \
   Null_Condition.h \
   Null_Mutex.h \
@@ -914,6 +921,7 @@ nobase_include_HEADERS += \
   Sbrk_Memory_Pool.h \
   Sched_Params.h \
   Sched_Params.inl \
+  Select_Reactor.h \
   Select_Reactor_Base.h \
   Select_Reactor_Base.inl \
   Select_Reactor_T.cpp \
@@ -970,8 +978,6 @@ nobase_include_HEADERS += \
   Svc_Conf_Tokens.h \
   Svc_Handler.cpp \
   Svc_Handler.h \
-  Swap.h \
-  Swap.inl \
   Synch.h \
   Synch_Options.h \
   Synch_T.cpp \
@@ -1016,7 +1022,7 @@ nobase_include_HEADERS += \
   Thread_Mutex.inl \
   Thread_Semaphore.h \
   Thread_Semaphore.inl \
-  Time_Request_Reply.h \
+  Throughput_Stats.h \
   Time_Value.h \
   Time_Value.inl \
   Timeprobe.h \
@@ -1096,6 +1102,7 @@ nobase_include_HEADERS += \
   XTI_ATM_Mcast.inl \
   ace_wchar.h \
   ace_wchar.inl \
+  checked_iterator.h \
   config-WinCE.h \
   config-all.h \
   config-borland-common.h \
@@ -1108,7 +1115,6 @@ nobase_include_HEADERS += \
   config-win32-msvc-7.h \
   config-win32-msvc-8.h \
   config-win32-msvc.h \
-  config-win32-visualage.h \
   config-win32.h \
   config.h \
   iosfwd.h \

@@ -34,8 +34,8 @@ ACE_Cached_Connect_Strategy_Ex<ACE_T2>::ACE_Cached_Connect_Strategy_Ex
 {
   if (this->open (cre_s, con_s, rec_s) == -1)
     ACE_ERROR ((LM_ERROR,
-                ACE_LIB_TEXT ("%p\n"),
-                ACE_LIB_TEXT ("ACE_Cached_Connect_Strategy_Ex<ACE_T2>\n")));
+                ACE_TEXT ("%p\n"),
+                ACE_TEXT ("ACE_Cached_Connect_Strategy_Ex<ACE_T2>\n")));
 }
 
 template <ACE_T1>
@@ -67,7 +67,8 @@ ACE_Cached_Connect_Strategy_Ex<ACE_T2>::check_hint_i
   found = 0;
 
   // Get the recycling act for the svc_handler
-  CONNECTION_CACHE_ENTRY *possible_entry = (CONNECTION_CACHE_ENTRY *) sh->recycling_act ();
+  CONNECTION_CACHE_ENTRY *possible_entry =
+    (CONNECTION_CACHE_ENTRY *) sh->recycling_act ();
 
   // Check to see if the hint svc_handler has been closed down
   if (possible_entry->ext_id_.recycle_state () == ACE_RECYCLABLE_CLOSED)
@@ -529,8 +530,7 @@ ACE_Cached_Connect_Strategy_Ex<ACE_T2>::cleanup (void)
   ACE_GUARD (MUTEX, ace_mon, *this->lock_);
 
   // Close down all cached service handlers.
-  ACE_TYPENAME CONNECTION_CACHE::ITERATOR iter =
-    this->connection_cache_.begin ();
+  typename CONNECTION_CACHE::ITERATOR iter = this->connection_cache_.begin ();
   while (iter != this->connection_cache_.end ())
     {
       if ((*iter).second () != 0)
@@ -544,7 +544,7 @@ ACE_Cached_Connect_Strategy_Ex<ACE_T2>::cleanup (void)
           (*iter).second ()->close ();
 
           // remember next iter
-          ACE_TYPENAME CONNECTION_CACHE::ITERATOR next_iter = iter;
+          typename CONNECTION_CACHE::ITERATOR next_iter = iter;
           ++next_iter;
 
           // purge the item from the hash
@@ -645,9 +645,9 @@ ACE_Bounded_Cached_Connect_Strategy<ACE_T2>::find_or_create_svc_handler_i
           ACE_ASSERT (0); // just to see it coming
 
           ACE_ERROR ((LM_ERROR,
-                      ACE_LIB_TEXT ("(%t)ACE_Bounded_Cached_Connect_Strategy<>::")
-                      ACE_LIB_TEXT ("find_or_create_svc_handler_i - ")
-                      ACE_LIB_TEXT ("error polling server socket state.\n")));
+                      ACE_TEXT ("(%t)ACE_Bounded_Cached_Connect_Strategy<>::")
+                      ACE_TEXT ("find_or_create_svc_handler_i - ")
+                      ACE_TEXT ("error polling server socket state.\n")));
 
           return -1;
         }

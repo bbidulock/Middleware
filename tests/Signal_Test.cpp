@@ -34,7 +34,7 @@ ACE_RCSID(tests, Signal_Test, "$Id$")
 #if !defined (ACE_LACKS_UNIX_SIGNALS)
 
 // Global options.
-static size_t n_iterations = 100000;
+static size_t n_iterations = 10000;
 
 // Keeps track of whether we're the child or not.
 static int child = 0;
@@ -146,7 +146,16 @@ synchronous_signal_handler (void *)
     {
       // Block waiting for SIGINT, SIGTERM, or SIGHUP, depending on
       // whether we're the parent or child process.
-      if (handle_signal (ACE_OS::sigwait (sigset)) == -1)
+      int signr = ACE_OS::sigwait (sigset);
+      if (signr == -1)
+        {
+          if (errno != EINTR)
+            ACE_ERROR ((LM_ERROR,
+                        ACE_TEXT ("(%P|%t) %p\n"),
+                        ACE_TEXT ("sigwait")));
+          continue;
+        }
+      if (handle_signal (signr) == -1)
         break;
       ACE_DEBUG ((LM_DEBUG,
                   ACE_TEXT ("(%P|%t) handled signal\n")));
@@ -282,11 +291,13 @@ worker_parent (void *arg)
   ACE_Process pm;
 
   child_pid = pm.spawn (options);
-  ACE_DEBUG ((LM_DEBUG,
-              ACE_TEXT ("(%P|%t) spawning child process %d\n"),
-              child_pid));
 
-  ACE_ASSERT (child_pid != -1);
+  if (child_pid == ACE_INVALID_PID)
+    ACE_ERROR_RETURN ((LM_ERROR, "(%P|%t) spawning child process failed\n"), 0);
+  else
+    ACE_DEBUG ((LM_DEBUG,
+                ACE_TEXT ("(%P|%t) spawning child process %d\n"),
+                child_pid));
 
   // Perform a <wait> until our child process has exited.
 
@@ -336,7 +347,7 @@ run_test (ACE_THR_FUNC worker,
       int result;
 
       ACE_DEBUG ((LM_DEBUG,
-		  ACE_TEXT ("(%P|%t) spawning worker thread\n")));
+                  ACE_TEXT ("(%P|%t) spawning worker thread\n")));
       result = ACE_Thread_Manager::instance ()->spawn
                 (worker,
                   reinterpret_cast <void *> (handle_signals_synchronously),
@@ -405,10 +416,10 @@ parse_args (int argc, ACE_TCHAR *argv[])
     default:
       ACE_DEBUG ((LM_DEBUG,
                   ACE_TEXT ("(%P|%t) usage:\n")
-		  ACE_TEXT ("-i <iterations>\n")
-		  ACE_TEXT ("-c\n")
-		  ACE_TEXT ("-p <parent_pid>\n")
-		  ACE_TEXT ("-t <test_number>\n")));
+                  ACE_TEXT ("-i <iterations>\n")
+                  ACE_TEXT ("-c\n")
+                  ACE_TEXT ("-p <parent_pid>\n")
+                  ACE_TEXT ("-t <test_number>\n")));
       break;
   }
 }

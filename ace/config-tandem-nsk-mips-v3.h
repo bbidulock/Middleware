@@ -104,9 +104,6 @@ typedef enum CMA_T_SCHED_POLICY {
 // Platform lacks streambuf "linebuffered ()".  [C++ iostream]
 #define ACE_LACKS_LINEBUFFERED_STREAMBUF
 
-// Use native implementation of memchr.
-#define ACE_HAS_MEMCHR
-
 // Platform supports recvmsg and sendmsg
 #define ACE_HAS_MSG
 
@@ -238,14 +235,31 @@ typedef enum CMA_T_SCHED_POLICY {
 #define ACE_HRTIME_T_IS_BASIC_TYPE
 
 // printf format specifiers for 64 bit integers
-# define ACE_UINT64_FORMAT_SPECIFIER ACE_LIB_TEXT ("%Ld")
-# define ACE_INT64_FORMAT_SPECIFIER ACE_LIB_TEXT ("%Ld")
+# define ACE_UINT64_FORMAT_SPECIFIER ACE_TEXT ("%Ld")
+# define ACE_INT64_FORMAT_SPECIFIER ACE_TEXT ("%Ld")
 
 // Use larger default buffer size for ease of interoperability
 #define ACE_DEFAULT_CDR_BUFSIZE 4096
 
 // Size of a wchar
 #define ACE_SIZEOF_WCHAR 2
+
+// Platform lacks time typedefs
+#define ACE_LACKS_SUSECONDS_T
+#define ACE_LACKS_USECONDS_T
+
+// Platform lacks setegid() and seteuid()
+#define ACE_LACKS_SETEGID
+#define ACE_LACKS_SETEUID
+
+// Platform lacks vsnprintf()
+#define ACE_LACKS_VSNPRINTF
+
+// Platform lacks log2()
+#define ACE_LACKS_LOG2
+
+// Platform lacks alphasort()
+#define ACE_LACKS_ALPHASORT
 
 
 //=========================================================================
@@ -260,19 +274,6 @@ typedef enum CMA_T_SCHED_POLICY {
 // one of the below to say which one.  Also may need some
 // ACE_HAS_... thing for extensions.
 #define ACE_HAS_PTHREADS
-
-// Platform's 'Pthreads' is .4a draft 4
-#ifndef ACE_TANDEM_T1248_PTHREADS
-#  define ACE_HAS_PTHREADS_DRAFT4
-#  define ACE_LACKS_CONST_TIMESPEC_PTR
-extern int cma_sigwait  (sigset_t *);
-#endif
-
-// Platform supports POSIX.1c-1995 threads
-// (This is the final standard Pthreads).
-#ifdef ACE_TANDEM_T1248_PTHREADS
-#define ACE_HAS_PTHREADS_STD
-#endif
 
 // Standard pthreads supports only SCHED_FIFO
 #define ACE_HAS_ONLY_SCHED_FIFO
@@ -305,7 +306,10 @@ extern int cma_sigwait  (sigset_t *);
 #define ACE_LACKS_THREAD_PROCESS_SCOPING
 
 // Platform lacks pthread_attr_setstackaddr
-#define ACE_LACKS_THREAD_STACK_ADDR
+#define ACE_LACKS_PTHREAD_ATTR_SETSTACKADDR
+
+// Platform lacks pthread_attr_setstack
+#define ACE_LACKS_PTHREAD_ATTR_SETSTACK
 
 // Defining ACE_HAS_UCONTEXT_T since G06.21 version of spthreads has
 // a definition for it.
@@ -367,12 +371,15 @@ extern int cma_sigwait  (sigset_t *);
 // Platform lacks <poll.h>
 #define ACE_LACKS_POLL_H
 
+// Platform lacks <sys/sysctl.h>
+#define ACE_LACKS_SYS_SYSCTL_H
+
 //=========================================================================
 // Compiler specific parts
 //=========================================================================
 
 // Compiler supports C++ exception handling
-#define ACE_HAS_EXCEPTIONS
+#define ACE_HAS_EXCEPTIONS 1
 
 // Compiler/platform has correctly prototyped header files
 #define ACE_HAS_CPLUSPLUS_HEADERS
@@ -411,11 +418,11 @@ extern int cma_sigwait  (sigset_t *);
 // Following will not be needed if use standard c library (G06.20 and later)
 #define ACE_LACKS_SIGNED_CHAR
 
-// Compiler supports the typename keyword for templates
-#define ACE_HAS_TYPENAME_KEYWORD
-
 // Compiler can handle any operators in namespace
 #define ACE_ANY_OPS_USE_NAMESPACE
+
+// Platform lacks intptr_t typedef
+#define ACE_LACKS_INTPTR_T
 
 //=========================================================================
 // C++ version3 import/export macros

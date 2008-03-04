@@ -81,8 +81,8 @@ ACE_SOCK_Dgram_Bcast::ACE_SOCK_Dgram_Bcast (const ACE_Addr &local,
 
   if (this->mk_broadcast (host_name) == -1)
     ACE_ERROR ((LM_ERROR,
-                ACE_LIB_TEXT ("%p\n"),
-                ACE_LIB_TEXT ("ACE_SOCK_Dgram_Bcast")));
+                ACE_TEXT ("%p\n"),
+                ACE_TEXT ("ACE_SOCK_Dgram_Bcast")));
 }
 
 // Here's the general-purpose open routine.
@@ -236,8 +236,8 @@ ACE_SOCK_Dgram_Bcast::mk_broadcast (const ACE_TCHAR *host_name)
                            IFF_UP) == 0)
         {
           ACE_ERROR ((LM_ERROR, "%p [%s]\n",
-                                                 "ACE_SOCK_Dgram_Bcast::mk_broadcast: Network interface is not up",
-                                                 flags.ifr_name));
+                     "ACE_SOCK_Dgram_Bcast::mk_broadcast: Network interface is not up",
+                     flags.ifr_name));
           continue;
         }
 
@@ -252,8 +252,8 @@ ACE_SOCK_Dgram_Bcast::mk_broadcast (const ACE_TCHAR *host_name)
                              SIOCGIFBRDADDR,
                              (char *) &if_req) == -1)
             ACE_ERROR ((LM_ERROR, "%p [%s]\n",
-                                                   "ACE_SOCK_Dgram_Bcast::mk_broadcast: ioctl (get broadaddr)",
-                                                   flags.ifr_name));
+                       "ACE_SOCK_Dgram_Bcast::mk_broadcast: ioctl (get broadaddr)",
+                       flags.ifr_name));
           else
             {
               ACE_INET_Addr addr (reinterpret_cast <sockaddr_in *>

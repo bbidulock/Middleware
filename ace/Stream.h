@@ -41,7 +41,7 @@ class ACE_Time_Value;
  * contains two <ACE_Tasks>.  Even though the methods in this
  * class are virtual, this class isn't really intended for
  * subclassing unless you know what you are doing.  In
- * particular, the <ACE_Stream> destructor calls <close>, which
+ * particular, the ACE_Stream destructor calls <close>, which
  * won't be overridden properly unless you call it in a subclass
  * destructor.
  */
@@ -88,12 +88,12 @@ public:
   // = ACE_Stream plumbing operations
 
   /// Add a new module <mod> right below the Stream head.  The
-  /// <open()> hook methods of the <ACE_Tasks> in this <ACE_Module>
+  /// <open()> hook methods of the <ACE_Tasks> in this ACE_Module
   /// are invoked to initialize the tasks.
   virtual int push (ACE_Module<ACE_SYNCH_USE> *mod);
 
   /// Remove the <mod> right below the Stream head and close it down.
-  //  The <close()> hook methods of the <ACE_Tasks> in this <ACE_Module>
+  //  The <close()> hook methods of the <ACE_Tasks> in this ACE_Module
   /// are invoked to cleanup the tasks.
   virtual int pop (int flags = M_DELETE);
 
@@ -132,18 +132,18 @@ public:
 
   // = Blocking data transfer operations
   /**
-   * Send the message <mb> down the stream, starting at the Module
-   * below the Stream head.  Wait for upto <timeout> amount of
+   * Send the message @a mb down the stream, starting at the Module
+   * below the Stream head.  Wait for upto @a timeout amount of
    * absolute time for the operation to complete (or block forever if
-   * <timeout> == 0).
+   * @a timeout == 0).
    */
   virtual int put (ACE_Message_Block *mb,
                    ACE_Time_Value *timeout = 0);
 
   /**
-   * Read the message <mb> that is stored in the stream head.
-   * Wait for upto <timeout> amount of absolute time for the operation
-   * to complete (or block forever if <timeout> == 0).
+   * Read the message @a mb that is stored in the stream head.
+   * Wait for upto @a timeout amount of absolute time for the operation
+   * to complete (or block forever if @a timeout == 0).
    */
   virtual int get (ACE_Message_Block *&mb,
                    ACE_Time_Value *timeout = 0);
@@ -195,7 +195,7 @@ private:
 /**
  * @class ACE_Stream_Iterator
  *
- * @brief Iterate through an <ACE_Stream>.
+ * @brief Iterate through an ACE_Stream.
  */
 template <ACE_SYNCH_DECL>
 class ACE_Stream_Iterator

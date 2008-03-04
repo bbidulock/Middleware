@@ -27,7 +27,7 @@
 
 ACE_RCSID(Proactor, test_multiple_loops, "$Id$")
 
-#if (defined (ACE_WIN32) && !defined (ACE_HAS_WINCE))
+#if defined (ACE_HAS_WIN32_OVERLAPPED_IO)
 
 class Timeout_Handler : public ACE_Handler, public ACE_Event_Handler
 {
@@ -133,8 +133,8 @@ ACE_TMAIN (int, ACE_TCHAR *[])
 }
 #else
 int
-main (int, char *[])
+ACE_TMAIN (int, ACE_TCHAR *[])
 {
   return 0;
 }
-#endif /* ACE_WIN32 && !ACE_HAS_WINCE */
+#endif /* ACE_HAS_WIN32_OVERLAPPED_IO */

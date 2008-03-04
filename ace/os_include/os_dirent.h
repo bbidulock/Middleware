@@ -89,16 +89,16 @@ typedef wDIR ACE_DIR;
 typedef DIR ACE_DIR;
 #endif /* ACE_LACKS_STRUCT_DIR */
 
-#if defined rewinddir
-# undef rewinddir
-#endif /* rewinddir */
-
 #if defined (ACE_LACKS_SCANDIR_PROTOTYPE)
 int scandir (const char *,
              struct dirent ***,
              int (*) (const struct dirent *),
              int (*) (const void *, const void *));
 #endif /* ACE_LACKS_SCANDIR_PROTOTYPE */
+
+#if defined (ACE_LACKS_ALPHASORT_PROTOTYPE)
+int alphasort (const void *, const void *);
+#endif /* ACE_LACKS_ALPHASORT_PROTOTYPE */
 
 #ifdef __cplusplus
 }

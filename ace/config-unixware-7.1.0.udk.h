@@ -10,7 +10,6 @@
 /* ACE configuration header file */
 
 #define ACE_TEMPLATES_REQUIRE_SOURCE
-#define ACE_HAS_EXPLICIT_TEMPLATE_INSTANTIATION
 
 #ifndef UNIXWARE_7_1
 #define UNIXWARE_7_1
@@ -199,9 +198,6 @@
 /* Platform supports POSIX Threads */
 #define ACE_HAS_PTHREADS
 
-/* Platform supports POSIX.1c-1995 threads */
-#define ACE_HAS_PTHREADS_STD
-
 /* pthread.h declares an enum with PTHREAD_PROCESS_PRIVATE and
    PTHREAD_PROCESS_SHARED values */
 #define ACE_HAS_PTHREAD_PROCESS_ENUM
@@ -342,9 +338,6 @@
 
 /* Platform has <utime.h> header file */
 #define ACE_HAS_UTIME 1
-
-/* Compiler supports the C++ typename keyword */
-#define ACE_HAS_TYPENAME_KEYWORD 1
 
 /* Prints out console message in ACE_NOTSUP.  Useful for tracking down origin
    of ACE_NOTSUP. */

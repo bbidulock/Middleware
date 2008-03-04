@@ -65,19 +65,9 @@ int handle_test (ACE_DLL &dll)
 
 int basic_test (ACE_DLL &dll)
 {
-#if defined (__KCC)
-  /* With KCC, turning on close-on-destruction will cause problems
-     when libKCC tries to call dtors. */
-  int retval = dll.open (ACE_TEXT (OBJ_PREFIX)
-                         ACE_TEXT ("DLL_Test_Lib")
-                         ACE_TEXT (OBJ_SUFFIX),
-                         ACE_DEFAULT_SHLIB_MODE,
-                         0);
-#else
   int retval = dll.open (OBJ_PREFIX
                          ACE_TEXT ("DLL_Test_Lib")
                          OBJ_SUFFIX);
-#endif /* __KCC */
 
   if (retval != 0)
     {
@@ -125,8 +115,6 @@ int basic_test (ACE_DLL &dll)
 
 int dynamic_cast_test (ACE_DLL &dll)
 {
-
-#if !defined (ACE_LACKS_RTTI)
   Child child;
   child.test();
 
@@ -148,9 +136,6 @@ int dynamic_cast_test (ACE_DLL &dll)
 
   if (pfnAcquire (&child) == -1)
     ACE_ERROR_RETURN ((LM_ERROR, ACE_TEXT ("dynamic_cast failed.\n")), -1);
-#else
-  ACE_UNUSED_ARG (dll);
-#endif /* !ACE_LACKS_RTTI */
 
   return 0;
 }

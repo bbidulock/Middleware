@@ -14,11 +14,9 @@
 # include "ace/config-g++-common.h"
 #endif /* __GNUG__ */
 
-// #undef ACE_HAS_WORKING_EXPLICIT_TEMPLATE_DESTRUCTOR
 #define ACE_HAS_WORKING_EXPLICIT_TEMPLATE_DESTRUCTOR
-#undef ACE_HAS_EXPLICIT_TEMPLATE_INSTANTIATION
 
-#define ACE_SIZE_T_FORMAT_SPECIFIER ACE_LIB_TEXT ("%lu")
+#define ACE_SIZE_T_FORMAT_SPECIFIER ACE_TEXT ("%lu")
 
 #if !defined (ACE_SIZEOF_LONG_DOUBLE)
 # if (__GNUC__ == 3 && __GNUC_MINOR__ == 3)
@@ -45,15 +43,11 @@
 #define ACE_HAS_GPERF
 #define ACE_HAS_POSIX_SEM
 
-//#define ACE_HAS_SVR4_TLI
 #define ACE_HAS_SUNOS4_GETTIMEOFDAY
-
-#define ACE_HAS_MEMCHR
 
 #define ACE_LACKS_STROPTS_H
 
 // Wcharness....
-//#define ACE_LACKS_WCHAR_H
 #define ACE_HAS_WCHAR
 #define ACE_SIZEOF_WCHAR 4
 
@@ -63,7 +57,6 @@
 #define ACE_LACKS_WCSICMP
 #define ACE_LACKS_WCSNICMP
 #define ACE_LACKS_WCSDUP
-// #define ACE_LACKS_WCSLEN
 
 // Mac lacks the following pthread features
 #define ACE_LACKS_MUTEXATTR_PSHARED
@@ -86,7 +79,6 @@
 //Platform/compiler has macros for sig{empty,fill,add,del}set (e.g., SCO and FreeBSD)
 #define ACE_HAS_SIG_MACROS
 
-//#define ACE_HAS_RECURSIVE_THR_EXIT_SEMANTICS
 #define ACE_LACKS_GETPGID
 #define ACE_LACKS_RWLOCK_T
 
@@ -132,9 +124,6 @@
 
 // Compiler/platform correctly calls init()/fini() for shared libraries.
 #define ACE_HAS_AUTOMATIC_INIT_FINI
-
-// Explicit dynamic linking permits "lazy" symbol resolution
-//#define ACE_HAS_RTLD_LAZY_V
 
 // platform supports POSIX O_NONBLOCK semantics
 #define ACE_HAS_POSIX_NONBLOCK
@@ -182,7 +171,6 @@
 # define ACE_HAS_THREADS
 // And they're even POSIX pthreads
 # define ACE_HAS_PTHREADS
-# define ACE_HAS_PTHREADS_STD
 # define ACE_HAS_PTHREAD_SCHEDPARAM
 # define ACE_HAS_THREAD_SPECIFIC_STORAGE
 #endif  /* ACE_MT_SAFE == 1 */
@@ -217,8 +205,8 @@
 // as of Dec 2002, if you use fink you will need to uncomment the next line
 // #define ACE_NEEDS_DL_UNDERSCORE
 #define ACE_HAS_SVR4_DYNAMIC_LINKING
-#define ACE_LD_SEARCH_PATH ACE_LIB_TEXT ("DYLD_LIBRARY_PATH")
-#define ACE_DLL_SUFFIX ACE_LIB_TEXT (".dylib")
+#define ACE_LD_SEARCH_PATH ACE_TEXT ("DYLD_LIBRARY_PATH")
+#define ACE_DLL_SUFFIX ACE_TEXT (".dylib")
 //#define ACE_LACKS_DLCLOSE
 
 // gperf seems to need this

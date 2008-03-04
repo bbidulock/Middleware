@@ -46,14 +46,13 @@ ACE_Basic_Stats::accumulate (const ACE_Basic_Stats &rhs)
 }
 
 void
-ACE_Basic_Stats::dump_results (const ACE_TCHAR *msg,
-                               ACE_UINT32 sf) const
+ACE_Basic_Stats::dump_results (const ACE_TCHAR *msg, ACE_UINT32 sf) const
 {
 #ifndef ACE_NLOGGING
   if (this->samples_count () == 0u)
     {
       ACE_DEBUG ((LM_DEBUG,
-                  ACE_LIB_TEXT ("%s : no data collected\n"), msg));
+                  ACE_TEXT ("%s : no data collected\n"), msg));
       return;
     }
 
@@ -64,12 +63,15 @@ ACE_Basic_Stats::dump_results (const ACE_TCHAR *msg,
   ACE_UINT64 l_avg = avg / sf;
 
   ACE_DEBUG ((LM_DEBUG,
-              ACE_LIB_TEXT ("%s latency   : %Q[%d]/%Q/%Q[%d] (min/avg/max)\n"),
+              ACE_TEXT ("%s latency   : %Q[%d]/%Q/%Q[%d] (min/avg/max)\n"),
               msg,
               l_min, this->min_at_,
               l_avg,
               l_max, this->max_at_));
 
+#else
+  ACE_UNUSED_ARG (msg);
+  ACE_UNUSED_ARG (sf);
 #endif /* ACE_NLOGGING */
 }
 

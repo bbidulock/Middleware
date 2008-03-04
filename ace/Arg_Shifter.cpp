@@ -115,7 +115,7 @@ ACE_Arg_Shifter_T<CHAR_TYPE>::get_the_parameter (const CHAR_TYPE *flag)
           return 0;
         }
     }
-  // the paramter is in the middle somewhere...
+  // the parameter is in the middle somewhere...
   return this->temp_[current_index_] + offset;
 }
 
@@ -144,7 +144,7 @@ ACE_Arg_Shifter_T<CHAR_TYPE>::cur_arg_strncasecmp (const CHAR_TYPE *flag)
               // matches, with more info to boot!
               size_t const remaining = ACE_OS::strspn
                 (this->temp_[current_index_] + flag_length,
-                ACE_LIB_TEXT (" ")) + flag_length;
+                ACE_TEXT (" ")) + flag_length;
               return static_cast<int> (remaining);
             }
         }

@@ -236,9 +236,7 @@ Thread_Handler::handle_input (ACE_HANDLE handle)
 int
 Thread_Handler::svc (void)
 {
-  ACE_Time_Value sleep_timeout (0,
-                                // Transform this into microseconds and divide by 2.
-                                (Thread_Handler::interval_.sec () * ACE_ONE_SECOND_IN_USECS) / 2);
+  ACE_Time_Value sleep_timeout (Thread_Handler::interval_.sec () / 2);
 
   for (int i = this->iterations_;
        i > 0;
@@ -280,7 +278,11 @@ Thread_Handler::handle_signal (int signum, siginfo_t *, ucontext_t *)
   switch (signum)
     {
     case SIGINT:
+      // This is coded thusly to avoid problems if SIGQUIT is a legit
+      // value but is not a preprocessor macro.
+#if !defined (SIGQUIT) || (SIGQUIT != 0)
     case SIGQUIT:
+#endif
       ACE_ERROR ((LM_ERROR,
 		  "(%t) ******************** shutting down %n on signal %S\n",
 		  signum));
@@ -377,7 +379,7 @@ ACE_TMAIN (int argc, ACE_TCHAR *argv[])
 }
 #else
 int
-main (int, char *[])
+ACE_TMAIN (int, ACE_TCHAR *[])
 {
   ACE_ERROR_RETURN ((LM_ERROR,
 		     "threads must be supported to run this application\n"), -1);

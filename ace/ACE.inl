@@ -4,7 +4,7 @@
 
 #include "ace/OS_NS_unistd.h"
 #include "ace/OS_NS_Thread.h"
-#include "ace/os_include/os_ctype.h"
+#include "ace/OS_NS_ctype.h"
 #include "ace/OS_NS_sys_socket.h"
 
 // Open versioned namespace, if enabled by the user.
@@ -312,24 +312,38 @@ ACE::nibble2hex (u_int n)
   // loads of warnings when inlining.
   // problem (incorrect warning leftover from older GNU) has been reported as
   // TSR to Windriver.
-  const ACE_TCHAR hex_chars[] = ACE_LIB_TEXT ("0123456789abcdef");
+  const ACE_TCHAR hex_chars[] = ACE_TEXT ("0123456789abcdef");
 #else
-  static const ACE_TCHAR hex_chars[] = ACE_LIB_TEXT ("0123456789abcdef");
+  static const ACE_TCHAR hex_chars[] = ACE_TEXT ("0123456789abcdef");
 #endif
 
-  // @@ UNICODE does this work?
+  // Yes, this works for UNICODE
   return hex_chars[n & 0x0f];
+}
+
+ACE_INLINE int
+ACE::map_errno (int error)
+{
+#if defined (ACE_WIN32)
+  switch (error)
+    {
+    case WSAEWOULDBLOCK:
+      return EAGAIN; // Same as UNIX errno EWOULDBLOCK.
+    }
+#endif /* ACE_WIN32 */
+
+  return error;
 }
 
 ACE_INLINE u_char
 ACE::hex2byte (ACE_TCHAR c)
 {
-  if (isdigit (c))
-    return (u_char) (c - ACE_LIB_TEXT ('0'));
-  else if (islower (c))
-    return (u_char) (10 + c - ACE_LIB_TEXT ('a'));
+  if (ACE_OS::ace_isdigit (c))
+    return (u_char) (c - ACE_TEXT ('0'));
+  else if (ACE_OS::ace_islower (c))
+    return (u_char) (10 + c - ACE_TEXT ('a'));
   else
-    return (u_char) (10 + c - ACE_LIB_TEXT ('A'));
+    return (u_char) (10 + c - ACE_TEXT ('A'));
 }
 
 // Close versioned namespace, if enabled by the user.

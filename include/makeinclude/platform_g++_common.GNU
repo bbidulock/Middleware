@@ -5,9 +5,9 @@
 
 ifeq ($(CXX),insure)
   # insure does not pass through the -dumpversion option.
-  CXX_FOR_VERSION_TEST = g++
+  CXX_FOR_VERSION_TEST ?= g++
 else
-  CXX_FOR_VERSION_TEST = $(CXX)
+  CXX_FOR_VERSION_TEST ?= $(CXX)
 endif
 
 CXX_VERSION := $(shell $(CXX_FOR_VERSION_TEST) -dumpversion)
@@ -48,6 +48,9 @@ ifeq ($(versioned_so),1)
 endif
 
 static_libs_only ?=
+
+CXX_FULL_VERSION := $(shell $(CXX_FOR_VERSION_TEST) --version)
+gcc_template_instantiation_visibility ?= 0
 
 # Only modify LDFLAGS if DLD has been set.
 ifneq ($(DLD),)
@@ -96,6 +99,9 @@ ifeq ($(shared_libs), 1)
     ifeq ($(GXX_4_OR_BETTER), 1)
       ifneq ($(no_hidden_visibility),1)
         CCFLAGS += -fvisibility=hidden -fvisibility-inlines-hidden
+        ifeq ($(gcc_template_instantiation_visibility),1)
+          CCFLAGS += -DACE_GCC_HAS_TEMPLATE_INSTANTIATION_VISIBILITY_ATTRS=1
+        endif # gcc_template_instantiation_visibility
       else
         CPPFLAGS += -DACE_HAS_CUSTOM_EXPORT_MACROS=0
       endif # no_hidden_visibility

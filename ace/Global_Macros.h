@@ -28,11 +28,11 @@
 #endif /* ACE_LACKS_PRAGMA_ONCE */
 
 #include "ace/config-lite.h"
-#include "ace/Assert.h"			// For ACE_ASSERT
+#include "ace/Assert.h" // For ACE_ASSERT
 
 // Start Global Macros
-# define ACE_BEGIN_DUMP ACE_LIB_TEXT ("\n====\n(%P|%t|%x)\n")
-# define ACE_END_DUMP ACE_LIB_TEXT ("====\n")
+# define ACE_BEGIN_DUMP ACE_TEXT ("\n====\n(%P|%t|%x)\n")
+# define ACE_END_DUMP ACE_TEXT ("====\n")
 
 # if defined (ACE_NDEBUG)
 #   define ACE_DB(X)
@@ -116,15 +116,24 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 // ----------------------------------------------------------------
 
-# if defined (ACE_HAS_NO_THROW_SPEC)
-#   define ACE_THROW_SPEC(X)
-# else
-#  if defined (ACE_HAS_EXCEPTIONS)
-#    define ACE_THROW_SPEC(X) throw X
-#  else  /* ! ACE_HAS_EXCEPTIONS */
-#    define ACE_THROW_SPEC(X)
-#  endif /* ! ACE_HAS_EXCEPTIONS */
-# endif /*ACE_HAS_NO_THROW_SPEC*/
+//FUZZ: disable check_for_exception_sepc
+#if !defined (ACE_LACKS_DEPRECATED_MACROS)
+  #if defined (ACE_HAS_NO_THROW_SPEC)
+  #  define ACE_THROW_SPEC(X)
+  #else
+  #  if defined (ACE_HAS_EXCEPTIONS)
+  #    if defined (ACE_WIN32) && defined (_MSC_VER) && \
+          (_MSC_VER >= 1400) && (_MSC_VER <= 1500)
+  #      define ACE_THROW_SPEC(X) throw(...)
+  #    else
+  #      define ACE_THROW_SPEC(X) throw X
+  #    endif /* ACE_WIN32 && VC8 */
+  #  else  /* ! ACE_HAS_EXCEPTIONS */
+  #    define ACE_THROW_SPEC(X)
+  #  endif /* ! ACE_HAS_EXCEPTIONS */
+  #endif /*ACE_HAS_NO_THROW_SPEC*/
+#endif /* ACE_LACKS_DEPRECATED_MACROS */
+//FUZZ: enable check_for_exception_sepc
 
 // ----------------------------------------------------------------
 
@@ -896,15 +905,13 @@ ACE_MAKE_SVC_CONFIG_FACTORY_NAME(ACE_VERSIONED_NAMESPACE_NAME,SERVICE_CLASS) (AC
 
 // This is being placed here temporarily to help stablelize the builds, but will
 // be moved out along with the above macros as part of the subsetting.  dhinton
-//# if !defined (ACE_HAS_WINCE)
-#   if !defined (ACE_LACKS_NEW_H)
-#     if defined (ACE_USES_STD_NAMESPACE_FOR_STDCPP_LIB)
-#       include /**/ <new>
-#     else
-#       include /**/ <new.h>
-#     endif /* ACE_USES_STD_NAMESPACE_FOR_STDCPP_LIB */
-#   endif /* ! ACE_LACKS_NEW_H */
-//# endif /* !ACE_HAS_WINCE */
+#if !defined (ACE_LACKS_NEW_H)
+#  if defined (ACE_USES_STD_NAMESPACE_FOR_STDCPP_LIB)
+#    include /**/ <new>
+#  else
+#    include /**/ <new.h>
+#  endif /* ACE_USES_STD_NAMESPACE_FOR_STDCPP_LIB */
+#endif /* ! ACE_LACKS_NEW_H */
 
 # define ACE_NOOP(x)
 
@@ -917,10 +924,6 @@ ACE_MAKE_SVC_CONFIG_FACTORY_NAME(ACE_VERSIONED_NAMESPACE_NAME,SERVICE_CLASS) (AC
 #     define ACE_SEH_TRY try
 #     define ACE_SEH_EXCEPT(X) __except(X)
 #     define ACE_SEH_FINALLY __finally
-#   elif defined (__IBMCPP__) && (__IBMCPP__ >= 400)
-#     define ACE_SEH_TRY if (1)
-#     define ACE_SEH_EXCEPT(X) while (0)
-#     define ACE_SEH_FINALLY if (1)
 #   else
 #     define ACE_SEH_TRY __try
 #     define ACE_SEH_EXCEPT(X) __except(X)
@@ -945,56 +948,34 @@ ACE_MAKE_SVC_CONFIG_FACTORY_NAME(ACE_VERSIONED_NAMESPACE_NAME,SERVICE_CLASS) (AC
 // Handle ACE_Message_Queue.
 #   define ACE_SYNCH_DECL class _ACE_SYNCH
 #   define ACE_SYNCH_USE _ACE_SYNCH
-#   define ACE_SYNCH_MUTEX_T ACE_TYPENAME _ACE_SYNCH::MUTEX
-#   define ACE_SYNCH_CONDITION_T ACE_TYPENAME _ACE_SYNCH::CONDITION
-#   define ACE_SYNCH_SEMAPHORE_T ACE_TYPENAME _ACE_SYNCH::SEMAPHORE
+#   define ACE_SYNCH_MUTEX_T typename _ACE_SYNCH::MUTEX
+#   define ACE_SYNCH_CONDITION_T typename _ACE_SYNCH::CONDITION
+#   define ACE_SYNCH_SEMAPHORE_T typename _ACE_SYNCH::SEMAPHORE
 
 // Handle ACE_Malloc*
 #   define ACE_MEM_POOL_1 class _ACE_MEM_POOL
 #   define ACE_MEM_POOL_2 _ACE_MEM_POOL
 #   define ACE_MEM_POOL _ACE_MEM_POOL
-#   define ACE_MEM_POOL_OPTIONS ACE_TYPENAME _ACE_MEM_POOL::OPTIONS
+#   define ACE_MEM_POOL_OPTIONS typename _ACE_MEM_POOL::OPTIONS
 
 // Handle ACE_Svc_Handler
 #   define ACE_PEER_STREAM_1 class _ACE_PEER_STREAM
 #   define ACE_PEER_STREAM_2 _ACE_PEER_STREAM
 #   define ACE_PEER_STREAM _ACE_PEER_STREAM
-#   define ACE_PEER_STREAM_ADDR ACE_TYPENAME _ACE_PEER_STREAM::PEER_ADDR
+#   define ACE_PEER_STREAM_ADDR typename _ACE_PEER_STREAM::PEER_ADDR
 
 // Handle ACE_Acceptor
 #   define ACE_PEER_ACCEPTOR_1 class _ACE_PEER_ACCEPTOR
 #   define ACE_PEER_ACCEPTOR_2 _ACE_PEER_ACCEPTOR
 #   define ACE_PEER_ACCEPTOR _ACE_PEER_ACCEPTOR
-#   define ACE_PEER_ACCEPTOR_ADDR ACE_TYPENAME _ACE_PEER_ACCEPTOR::PEER_ADDR
+#   define ACE_PEER_ACCEPTOR_ADDR typename _ACE_PEER_ACCEPTOR::PEER_ADDR
 
 // Handle ACE_Connector
 #   define ACE_PEER_CONNECTOR_1 class _ACE_PEER_CONNECTOR
 #   define ACE_PEER_CONNECTOR_2 _ACE_PEER_CONNECTOR
 #   define ACE_PEER_CONNECTOR _ACE_PEER_CONNECTOR
-#   define ACE_PEER_CONNECTOR_ADDR ACE_TYPENAME _ACE_PEER_CONNECTOR::PEER_ADDR
-#   if !defined(ACE_HAS_TYPENAME_KEYWORD)
-#     define ACE_PEER_CONNECTOR_ADDR_ANY ACE_PEER_CONNECTOR_ADDR::sap_any
-#   else
-    //
-    // If the compiler supports 'typename' we cannot use
-    //
-    // PEER_CONNECTOR::PEER_ADDR::sap_any
-    //
-    // because PEER_CONNECTOR::PEER_ADDR is not considered a type. But:
-    //
-    // typename PEER_CONNECTOR::PEER_ADDR::sap_any
-    //
-    // will not work either, because now we are declaring sap_any a
-    // type, further:
-    //
-    // (typename PEER_CONNECTOR::PEER_ADDR)::sap_any
-    //
-    // is considered a casting expression. All I can think of is using a
-    // typedef, I tried PEER_ADDR but that was a source of trouble on
-    // some platforms. I will try:
-    //
-#     define ACE_PEER_CONNECTOR_ADDR_ANY ACE_PEER_ADDR_TYPEDEF::sap_any
-#   endif /* ACE_HAS_TYPENAME_KEYWORD */
+#   define ACE_PEER_CONNECTOR_ADDR typename ACE_PEER_CONNECTOR::PEER_ADDR
+#   define ACE_PEER_CONNECTOR_ADDR_ANY ACE_PEER_ADDR_TYPEDEF::sap_any
 
 // Handle ACE_SOCK_*
 #   define ACE_SOCK_ACCEPTOR ACE_SOCK_Acceptor

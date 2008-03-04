@@ -13,6 +13,14 @@
 
 #define ACE_LACKS_STDINT_H
 
+// alphasort() is present on earlier Solaris versions but is marked as not for
+// use on non-BSD systems and not supported for use in applications that use
+// system libraries or with multiple threads. So it's mostly useless.
+#define ACE_LACKS_ALPHASORT
+
+// Solaris doesn't support log2()
+#define ACE_LACKS_LOG2
+
 // SunOS 5.5 does not provide getloadavg()
 #define ACE_LACKS_GETLOADAVG
 
@@ -33,8 +41,6 @@
 # if (__SUNPRO_CC >= 0x500)
     // string.h and memory.h conflict for memchr definitions
 #   define ACE_LACKS_MEMORY_H
-    // Sun C++ 5.0 supports the `using' and `typename' keywords.
-#   define ACE_HAS_TYPENAME_KEYWORD
     // If -compat=4 is turned on, the old 4.2 settings for iostreams are used,
     // but the newer, explicit instantiation is used (above)
 #   if (__SUNPRO_CC_COMPAT >= 5)
@@ -316,12 +322,12 @@
 # endif /* ! _POSIX_PTHREAD_SEMANTICS */
 
 # define ACE_HAS_PTHREADS
-# define ACE_HAS_PTHREADS_STD
   // . . . but only supports SCHED_OTHER scheduling policy
 # define ACE_HAS_ONLY_SCHED_OTHER
 # define ACE_HAS_SIGWAIT
 # define ACE_HAS_SIGTIMEDWAIT
 # define ACE_HAS_SIGSUSPEND
+# define ACE_LACKS_PTHREAD_ATTR_SETSTACK
 
   // Compiler/platform has thread-specific storage
 # define ACE_HAS_THREAD_SPECIFIC_STORAGE
@@ -357,19 +363,13 @@
 
 #define ACE_HAS_STL_MAP_CONFLICT
 
-// Sieg - gcc 2.95.1 declares queue in stream.h.  Might want to change
-// the == to >= to allow for future versions
-#if !( __GNUG__ && (__GNUC__ == 2) && (__GNUC_MINOR__ == 95) )
-#define ACE_HAS_STL_QUEUE_CONFLICT
-#endif /* !( __GNUG__ && (__GNUC__ == 2) && (__GNUC_MINOR__ == 95) ) */
 #define ACE_HAS_IDTYPE_T
 
 #define ACE_HAS_GPERF
 #define ACE_HAS_DIRENT
-#define ACE_HAS_MEMCHR
 
 #if defined (__SUNPRO_CC)
-# define ACE_CC_NAME ACE_LIB_TEXT ("SunPro C++")
+# define ACE_CC_NAME ACE_TEXT ("SunPro C++")
 # define ACE_CC_MAJOR_VERSION (__SUNPRO_CC >> 8)
 # define ACE_CC_MINOR_VERSION (__SUNPRO_CC & 0x00ff)
 # define ACE_CC_BETA_VERSION  (0)
@@ -378,9 +378,9 @@
 # define ACE_CC_MINOR_VERSION __GNUC_MINOR__
 # define ACE_CC_BETA_VERSION  (0)
 # if __GNUC_MINOR__ >= 90
-#   define ACE_CC_NAME ACE_LIB_TEXT ("egcs")
+#   define ACE_CC_NAME ACE_TEXT ("egcs")
 # else
-#   define ACE_CC_NAME ACE_LIB_TEXT ("g++")
+#   define ACE_CC_NAME ACE_TEXT ("g++")
 # endif /* __GNUC_MINOR__ */
 #endif /* __GNUG__ */
 
@@ -388,7 +388,7 @@
 # define ACE_HAS_X86_STAT_MACROS
 #endif /* i386 && _FILE_OFFSET_BITS==32 */
 
-#define ACE_MALLOC_ALIGN 8
+#define ACE_MALLOC_ALIGN ((size_t)8)
 #define ACE_LACKS_SETREUID_PROTOTYPE
 #define ACE_LACKS_SETREGID_PROTOTYPE
 
@@ -402,5 +402,13 @@
 #undef ACE_HAS_PROC_FS
 #undef ACE_HAS_PRUSAGE_T
 #endif /* (_LARGEFILE_SOURCE) || (_FILE_OFFSET_BITS==64) */
+
+#if defined (_POSIX_PTHREAD_SEMANTICS) || (_FILE_OFFSET_BITS == 64) || (_POSIX_C_SOURCE - 0 >= 199506L)
+#  define ACE_HAS_3_PARAM_READDIR_R
+#endif
+
+// Sum of the iov_len values can't be larger then SSIZE_MAX
+#define ACE_HAS_SOCK_BUF_SIZE_MAX
+
 #include /**/ "ace/post.h"
 #endif /* ACE_CONFIG_H */

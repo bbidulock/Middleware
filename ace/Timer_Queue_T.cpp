@@ -40,12 +40,12 @@ ACE_Timer_Node_T<TYPE>::dump (void) const
 #if defined (ACE_HAS_DUMP)
   ACE_TRACE ("ACE_Timer_Node_T::dump");
   ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
-  ACE_DEBUG ((LM_DEBUG, ACE_LIB_TEXT ("\nact_ = %x"), this->act_));
+  ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("\nact_ = %x"), this->act_));
   this->timer_value_.dump ();
   this->interval_.dump ();
-  ACE_DEBUG ((LM_DEBUG, ACE_LIB_TEXT ("\nprev_ = %x"), this->prev_));
-  ACE_DEBUG ((LM_DEBUG, ACE_LIB_TEXT ("\nnext_ = %x"), this->next_));
-  ACE_DEBUG ((LM_DEBUG, ACE_LIB_TEXT ("\ntimer_id_ = %d\n"), this->timer_id_));
+  ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("\nprev_ = %x"), this->prev_));
+  ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("\nnext_ = %x"), this->next_));
+  ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("\ntimer_id_ = %d\n"), this->timer_id_));
   ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
 }
@@ -265,8 +265,7 @@ ACE_Timer_Queue_T<TYPE, FUNCTOR, ACE_LOCK>::expire (const ACE_Time_Value &cur_ti
 
   ACE_Timer_Node_Dispatch_Info_T<TYPE> info;
 
-  while ((result = this->dispatch_info_i (cur_time,
-                                          info)) != 0)
+  while ((result = this->dispatch_info_i (cur_time, info)) != 0)
     {
       const void *upcall_act = 0;
 
@@ -363,7 +362,7 @@ ACE_Event_Handler_Handle_Timeout_Upcall<ACE_LOCK>::preinvoke (TIMER_QUEUE & /* t
                                                               const ACE_Time_Value & /* cur_time */,
                                                               const void *&upcall_act)
 {
-  int requires_reference_counting =
+  bool const requires_reference_counting =
     event_handler->reference_counting_policy ().value () ==
     ACE_Event_Handler::Reference_Counting_Policy::ENABLED;
 

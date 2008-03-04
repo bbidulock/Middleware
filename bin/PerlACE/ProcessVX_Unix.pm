@@ -37,9 +37,6 @@ else {
 # This is what GetExitCode will return if the process is still running.
 my $STILL_ACTIVE = 259;
 
-my $set_vx_defgw = 1;
-my $do_vx_init = (defined $ENV{"ACE_RUN_VX_NO_INITIAL_REBOOT"}) ? 0 : 1;
-
 ###############################################################################
 
 ### Constructor and Destructor
@@ -58,15 +55,9 @@ sub new
     if (!defined $PerlACE::ProcessVX::WAIT_DELAY_FACTOR) {
         $PerlACE::ProcessVX::WAIT_DELAY_FACTOR = 2;
     }
-    $self->{REBOOT_CMD} = $ENV{"ACE_RUN_VX_REBOOT_CMD"};
-    if (!defined $self->{REBOOT_CMD}) {
-        $self->{REBOOT_CMD} = "reboot 0x02";
+    if (!defined $PerlACE::ProcessVX::RebootCmd) {
+        $PerlACE::ProcessVX::RebootCmd = "reboot 0x02";
     }
-    $self->{REBOOT_TIME} = $ENV{"ACE_RUN_VX_REBOOT_TIME"};
-    if (!defined $self->{REBOOT_TIME}) {
-        $self->{REBOOT_TIME} = 90;
-    }
-
     bless ($self, $class);
     return $self;
 }
@@ -88,16 +79,17 @@ sub DESTROY
 
 sub Normalize_Executable_Name
 {
+    my $self = shift;
     my $executable = shift;
 
     my $basename = basename ($executable);
     my $dirname = dirname ($executable). '/';
 
-    $executable = $dirname.$PerlACE::ProcessVX::ExeSubDir.$basename.".vxe";
+    $executable = $dirname.$PerlACE::ProcessVX::ExeSubDir.$basename.$PerlACE::ProcessVX::ExeExt;
 
     ## Installed executables do not conform to the ExeSubDir
-    if (! -e $executable && -e $dirname.$basename.'.vxe') {
-      $executable = $dirname.$basename.'.vxe';
+    if (! -e $executable && -e $dirname.$basename.$PerlACE::ProcessVX::ExeExt) {
+      $executable = $dirname.$basename.$PerlACE::ProcessVX::ExeExt;
     }
 
     return $executable;
@@ -115,10 +107,10 @@ sub Executable
     my $executable = $self->{EXECUTABLE};
 
     if ($self->{IGNOREEXESUBDIR} == 0) {
-      $executable = PerlACE::ProcessVX::Normalize_Executable_Name ($executable);
+      $executable = $self->Normalize_Executable_Name ($executable);
     }
     else {
-      $executable = $executable.".vxe";
+      $executable = $executable.$PerlACE::ProcessVX::ExeExt;
     }
 
     return $executable;
@@ -193,76 +185,81 @@ sub Spawn ()
 
     my $cmdline;
 
-    my $t;
-    my $ok;
-
-    ##
-    ## initialize VxWorks kernel (reboot!) if needed
-    if ($do_vx_init || $ENV{'ACE_RUN_VX_TGT_REBOOT'}) {
-        if (defined $ENV{'ACE_RUN_VX_REBOOT_TOOL'}) {
-            if (defined $ENV{'ACE_TEST_VERBOSE'}) {
-                print "Calling: $ENV{'ACE_RUN_VX_REBOOT_TOOL'}\n";
-            }
-            system ($ENV{'ACE_RUN_VX_REBOOT_TOOL'});
-        }
-        else {
-            if (defined $ENV{'ACE_TEST_VERBOSE'}) {
-              print "Executing 'reboot' command over Telnet to ".$ENV{'ACE_RUN_VX_TGTHOST'}.".\n";
-            }
-            $t = new Net::Telnet(Timeout => 10,
-                                 Prompt => '/-> $/',
-                                 Errmode => 'return');
-            $t->open($ENV{'ACE_RUN_VX_TGTHOST'});
-            $t->print("");
-            $ok = $t->waitfor('/-> $/');
-            if ($ok) {
-              $t->print($self->{REBOOT_CMD});
-            }
-            else {
-              print "ERROR: FAILED to execute 'reboot' command!\n";
-            }
-            $t->close();
-        }
-        $set_vx_defgw = 1;
-        $do_vx_init = 0;
-
-        sleep($self->{REBOOT_TIME});
-    }
+    # Reboot the target if necessery
+    $self->reboot();
 
     my $program = $self->Executable ();
     my $cwdrel = dirname ($program);
+    my $prjroot = defined $ENV{"ACE_RUN_VX_PRJ_ROOT"} ? $ENV{"ACE_RUN_VX_PRJ_ROOT"} : $ENV{"ACE_ROOT"};
     if (length ($cwdrel) > 0) {
-        $cwdrel = File::Spec->abs2rel( cwd(), $ENV{"ACE_ROOT"} );
+        $cwdrel = File::Spec->abs2rel( cwd(), $prjroot );
     }
     else {
-        $cwdrel = File::Spec->abs2rel( $cwdrel, $ENV{"ACE_ROOT"} );
+        $cwdrel = File::Spec->abs2rel( $cwdrel, $prjroot );
     }
-    $program = basename($program, ".vxe");
-
-    unlink "run_test.vxs";
-    my $oh = new FileHandle();
-    if (!open($oh, ">run_test.vxs")) {
-        print STDERR "ERROR: Unable to write to run_test.vxs\n";
-        exit -1;
-    }
+    $program = basename($program, $PerlACE::ProcessVX::ExeExt);
 
     my @cmds;
     my $cmdnr = 0;
+    my $arguments = "";
+    my $prompt = '';
 
-    @cmds[$cmdnr++] = 'cmd';
-    if ( defined $ENV{"ACE_RUN_VX_TGTSVR_DEFGW"} && $set_vx_defgw ) {
-        @cmds[$cmdnr++] = "C mRouteAdd(\"0.0.0.0\", \"" . $ENV{"ACE_RUN_VX_TGTSVR_DEFGW"} . "\", 0,0,0)";
-        $set_vx_defgw = 0;
+    if ($PerlACE::VxWorks_RTP_Test) {
+        @cmds[$cmdnr++] = 'cmd';
+        if ( defined $ENV{"ACE_RUN_VX_TGTSVR_DEFGW"} && $self->{SET_VX_DEFGW}) {
+            @cmds[$cmdnr++] = "C mRouteAdd(\"0.0.0.0\", \"" . $ENV{"ACE_RUN_VX_TGTSVR_DEFGW"} . "\", 0,0,0)";
+            $self->{SET_VX_DEFGW} = 0;
+        }
+
+        @cmds[$cmdnr++] = 'cd "' . $ENV{'ACE_RUN_VX_TGTSVR_ROOT'} . "/" . $cwdrel . '"';
+        @cmds[$cmdnr++] = 'C putenv("TMPDIR=' . $ENV{"ACE_RUN_VX_TGTSVR_ROOT"} . "/" . $cwdrel . '")';
+
+        if (defined $ENV{'ACE_RUN_ACE_DEBUG'}) {
+            @cmds[$cmdnr++] = 'putenv("ACE_DEBUG=' . $ENV{"ACE_RUN_ACE_DEBUG"} . '")';
+        }
+
+        if (defined $ENV{'ACE_RUN_TAO_ORB_DEBUG'}) {
+            @cmds[$cmdnr++] = 'putenv("TAO_ORB_DEBUG=' . $ENV{"ACE_RUN_TAO_ORB_DEBUG"} . '")';
+        }
+
+        if (defined $ENV{'ACE_RUN_VX_CHECK_RESOURCES'}) {
+            @cmds[$cmdnr++] = 'C memShow()';
+        }
+
+        $cmdline = $program . $PerlACE::ProcessVX::ExeExt . ' ' . $self->{ARGUMENTS};
+        @cmds[$cmdnr++] = $cmdline;
+        $prompt = '/\[vxWorks \*]# $/';
+    } else {
+        if ( defined $ENV{"ACE_RUN_VX_TGTSVR_DEFGW"} && $self->{SET_VX_DEFGW}) {
+            @cmds[$cmdnr++] = "mRouteAdd(\"0.0.0.0\", \"" . $ENV{"ACE_RUN_VX_TGTSVR_DEFGW"} . "\", 0,0,0)";
+            $self->{SET_VX_DEFGW} = 0;
+        }
+
+        @cmds[$cmdnr++] = 'cd "' . $ENV{'ACE_RUN_VX_TGTSVR_ROOT'} . "/" . $cwdrel . '"';
+        @cmds[$cmdnr++] = 'putenv("TMPDIR=' . $ENV{"ACE_RUN_VX_TGTSVR_ROOT"} . "/" . $cwdrel . '")';
+
+        if (defined $ENV{'ACE_RUN_VX_CHECK_RESOURCES'}) {
+            @cmds[$cmdnr++] = 'memShow()';
+        }
+
+        if (defined $ENV{'ACE_RUN_ACE_DEBUG'}) {
+            @cmds[$cmdnr++] = 'putenv("ACE_DEBUG=' . $ENV{"ACE_RUN_ACE_DEBUG"} . '")';
+        }
+
+        if (defined $ENV{'ACE_RUN_TAO_ORB_DEBUG'}) {
+            @cmds[$cmdnr++] = 'putenv("TAO_ORB_DEBUG=' . $ENV{"ACE_RUN_TAO_ORB_DEBUG"} . '")';
+        }
+
+        @cmds[$cmdnr++] = 'ld <'. $program . $PerlACE::ProcessVX::ExeExt;
+        $cmdline = $program . $PerlACE::ProcessVX::ExeExt . ' ' . $self->{ARGUMENTS};
+        if (defined $self->{ARGUMENTS}) {
+            ($arguments = $self->{ARGUMENTS})=~ s/\"/\\\"/g;
+            $arguments = ",\"" . $arguments . "\"";
+        }
+        @cmds[$cmdnr++] = 'ace_vx_rc = vx_execae(ace_main' . $arguments . ')';
+        @cmds[$cmdnr++] = 'unld "'. $program . $PerlACE::ProcessVX::ExeExt . '"';
+        $prompt = '/-> $/';
     }
-
-    @cmds[$cmdnr++] = 'cd "' . $ENV{'ACE_RUN_VX_TGTSVR_ROOT'} . "/" . $cwdrel . '"';
-    @cmds[$cmdnr++] = 'C putenv("TMPDIR=' . $ENV{"ACE_RUN_VX_TGTSVR_ROOT"} . "/" . $cwdrel . '")';
-
-    if (defined $ENV{'ACE_RUN_VX_CHECK_RESOURCES'}) {
-        @cmds[$cmdnr++] = 'C memShow()';
-    }
-
-    @cmds[$cmdnr++] = $program . '.vxe ' . $self->{ARGUMENTS};
 
     FORK:
     {
@@ -276,12 +273,28 @@ sub Spawn ()
               print "$cmdline\n";
             }
 
+            my $t;
             $t = new Net::Telnet(Timeout => 600, Errmode => 'return');
             $t->open($ENV{'ACE_RUN_VX_TGTHOST'});
             $t->print("");
+
+            my $target_login = $ENV{'ACE_RUN_VX_LOGIN'};
+            my $target_password = $ENV{'ACE_RUN_VX_PASSWORD'};
+
+            if (defined $target_login)  {
+              $t->waitfor('/VxWorks login: $/');
+              $t->print("$target_login");
+            }
+
+            if (defined $target_password)  {
+              $t->waitfor('/Password: $/');
+              $t->print("$target_password");
+            }
+
+            my $ok;
             $ok = $t->waitfor('/-> $/');
             if ($ok) {
-              $t->prompt ('/\[vxWorks \*]# $/');
+              $t->prompt ($prompt);
               my $i = 0;
               my @lines;
               while($i < $cmdnr) {
@@ -296,6 +309,7 @@ sub Spawn ()
               die "ERROR: exec failed for <" . $cmdline . ">";
             }
             $t->close();
+            sleep(2);
             exit;
         }
         elsif ($! =~ /No more process/) {
@@ -312,7 +326,6 @@ sub Spawn ()
     return 0;
 }
 
-
 # Wait for the process to exit or kill after a time period
 
 sub WaitKill ($)
@@ -326,7 +339,7 @@ sub WaitKill ($)
         print STDERR "ERROR: $self->{EXECUTABLE} timedout\n";
         $self->Kill ();
 
-        $do_vx_init = 1; # force reboot on next run
+        $PerlACE::ProcessVX::DoVxInit = 1; # force reboot on next run
     }
 
     $self->{RUNNING} = 0;
@@ -349,6 +362,9 @@ sub SpawnWaitKill ($)
     return $self->WaitKill ($timeout);
 }
 
+
+# Terminate the process and wait for it to finish
+
 sub TerminateWaitKill ($)
 {
     my $self = shift;
@@ -358,7 +374,7 @@ sub TerminateWaitKill ($)
         print STDERR "INFO: $self->{EXECUTABLE} being killed.\n";
         kill ('TERM', $self->{PROCESS});
 
-        $do_vx_init = 1; # force reboot on next run
+        $PerlACE::ProcessVX::DoVxInit = 1; # force reboot on next run
     }
 
     return $self->WaitKill ($timeout);
@@ -380,7 +396,7 @@ sub check_return_value ($)
         print STDERR "ERROR: <", $self->{EXECUTABLE},
                      "> failed: $!\n";
 
-        $do_vx_init = 1; # force reboot on next run
+        $PerlACE::ProcessVX::DoVxInit = 1; # force reboot on next run
 
         return ($rc >> 8);
     }
@@ -409,7 +425,7 @@ sub check_return_value ($)
 
     print STDERR "signal $rc : ", $signame[$rc], "\n";
 
-    $do_vx_init = 1; # force reboot on next run
+    $PerlACE::ProcessVX::DoVxInit = 1; # force reboot on next run
 
     return 0;
 }
@@ -446,7 +462,9 @@ sub TimedWait ($)
     my $self = shift;
     my $timeout = shift;
 
-    $timeout *= $PerlACE::Process::WAIT_DELAY_FACTOR;
+    if ($PerlACE::Process::WAIT_DELAY_FACTOR > 0) {
+      $timeout *= $PerlACE::Process::WAIT_DELAY_FACTOR;
+    }
 
     while ($timeout-- != 0) {
         my $pid = waitpid ($self->{PROCESS}, &WNOHANG);
@@ -456,9 +474,13 @@ sub TimedWait ($)
         sleep 1;
     }
 
-    $do_vx_init = 1; # force reboot on next run
+    $PerlACE::ProcessVX::DoVxInit = 1; # force reboot on next run
 
     return -1;
 }
+
+
+
+
 
 1;

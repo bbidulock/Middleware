@@ -27,16 +27,17 @@
 #include "ace/If_Then_Else.h"
 #include "ace/Numeric_Limits.h"
 
-#if defined (__BORLANDC__) && __BORLANDC__ <= 0x590
+#if defined (ACE_LACKS_LONGLONG_T) \
+    || defined (__BORLANDC__) && __BORLANDC__ < 0x590
 # include "ace/Basic_Types.h"
-#endif  /* __BORLANDC__ <= 0x590 */
+#endif  /* ACE_LACKS_LONGLONG_T || __BORLANDC__ < 0x590 */
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
 namespace ACE_Utils
 {
 
-#if !defined (__BORLANDC__) || __BORLANDC__ > 0x590
+#if !defined (__BORLANDC__) || __BORLANDC__ >= 0x590
 
   template<typename T> struct Sign_Check;
 
@@ -45,13 +46,15 @@ namespace ACE_Utils
   template<> struct Sign_Check<unsigned short> { ACE_STATIC_CONSTANT (bool, is_signed = 0); };
   template<> struct Sign_Check<unsigned int>   { ACE_STATIC_CONSTANT (bool, is_signed = 0); };
   template<> struct Sign_Check<unsigned long>  { ACE_STATIC_CONSTANT (bool, is_signed = 0); };
-#ifndef ACE_LACKS_LONGLONG_T
+#if !(defined(ACE_LACKS_LONGLONG_T) || defined(ACE_LACKS_UNSIGNEDLONGLONG_T))
 # ifdef __GNUC__
   // Silence g++ "-pedantic" warnings regarding use of "long long"
   // type.
   __extension__
 # endif  /* __GNUC__ */
   template<> struct Sign_Check<unsigned long long> { ACE_STATIC_CONSTANT (bool, is_signed = 0); };
+#else
+  template<> struct Sign_Check<ACE_U_LongLong> { ACE_STATIC_CONSTANT (bool, is_signed = 0); };
 #endif  /* !ACE_LACKS_LONGLONG_T */
 
   // Specialize the signed cases.
@@ -111,7 +114,7 @@ namespace ACE_Utils
     unsigned_type operator() (unsigned_type x) { return x; }
   };
 
-#ifndef ACE_LACKS_LONGLONG_T
+#if !(defined(ACE_LACKS_LONGLONG_T) || defined(ACE_LACKS_UNSIGNEDLONGLONG_T))
 # ifdef __GNUC__
   // Silence g++ "-pedantic" warnings regarding use of "long long"
   // type.
@@ -121,6 +124,14 @@ namespace ACE_Utils
   struct To_Unsigned<unsigned long long>
   {
     typedef unsigned long long unsigned_type;
+
+    unsigned_type operator() (unsigned_type x) { return x; }
+  };
+#else
+  template<>
+  struct To_Unsigned<ACE_U_LongLong>
+  {
+    typedef ACE_U_LongLong unsigned_type;
 
     unsigned_type operator() (unsigned_type x) { return x; }
   };
@@ -176,7 +187,7 @@ namespace ACE_Utils
     }
   };
 
-#ifndef ACE_LACKS_LONGLONG_T
+#if !(defined(ACE_LACKS_LONGLONG_T) || defined(ACE_LACKS_UNSIGNEDLONGLONG_T))
 # ifdef __GNUC__
   // Silence g++ "-pedantic" warnings regarding use of "long long"
   // type.
@@ -431,6 +442,29 @@ namespace ACE_Utils
     }
   };
 
+
+#if defined (ACE_LACKS_LONGLONG_T) || defined (ACE_LACKS_UNSIGNEDLONGLONG_T)
+  // Partial specialization for the case where we're casting from
+  // ACE_U_LongLong to a smaller integer.  We assume that we're always
+  // truncating from ACE_U_LongLong to a smaller type.  The partial
+  // specialization above handles the case where both the FROM and TO
+  // types are ACE_U_LongLong.
+  template<typename TO>
+  struct Truncator<ACE_U_LongLong, TO>
+  {
+    TO operator() (ACE_U_LongLong const & val)
+    {
+      // If val less than or equal to ACE_Numeric_Limits<TO>::max(),
+      // val.lo() must be less than or equal to
+      // ACE_Numeric_Limits<TO>::max (), as well.
+      return
+        (val > ACE_Numeric_Limits<TO>::max ()
+         ? ACE_Numeric_Limits<TO>::max ()
+         : static_cast<TO> (val.lo ()));
+    }
+  };
+#endif /* ACE_LACKS_LONGLONG_T || ACE_LACKS_UNSIGNEDLONGLONG_T */
+
   // -----------------------------------------------------
   /**
    * @struct Noop_Truncator
@@ -452,7 +486,7 @@ namespace ACE_Utils
   // -----------------------------------------------------
 
   /**
-   * @class Truncate
+   * @class truncate_cast
    *
    * @brief Helper function to truncate an integral value to the
    *        maximum  value of the given type.
@@ -465,7 +499,7 @@ namespace ACE_Utils
    * @internal Internal use only.
    */
   template<typename TO, typename FROM>
-  inline TO Truncate (FROM val)
+  inline TO truncate_cast (FROM val)
   {
     // If the size of FROM is less than the size of TO, "val" will
     // never be greater than the maximum "TO" value, so there is no
@@ -584,6 +618,18 @@ namespace ACE_Utils
   struct Truncator<ACE_UINT64, signed long>
   {
     signed long operator() (ACE_UINT64 val)
+    {
+      return
+        (val > static_cast<ACE_UINT64> (ACE_Numeric_Limits<signed long>::max ())
+         ? ACE_Numeric_Limits<signed long>::max ()
+         : static_cast<signed long> (val));
+    }
+  };
+
+  template<>
+  struct Truncator<const ACE_UINT64, signed long>
+  {
+    signed long operator() (const ACE_UINT64 val)
     {
       return
         (val > static_cast<ACE_UINT64> (ACE_Numeric_Limits<signed long>::max ())
@@ -716,6 +762,21 @@ namespace ACE_Utils
   };
 
   template<>
+  struct Truncator<signed long, signed int>
+  {
+    signed int operator() (signed long val)
+    {
+      return static_cast<signed int> (val);
+//      This code causes asserts and compiler crashes with BCB6 Static and
+//      BCB2007 Static
+//      return
+//        (val > static_cast<signed long> (ACE_Numeric_Limits<signed int>::max ())
+//         ? ACE_Numeric_Limits<signed int>::max ()
+//         : static_cast<signed int> (val));
+    }
+  };
+
+  template<>
   struct Truncator<signed long, unsigned int>
   {
     unsigned int operator() (signed long val)
@@ -723,6 +784,16 @@ namespace ACE_Utils
       return static_cast<unsigned int> (val);
     }
   };
+
+  template<>
+  struct Truncator<const signed long, unsigned int>
+  {
+    unsigned int operator() (const signed long val)
+    {
+      return static_cast<unsigned int> (val);
+    }
+  };
+
 
   template<>
   struct Truncator<unsigned int, signed long>
@@ -819,6 +890,18 @@ namespace ACE_Utils
   };
 
   template<>
+  struct Truncator<const signed long, ACE_UINT64>
+  {
+    ACE_UINT64 operator() (const signed long val)
+    {
+      return
+        (val > static_cast<ACE_UINT64> (ACE_Numeric_Limits<signed long>::max ())
+         ? ACE_Numeric_Limits<signed long>::max ()
+         : static_cast<signed long> (val));
+    }
+  };
+
+  template<>
   struct Truncator<unsigned long, ACE_UINT64>
   {
     ACE_UINT64 operator() (unsigned long val)
@@ -875,6 +958,18 @@ namespace ACE_Utils
   };
 #endif  /* ACE_SIZEOF_INT < 8 */
 
+  template<>
+  struct Truncator<size_t, unsigned long>
+  {
+    unsigned long operator() (size_t val)
+    {
+      return
+        (val > static_cast<unsigned long> (ACE_Numeric_Limits<size_t>::max ())
+         ? ACE_Numeric_Limits<size_t>::max ()
+         : static_cast<size_t> (val));
+    }
+  };
+
   // Partial specialization for the case where the types are the same.
   // No truncation is necessary.
   template<typename T>
@@ -886,16 +981,31 @@ namespace ACE_Utils
     }
   };
 
+  // Partial specialization for the case where the types are the same,
+  // but the from type is const.  No truncation is necessary.
+  //
+  // This is only necessary to workaround a problem with the BCB6
+  // compiler.
+  template<typename T>
+  struct Truncator<T const, T>
+  {
+    T operator() (T val)
+    {
+      return val;
+    }
+  };
+
   // -------------------------------------
+
   template<typename TO, typename FROM>
-  inline TO Truncate (FROM val)
+  inline TO truncate_cast (FROM val)
   {
     typedef Truncator<FROM, TO> truncator;
 
     return truncator() (val);
   }
 
-#endif  /* !__BORLANDC__ || __BORLANDC__ > 0x590 */
+#endif  /* !__BORLANDC__ || __BORLANDC__ >= 0x590 */
 
 } // namespace ACE_Utils
 

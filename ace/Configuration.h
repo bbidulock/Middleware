@@ -349,7 +349,7 @@ public:
                             const ACE_TCHAR* name) = 0;
 
   /**
-   * Expands <path_in> to <key_out> from <key>.  If create is true,
+   * Expands <path_in> to <key_out> from @a key.  If create is true,
    * the subsections are created.  Returns 0 on success, non zero on
    * error The path consists of sections separated by the backslash
    * '\' or forward slash '/'.
@@ -405,18 +405,18 @@ protected:
     (const ACE_Configuration_Section_Key& key);
 
   /**
-   * Tests to see if <name> is valid.  <name> must be < 255 characters
+   * Tests to see if @a name is valid.  @a name must be < 255 characters
    * and not contain the path separator '\', brackets [] or = (maybe
    * just restrict to alphanumeric?) returns non zero if name is not
    * valid.  The path separator is allowed, except for the first character,
-   * if <allow_path> is true.
+   * if @a allow_path is true.
    */
   int validate_name (const ACE_TCHAR* name, int allow_path = 0);
 
   /**
-   * Test to see if <name> is valid.  The default value for a key can be
-   * unnamed, which means either <name> is == 0 or <name> == '\0` is
-   * valid.  Otherwise, it calls validate_name() to test <name> for the
+   * Test to see if @a name is valid.  The default value for a key can be
+   * unnamed, which means either @a name is == 0 or @a name == '\0` is
+   * valid.  Otherwise, it calls validate_name() to test @a name for the
    * same rules that apply to keys.
    */
   int validate_value_name (const ACE_TCHAR* name);
@@ -429,7 +429,7 @@ protected:
   ACE_Configuration_Section_Key root_;
 };
 
-#if defined (ACE_WIN32)
+#if defined (ACE_WIN32) && !defined (ACE_LACKS_WIN32_REGISTRY)
 
 /**
  * @class ACE_Section_Key_Win32
@@ -554,7 +554,7 @@ protected:
   ACE_Configuration_Win32Registry (const ACE_Configuration_Win32Registry& rhs);
   ACE_Configuration_Win32Registry& operator= (const ACE_Configuration_Win32Registry& rhs);
 };
-#endif /* ACE_WIN32 */
+#endif /* ACE_WIN32 && !ACE_LACKS_WIN32_REGISTRY */
 
 // ACE_Allocator version
 
@@ -848,7 +848,7 @@ public:
                          const ACE_TCHAR* name,
                          VALUETYPE& type);
 
-  /// Removes the the value <name> from <key>.  returns non zero on error
+  /// Removes the the value @a name from @a key.  returns non zero on error
   virtual int remove_value (const ACE_Configuration_Section_Key& key,
                             const ACE_TCHAR* name);
 
@@ -887,6 +887,10 @@ private:
 };
 
 ACE_END_VERSIONED_NAMESPACE_DECL
+
+#if defined (__ACE_INLINE__)
+#include "ace/Configuration.inl"
+#endif /* __ACE_INLINE__ */
 
 #include /**/ "ace/post.h"
 #endif /* ACE_CONFIGURATION_H */

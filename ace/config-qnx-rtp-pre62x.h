@@ -41,7 +41,6 @@
 #define ACE_HAS_POSIX_SEM
 #define ACE_HAS_POSIX_TIME
 #define ACE_HAS_PTHREADS
-#define ACE_HAS_PTHREADS_STD
 #define ACE_HAS_P_READ_WRITE
 #define ACE_HAS_REENTRANT_FUNCTIONS
 #define ACE_HAS_SELECT_H
@@ -82,7 +81,6 @@
 #define ACE_LACKS_NETDB_REENTRANT_FUNCTIONS
 #define ACE_LACKS_NETDB_REENTRANT_FUNCTIONS
 #define ACE_LACKS_PTHREAD_THR_SIGSETMASK
-#define ACE_LACKS_RTTI
 #define ACE_LACKS_RWLOCK_T
 #define ACE_LACKS_SBRK
 #define ACE_LACKS_SEEKDIR
@@ -96,6 +94,7 @@
 #define ACE_LACKS_SYSCALL
 #define ACE_LACKS_SYS_MSG_H
 #define ACE_LACKS_SYSV_SHMEM
+#define ACE_LACKS_ALPHASORT
 //#define ACE_LACKS_TCP_NODELAY  // Based on the  QNX RTP documentation, this option seems to
                                  // to be supported.
 #define ACE_LACKS_TELLDIR
@@ -146,7 +145,6 @@
 #define ACE_LACKS_WCSPBRK
 #define ACE_LACKS_WCSRCHR
 
-#define ACE_HAS_EXPLICIT_TEMPLATE_INSTANTIATION
 #define ACE_LACKS_ACE_IOSTREAM
 
 #include /**/ "ace/post.h"

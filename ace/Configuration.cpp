@@ -13,6 +13,10 @@
 #  include "ace/OS_NS_unistd.h"
 #endif /* ACE_LACKS_ACCESS */
 
+#if !defined (__ACE_INLINE__)
+#include "ace/Configuration.inl"
+#endif /* __ACE_INLINE__ */
+
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
 ACE_Section_Key_Internal::ACE_Section_Key_Internal (void)
@@ -151,20 +155,20 @@ ACE_Configuration::validate_name (const ACE_TCHAR* name, int allow_path)
 {
   // Invalid character set
   const ACE_TCHAR* reject =
-    allow_path ? ACE_LIB_TEXT ("][") : ACE_LIB_TEXT ("\\][");
+    allow_path ? ACE_TEXT ("][") : ACE_TEXT ("\\][");
 
   // Position of the first invalid character or terminating null.
-  size_t pos = ACE_OS::strcspn (name, reject);
+  size_t const pos = ACE_OS::strcspn (name, reject);
 
   // Check if it is an invalid character.
-  if (name[pos] != ACE_LIB_TEXT ('\0'))
+  if (name[pos] != ACE_TEXT ('\0'))
     {
       errno = EINVAL;
       return -1;
     }
 
   // The first character can never be a path separator.
-  if (name[0] == ACE_LIB_TEXT ('\\'))
+  if (name[0] == ACE_TEXT ('\\'))
     {
       errno = EINVAL;
       return -1;
@@ -385,7 +389,7 @@ ACE_Configuration::operator== (const ACE_Configuration& rhs) const
 
         }// end else if sections match.
 
-      sectionIndex++;
+      ++sectionIndex;
 
     }// end section while loop
 
@@ -428,7 +432,7 @@ ACE_Configuration::operator!= (const ACE_Configuration& rhs) const
 
 //////////////////////////////////////////////////////////////////////////////
 
-#if defined (WIN32)
+#if defined (ACE_WIN32) && !defined (ACE_LACKS_WIN32_REGISTRY)
 
 static const int ACE_DEFAULT_BUFSIZE = 256;
 
@@ -467,7 +471,7 @@ ACE_Configuration_Win32Registry::operator!= (const ACE_Configuration_Win32Regist
 
 ACE_Configuration_Win32Registry::ACE_Configuration_Win32Registry (HKEY hKey)
 {
-  ACE_Section_Key_Win32 *temp;
+  ACE_Section_Key_Win32 *temp = 0;
 
   ACE_NEW (temp, ACE_Section_Key_Win32 (hKey));
 
@@ -576,47 +580,12 @@ ACE_Configuration_Win32Registry::remove_section (const ACE_Configuration_Section
     }
 
   int errnum;
-#if (ACE_HAS_WINNT4 != 0)
   errnum = ACE_TEXT_RegDeleteKey (base_key, sub_section);
   if (errnum != ERROR_SUCCESS)
     {
       errno = errnum;
       return -1;
     }
-#else
-  if (!recursive)
-    {
-      ACE_Configuration_Section_Key section;
-      if (open_section (key, sub_section, 0, section))
-        return -1;
-
-      HKEY sub_key;
-      if (load_key (section, sub_key))
-        return -1;
-
-      ACE_TCHAR name_buffer[ACE_DEFAULT_BUFSIZE];
-      DWORD buffer_size = ACE_DEFAULT_BUFSIZE;
-      // Check for a an entry under the sub_key
-      if (ACE_TEXT_RegEnumKeyEx (sub_key,
-                                 0,
-                                 name_buffer,
-                                 &buffer_size,
-                                 0,
-                                 0,
-                                 0,
-                                 0) == ERROR_SUCCESS)
-        {
-          errno = ERROR_DIR_NOT_EMPTY;
-          return -1;
-        }
-    }
-  errnum = ACE_TEXT_RegDeleteKey (base_key, sub_section);
-  if (errnum != ERROR_SUCCESS)
-    {
-      errno = errnum;
-      return -1;
-    }
-#endif
 
   return 0;
 }
@@ -885,10 +854,11 @@ ACE_Configuration_Win32Registry::get_integer_value (const ACE_Configuration_Sect
 }
 
 int
-ACE_Configuration_Win32Registry::get_binary_value (const ACE_Configuration_Section_Key &key,
-                                                   const ACE_TCHAR *name,
-                                                   void *&data,
-                                                   size_t &length)
+ACE_Configuration_Win32Registry::get_binary_value (
+  const ACE_Configuration_Section_Key &key,
+  const ACE_TCHAR *name,
+  void *&data,
+  size_t &length)
 {
   const ACE_TCHAR *t_name = temp_name (name);
   if (validate_value_name (t_name))
@@ -921,20 +891,23 @@ ACE_Configuration_Win32Registry::get_binary_value (const ACE_Configuration_Secti
 
   length = buffer_length;
 
-  ACE_NEW_RETURN (data, BYTE[length], -1);
+  BYTE * the_data = 0;
+  ACE_NEW_RETURN (the_data, BYTE[length], -1);
+  ACE_Auto_Basic_Array_Ptr<BYTE> safe_data (the_data);
 
   if ((errnum = ACE_TEXT_RegQueryValueEx (base_key,
                                           t_name,
                                           0,
                                           &type,
-                                          (BYTE *) data,
+                                          the_data,
                                           &buffer_length)) != ERROR_SUCCESS)
     {
-      delete [] (BYTE *) data;
       data = 0;
       errno = errnum;
       return -1;
     }
+
+  data = safe_data.release ();
 
   return 0;
 }
@@ -1097,7 +1070,7 @@ ACE_Configuration_Win32Registry::resolve_key (HKEY hKey,
   return result;
 }
 
-#endif /* WIN_32 */
+#endif /* ACE_WIN32 && !ACE_LACKS_WIN32_REGISTRY */
 
 ///////////////////////////////////////////////////////////////
 
@@ -1196,20 +1169,14 @@ ACE_Configuration_ExtId::operator== (const ACE_Configuration_ExtId& rhs) const
 bool
 ACE_Configuration_ExtId::operator!= (const ACE_Configuration_ExtId& rhs) const
 {
-  return (ACE_OS::strcasecmp (name_, rhs.name_) != 0);
+  return !this->operator== (rhs);
 }
 
 u_long
 ACE_Configuration_ExtId::hash (void) const
 {
-  ACE_TString temp (name_, 0, 0);
+  ACE_TString temp (name_, 0, false);
   return temp.hash ();
-}
-
-const ACE_TCHAR*
-ACE_Configuration_ExtId::name (void)
-{
-  return name_;
 }
 
 void
@@ -1285,7 +1252,7 @@ ACE_Configuration_Heap::ACE_Configuration_Heap (void)
 {
   ACE_Configuration_Section_Key_Heap *temp = 0;
 
-  ACE_NEW (temp, ACE_Configuration_Section_Key_Heap (ACE_LIB_TEXT ("")));
+  ACE_NEW (temp, ACE_Configuration_Section_Key_Heap (ACE_TEXT ("")));
   root_ = ACE_Configuration_Section_Key (temp);
 }
 
@@ -1339,7 +1306,7 @@ ACE_Configuration_Heap::open (const ACE_TCHAR* file_name,
   // Now check if the backing store has been created successfully.
   if (ACE_OS::access (file_name, F_OK) != 0)
     ACE_ERROR_RETURN ((LM_ERROR,
-                       ACE_LIB_TEXT ("create_index\n")),
+                       ACE_TEXT ("create_index\n")),
                       -1);
 #endif /* ACE_LACKS_ACCESS */
 
@@ -1370,12 +1337,12 @@ ACE_Configuration_Heap::create_index (void)
         {
           // Attempt to clean up.
           ACE_ERROR ((LM_ERROR,
-                      ACE_LIB_TEXT ("create_index failed\n")));
+                      ACE_TEXT ("create_index failed\n")));
           this->allocator_->remove ();
           return -1;
         }
       // Add the root section
-      return new_section (ACE_LIB_TEXT (""), root_);
+      return new_section (ACE_TEXT (""), root_);
     }
   return 0;
 }
@@ -1401,7 +1368,7 @@ ACE_Configuration_Heap::load_key (const ACE_Configuration_Section_Key& key,
       return -1;
     }
 
-  ACE_TString temp (pKey->path_, 0, 0);
+  ACE_TString temp (pKey->path_, 0, false);
   name.assign_nocopy (temp);
   return 0;
 }
@@ -1437,7 +1404,7 @@ ACE_Configuration_Heap::add_section (const ACE_Configuration_Section_Key& base,
   // Create the new section name
   // only prepend a separater if were not at the root
   if (section.length ())
-    section += ACE_LIB_TEXT ("\\");
+    section += ACE_TEXT ("\\");
 
   section += sub_section;
 
@@ -1567,7 +1534,7 @@ ACE_Configuration_Heap::open_section (const ACE_Configuration_Section_Key& base,
   result = base;
 
   for (const ACE_TCHAR* separator;
-       (separator = ACE_OS::strchr (sub_section, ACE_LIB_TEXT ('\\'))) != 0;
+       (separator = ACE_OS::strchr (sub_section, ACE_TEXT ('\\'))) != 0;
        )
     {
       ACE_TString simple_section (sub_section, separator - sub_section);
@@ -1587,7 +1554,7 @@ ACE_Configuration_Heap::open_simple_section (const ACE_Configuration_Section_Key
                                              int create,
                                              ACE_Configuration_Section_Key& result)
 {
-  ACE_TString section (0, 0, 0);
+  ACE_TString section (0, 0, false);
 
   if (load_key (base, section))
     {
@@ -1597,7 +1564,7 @@ ACE_Configuration_Heap::open_simple_section (const ACE_Configuration_Section_Key
   // Only add the \\ if were not at the root
   if (section.length ())
     {
-      section += ACE_LIB_TEXT ("\\");
+      section += ACE_TEXT ("\\");
     }
 
   section += sub_section;
@@ -1646,7 +1613,7 @@ ACE_Configuration_Heap::remove_section (const ACE_Configuration_Section_Key& key
 
   // Find this subkey
   if (section.length ())
-    section += ACE_LIB_TEXT ("\\");
+    section += ACE_TEXT ("\\");
 
   section += sub_section;
   ACE_Configuration_ExtId SectionExtId (section.fast_rep ());
@@ -2029,7 +1996,7 @@ ACE_Configuration_Heap::get_integer_value (const ACE_Configuration_Section_Key& 
     return -1;
 
   // Get the section name from the key
-  ACE_TString section (0, 0, 0);
+  ACE_TString section (0, 0, false);
 
   if (this->load_key (key, section) != 0)
     {
@@ -2068,10 +2035,11 @@ ACE_Configuration_Heap::get_integer_value (const ACE_Configuration_Section_Key& 
 }
 
 int
-ACE_Configuration_Heap::get_binary_value (const ACE_Configuration_Section_Key& key,
-                                          const ACE_TCHAR* name,
-                                          void*& data,
-                                          size_t& length)
+ACE_Configuration_Heap::get_binary_value (
+  const ACE_Configuration_Section_Key& key,
+  const ACE_TCHAR* name,
+  void*& data,
+  size_t& length)
 {
   ACE_ASSERT (this->allocator_);
   const ACE_TCHAR *t_name = name ? name : &this->NULL_String_;

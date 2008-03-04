@@ -25,11 +25,20 @@
 #include "ace/Select_Reactor.h"
 #include "ace/Map_Manager.h"
 
+#include "qglobal.h"
+
 // QT toolkit specific includes.
+#if QT_VERSION >= 0x040000
+#include /**/ <QtGui/QApplication>
+#include /**/ <QtCore/QObject>
+#include /**/ <QtCore/QSocketNotifier.h>
+#include /**/ <QtCore/QTimer.h>
+#else
 #include /**/ <qapplication.h>
 #include /**/ <qobject.h>
 #include /**/ <qsocketnotifier.h>
 #include /**/ <qtimer.h>
+#endif
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -134,7 +143,7 @@ protected:
 
     // = Register timers/handles with Qt
 
-    /// Register a single <handler>.
+    /// Register a single @a handler.
     virtual int register_handler_i (ACE_HANDLE handle,
         ACE_Event_Handler *handler,
         ACE_Reactor_Mask mask);
@@ -145,7 +154,7 @@ protected:
         ACE_Reactor_Mask mask);
 
 
-    /// Remove the <handler> associated with this <handle>.
+    /// Remove the <handler> associated with this @a handle.
     virtual int remove_handler_i (ACE_HANDLE handle,
         ACE_Reactor_Mask mask);
 

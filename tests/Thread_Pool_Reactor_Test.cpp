@@ -63,9 +63,8 @@ static const ACE_TCHAR *rendezvous = ACE_TEXT ("127.0.0.1:10010");
 // Total number of server threads.
 static size_t svr_thrno = ACE_MAX_THREADS;
 
-#if defined (CHORUS) \
-	|| defined (ACE_VXWORKS) 	// default network parameters (MAX_BINDS and system buffers) are too small for full test
-		// Add platforms that can't handle too many
+#if defined (ACE_VXWORKS)  // default network parameters (MAX_BINDS and system buffers) are too small for full test
+        // Add platforms that can't handle too many
         // connection simultaneously here.
 #define ACE_LOAD_FACTOR /2
 #else
@@ -87,12 +86,14 @@ static int req_delay = 50;
 static void
 parse_arg (int argc, ACE_TCHAR *argv[])
 {
+  //FUZZ: disable check_for_lack_ACE_OS
   ACE_Get_Opt getopt (argc, argv, ACE_TEXT ("r:s:c:d:i:n:"));
 
   int c;
 
   while ((c = getopt ()) != -1)
     {
+  //FUZZ: enable check_for_lack_ACE_OS
       switch (c)
         {
         case 'r':                   // hostname:port

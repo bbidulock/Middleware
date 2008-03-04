@@ -36,7 +36,7 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
  * @class ACE_Cached_Connect_Strategy_Ex
  *
  * @brief A connection strategy which caches connections to peers
- * (represented by <SVC_HANDLER> instances), thereby allowing
+ * (represented by SVC_HANDLER instances), thereby allowing
  * subsequent re-use of unused, but available, connections.
  *
  * <Cached_Connect_Strategy> is intended to be used as a
@@ -85,9 +85,9 @@ public:
                                     CACHING_STRATEGY,
                                     ATTRIBUTES>
           CONNECTION_CACHE;
-  typedef ACE_TYPENAME CONNECTION_CACHE::CACHE_ENTRY CONNECTION_CACHE_ENTRY;
-  typedef ACE_TYPENAME CONNECTION_CACHE::key_type KEY;
-  typedef ACE_TYPENAME CONNECTION_CACHE::mapped_type VALUE;
+  typedef typename CONNECTION_CACHE::CACHE_ENTRY CONNECTION_CACHE_ENTRY;
+  typedef typename CONNECTION_CACHE::key_type KEY;
+  typedef typename CONNECTION_CACHE::mapped_type VALUE;
 
   typedef ACE_Recyclable_Handler_Cleanup_Strategy<REFCOUNTED_HASH_RECYCLABLE_ADDRESS,
                                                   ACE_Pair<SVC_HANDLER *, ATTRIBUTES>,
@@ -172,7 +172,7 @@ protected:
                               int flags,
                               int perms);
 
-  /// Table that maintains the cache of connected <SVC_HANDLER>s.
+  /// Table that maintains the cache of connected SVC_HANDLERs.
   CONNECTION_CACHE connection_cache_;
 };
 
@@ -185,7 +185,7 @@ protected:
  * @class ACE_Bounded_Cached_Connect_Strategy
  *
  * @brief A connection strategy which caches connections to peers
- *     (represented by <SVC_HANDLER> instances), thereby allowing
+ *     (represented by SVC_HANDLER instances), thereby allowing
  *     subsequent re-use of unused, but available, connections.
  *     This strategy should be used when the cache is bounded by
  *     maximum size.

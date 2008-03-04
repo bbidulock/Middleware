@@ -13,49 +13,12 @@
 #include "ace/Log_Msg.h"
 #include "ace/Truncate.h"
 
-#if defined (ACE_WIN32) \
-    && (!defined(ACE_HAS_WINNT4) || (ACE_HAS_WINNT4 == 0))
-# define ACE_USE_MAPPING_NAME 1
-#endif /* ACE_WIN32 */
-
-#if defined (ACE_USE_MAPPING_NAME)
-#include "ace/SString.h"
-#endif /* ACE_USE_MAPPING_NAME */
-
 ACE_RCSID(ace, Mem_Map, "Mem_Map.cpp,v 4.39 2003/11/01 11:15:13 dhinton Exp")
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
 ACE_ALLOC_HOOK_DEFINE(ACE_Mem_Map)
 
-#if defined (ACE_USE_MAPPING_NAME)
-// Gets a mapping object name from a file name.  TODO: The file name
-// is used as the key to the mapping. We should try to avoid mapping
-// the same object name to different files (there is a mapping object
-// name length limitation).
-
-static void
-to_mapping_name (ACE_TCHAR *mapobjname,
-    const ACE_TCHAR *filename,
-    size_t len)
-{
-  --len;
-  size_t i = 0;
-
-  while (*filename && i < len)
-    {
-      if (*filename == ACE_LIB_TEXT ('\\'))
-        // Can't use backslash in mapping object name.
-        mapobjname[i] = ACE_LIB_TEXT ('.');
-      else
-        mapobjname[i] = *filename;
-      ++filename;
-      ++i;
-    }
-
-  mapobjname[i] = 0;
-}
-#endif /* ACE_USE_MAPPING_NAME */
 
 void
 ACE_Mem_Map::dump (void) const
@@ -64,12 +27,12 @@ ACE_Mem_Map::dump (void) const
   ACE_TRACE ("ACE_Mem_Map::dump");
 
   ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
-  ACE_DEBUG ((LM_DEBUG,  ACE_LIB_TEXT ("base_addr_ = %x"), this->base_addr_));
-  ACE_DEBUG ((LM_DEBUG,  ACE_LIB_TEXT ("\nfilename_ = %s"), this->filename_));
-  ACE_DEBUG ((LM_DEBUG,  ACE_LIB_TEXT ("\nlength_ = %d"), this->length_));
-  ACE_DEBUG ((LM_DEBUG,  ACE_LIB_TEXT ("\nhandle_ = %d"), this->handle_));
-  ACE_DEBUG ((LM_DEBUG,  ACE_LIB_TEXT ("\nfile_mapping_ = %d"), this->file_mapping_));
-  ACE_DEBUG ((LM_DEBUG,  ACE_LIB_TEXT ("\nclose_handle_ = %d"), this->close_handle_));
+  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("base_addr_ = %x"), this->base_addr_));
+  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("\nfilename_ = %s"), this->filename_));
+  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("\nlength_ = %d"), this->length_));
+  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("\nhandle_ = %d"), this->handle_));
+  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("\nfile_mapping_ = %d"), this->file_mapping_));
+  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("\nclose_handle_ = %d"), this->close_handle_));
   ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
 }
@@ -116,10 +79,8 @@ ACE_Mem_Map::map_it (ACE_HANDLE handle,
   this->base_addr_ = addr;
   this->handle_ = handle;
 
-  ACE_OFF_T const result = ACE_OS::filesize (this->handle_);
-
-  // At this point we know <result> is not negative...
-  ACE_OFF_T const current_file_length = result;
+  // Get the current filesize
+  ACE_OFF_T const current_file_length = ACE_OS::filesize (this->handle_);
 
   // Flag to indicate if we need to extend the back store
   bool extend_backing_store = false;
@@ -129,10 +90,12 @@ ACE_Mem_Map::map_it (ACE_HANDLE handle,
 
   // Check <length_request>
   if (length_request == static_cast<size_t> (-1))
-    // Set length to file_request or size_t max.
-    this->length_ = ACE_Utils::Truncate<size_t> (current_file_length - offset);
+    {
+      // Set length to file_request or size_t max.
+      this->length_ = ACE_Utils::truncate_cast<size_t> (current_file_length - offset);
+    }
   else
-    { 
+    {
       // Make sure that we have not been asked to do the impossible.
       if (static_cast<ACE_UINT64> (length_request)
           + static_cast<ACE_UINT64> (offset)
@@ -163,13 +126,12 @@ ACE_Mem_Map::map_it (ACE_HANDLE handle,
   if (extend_backing_store)
     {
       // Remember than write increases the size by one.
-      ACE_OFF_T null_byte_position;
+      ACE_OFF_T null_byte_position = 0;
       if (requested_file_length > 0)
-        // This will make the file size <requested_file_length>
-        null_byte_position = requested_file_length - 1;
-      else
-        // This will make the file size 1
-        null_byte_position = 0;
+        {
+          // This will make the file size <requested_file_length>
+          null_byte_position = requested_file_length - 1;
+        }
 
       if (ACE_OS::pwrite (this->handle_,
                           "",
@@ -178,31 +140,6 @@ ACE_Mem_Map::map_it (ACE_HANDLE handle,
         return -1;
     }
 
-#if defined (ACE_USE_MAPPING_NAME)
-  if (ACE_BIT_ENABLED (share, MAP_SHARED))
-    {
-# if defined(__MINGW32__)
-      const int max_mapping_name_length = 32;
-# else
-      const int max_mapping_name_length = 31;
-# endif /* __MINGW32__ */
-      ACE_TCHAR file_mapping_name[max_mapping_name_length + 1];
-      to_mapping_name (file_mapping_name,
-                       filename_,
-                       max_mapping_name_length + 1);
-
-      this->base_addr_ = ACE_OS::mmap (this->base_addr_,
-                                       this->length_,
-                                       prot,
-                                       share,
-                                       this->handle_,
-                                       offset,
-                                       &this->file_mapping_,
-                                       sa,
-                                       file_mapping_name);
-    }
-  else
-#endif /* ACE_USE_MAPPING_NAME */
     this->base_addr_ = ACE_OS::mmap (this->base_addr_,
                                      this->length_,
                                      prot,
@@ -218,17 +155,17 @@ ACE_Mem_Map::map_it (ACE_HANDLE handle,
 int
 ACE_Mem_Map::open (const ACE_TCHAR *file_name,
                    int flags,
-                   int mode,
+                   mode_t perms,
                    LPSECURITY_ATTRIBUTES sa)
 {
   ACE_TRACE ("ACE_Mem_Map::open");
 
-#if defined(INTEGRITY)  || defined (__QNXNTO__)
-  this->handle_ = ACE_OS::shm_open (file_name, flags, mode, sa);
+#if defined (INTEGRITY)  || defined (__QNXNTO__) || defined (ACE_VXWORKS)
+  this->handle_ = ACE_OS::shm_open (file_name, flags, perms, sa);
 #elif defined (ACE_OPENVMS)
-  ACE_OSCALL (::open (file_name, flags, mode, "shr=get,put,upd"), ACE_HANDLE, -1, this->handle_);
+  ACE_OSCALL (::open (file_name, flags, perms, "shr=get,put,upd"), ACE_HANDLE, -1, this->handle_);
 #else
-  this->handle_ = ACE_OS::open (file_name, flags, mode, sa);
+  this->handle_ = ACE_OS::open (file_name, flags, perms, sa);
 #endif /* INTEGRITY */
 
   if (this->handle_ == ACE_INVALID_HANDLE)
@@ -248,7 +185,7 @@ int
 ACE_Mem_Map::map (const ACE_TCHAR *file_name,
                   size_t len,
                   int flags,
-                  int mode,
+                  mode_t mode,
                   int prot,
                   int share,
                   void *addr,
@@ -289,7 +226,7 @@ ACE_Mem_Map::ACE_Mem_Map (void)
 ACE_Mem_Map::ACE_Mem_Map (const ACE_TCHAR *file_name,
                           size_t len,
                           int flags,
-                          int mode,
+                          mode_t mode,
                           int prot,
                           int share,
                           void *addr,
@@ -312,8 +249,8 @@ ACE_Mem_Map::ACE_Mem_Map (const ACE_TCHAR *file_name,
                  offset,
                  sa) < 0)
     ACE_ERROR ((LM_ERROR,
-                ACE_LIB_TEXT ("%p\n"),
-                ACE_LIB_TEXT ("ACE_Mem_Map::ACE_Mem_Map")));
+                ACE_TEXT ("%p\n"),
+                ACE_TEXT ("ACE_Mem_Map::ACE_Mem_Map")));
 }
 
 // Map a file from an open file descriptor HANDLE.  This function will
@@ -345,8 +282,8 @@ ACE_Mem_Map::ACE_Mem_Map (ACE_HANDLE handle,
                  offset,
                  sa) < 0)
     ACE_ERROR ((LM_ERROR,
-                ACE_LIB_TEXT ("%p\n"),
-                ACE_LIB_TEXT ("ACE_Mem_Map::ACE_Mem_Map")));
+                ACE_TEXT ("%p\n"),
+                ACE_TEXT ("ACE_Mem_Map::ACE_Mem_Map")));
 }
 
 // Close down and remove the file from the file system.
@@ -360,7 +297,7 @@ ACE_Mem_Map::remove (void)
   this->close ();
 
   if (this->filename_[0] != '\0')
-#if defined (__QNXNTO__)
+#if defined (INTEGRITY) || defined (__QNXNTO__) || defined (ACE_VXWORKS)
   return ACE_OS::shm_unlink (this->filename_);
 #else
   return ACE_OS::unlink (this->filename_);

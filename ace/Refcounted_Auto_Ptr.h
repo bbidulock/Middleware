@@ -16,6 +16,7 @@
 #include /**/ "ace/pre.h"
 
 #include "ace/Auto_Ptr.h"
+#include "ace/Atomic_Op.h"
 
 #if !defined (ACE_LACKS_PRAGMA_ONCE)
 # pragma once
@@ -51,7 +52,7 @@ public:
 
   /// Constructor that initializes an ACE_Refcounted_Auto_Ptr to
   /// the specified pointer value.
-  ACE_Refcounted_Auto_Ptr (X *p = 0);
+  explicit ACE_Refcounted_Auto_Ptr (X *p = 0);
 
   /// Copy constructor binds the new ACE_Refcounted_Auto_Ptr to the
   /// representation object referenced by @a r.
@@ -67,7 +68,7 @@ public:
   /// ACE_Refcounted_Auto_Ptr_Rep. An ACE_Refcounted_Auto_Ptr_Rep
   /// is created if necessary.
   void operator = (const ACE_Refcounted_Auto_Ptr<X, ACE_LOCK> &r);
-
+  
   /// Equality operator that returns @c true if both
   /// ACE_Refcounted_Auto_Ptr objects point to the same underlying
   /// representation. It does not compare the actual pointers.
@@ -85,6 +86,12 @@ public:
 
   /// Accessor method.
   X &operator *() const;
+  
+  /// Check rep easily.
+  bool operator !() const;
+
+  /// Check rep easily.
+  operator bool () const;
 
   /// Releases the reference to the underlying representation object.
   /// @retval The pointer value prior to releasing it.
@@ -98,7 +105,7 @@ public:
   X *get (void) const;
 
   /// Get the reference count value.
-  int count (void) const;
+  long count (void) const;
 
   /// Returns @c true if this object does not contain a valid pointer.
   bool null (void) const;
@@ -110,7 +117,7 @@ protected:
   /// the ACE_Refcounted_Auto_Ptr_Rep
   typedef ACE_Refcounted_Auto_Ptr_Rep<X, ACE_LOCK> AUTO_REFCOUNTED_PTR_REP;
 
-  /// Protect operations on the <ACE_Refcounted_Auto_Ptr>.
+  /// Protect operations on the ACE_Refcounted_Auto_Ptr.
   AUTO_REFCOUNTED_PTR_REP *rep_;
 };
 
@@ -134,7 +141,7 @@ private:
   X *get (void) const;
 
   /// Get the reference count value.
-  int count (void) const;
+  long count (void) const;
 
   /// Declare the dynamic allocation hooks.
   ACE_ALLOC_HOOK_DECLARE;
@@ -167,12 +174,7 @@ private:
   ACE_Auto_Basic_Ptr<X> ptr_;
 
   /// Reference count.
-  int ref_count_;
-
-  // = Mutex variable to protect the <ptr_>.
-
-  /// Synchronization variable for serializing access to ref_count_
-  mutable ACE_LOCK lock_;
+  mutable ACE_Atomic_Op<ACE_LOCK, long> ref_count_;
 
 private:
   // = Constructor and destructor private.

@@ -6,6 +6,7 @@
 #include "ace/Service_Config.h"
 #include "ace/Service_Types.h"
 #include "ace/Service_Repository.h"
+#include "ace/Service_Gestalt.h"
 #include "ace/DLL.h"
 #include "ace/ARGV.h"
 #include "ace/Module.h"
@@ -36,14 +37,12 @@ void
 ACEXML_Svcconf_Handler::characters (const ACEXML_Char *,
                                     int,
                                     int ACEXML_ENV_ARG_DECL_NOT_USED)
-      ACE_THROW_SPEC ((ACEXML_SAXException))
 {
   // no-op
 }
 
 void
 ACEXML_Svcconf_Handler::endDocument ( ACEXML_ENV_SINGLE_ARG_DECL_NOT_USED)
-      ACE_THROW_SPEC ((ACEXML_SAXException))
 {
   // no-op
 }
@@ -52,7 +51,6 @@ void
 ACEXML_Svcconf_Handler::endElement (const ACEXML_Char *,
                                     const ACEXML_Char *,
                                     const ACEXML_Char *qName ACEXML_ENV_ARG_DECL)
-      ACE_THROW_SPEC ((ACEXML_SAXException))
 {
   if (ACE_OS::strcmp (qName, ACE_TEXT ("dynamic")) == 0)
     {
@@ -60,6 +58,13 @@ ACEXML_Svcconf_Handler::endElement (const ACEXML_Char *,
                                       &this->parsed_info_ :
                                       &this->stream_info_);
 
+      // We must allocate a string here to ensure that the
+      // name is still available by the time the
+      // ACE_Service_Type_Dynamic_Guard is destructed.
+      ACE_TString name = active_info->name ();
+      ACE_Service_Type_Dynamic_Guard dummy (
+        *ACE_Service_Config::current ()->current_service_repository (),
+        name.c_str ());
       ACE_DLL svc_dll;
 
       if (svc_dll.open (active_info->path ()) == -1)
@@ -113,6 +118,9 @@ ACEXML_Svcconf_Handler::endElement (const ACEXML_Char *,
             }
           else
             {
+              // We will not retain this stream
+              delete stp;
+
               // build the error message
               ACE_CString msg (ACE_TEXT ("Expecting Stream type in stream header"));
               msg += ACE_CString (ACE_TEXT (" for entity '"));
@@ -179,6 +187,10 @@ ACEXML_Svcconf_Handler::endElement (const ACEXML_Char *,
               if (ACE_Service_Config::initialize (stype,
                                                   active_info->init_params ()) == -1)
                 {
+                  // If it did not initialize correctly, the
+                  // ACE_Service_Config doesn't own this object
+                  delete stype;
+
                   // build the error message
                   ACE_CString msg (ACE_TEXT ("Failed to initialize dynamic service"));
                   msg += ACE_CString (ACE_TEXT (" for entity '"));
@@ -257,7 +269,6 @@ ACEXML_Svcconf_Handler::endElement (const ACEXML_Char *,
 
 void
 ACEXML_Svcconf_Handler::endPrefixMapping (const ACEXML_Char * ACEXML_ENV_ARG_DECL_NOT_USED)
-      ACE_THROW_SPEC ((ACEXML_SAXException))
 {
   // no-op
 }
@@ -266,7 +277,6 @@ void
 ACEXML_Svcconf_Handler::ignorableWhitespace (const ACEXML_Char *,
                                              int,
                                              int ACEXML_ENV_ARG_DECL_NOT_USED)
-      ACE_THROW_SPEC ((ACEXML_SAXException))
 {
   // no-op
 }
@@ -274,7 +284,6 @@ ACEXML_Svcconf_Handler::ignorableWhitespace (const ACEXML_Char *,
 void
 ACEXML_Svcconf_Handler::processingInstruction (const ACEXML_Char *,
                                                const ACEXML_Char * ACEXML_ENV_ARG_DECL_NOT_USED)
-      ACE_THROW_SPEC ((ACEXML_SAXException))
 {
   // no-op
 }
@@ -287,14 +296,12 @@ ACEXML_Svcconf_Handler::setDocumentLocator (ACEXML_Locator* locator)
 
 void
 ACEXML_Svcconf_Handler::skippedEntity (const ACEXML_Char * ACEXML_ENV_ARG_DECL_NOT_USED)
-      ACE_THROW_SPEC ((ACEXML_SAXException))
 {
   // no-op
 }
 
 void
 ACEXML_Svcconf_Handler::startDocument ( ACEXML_ENV_SINGLE_ARG_DECL_NOT_USED)
-      ACE_THROW_SPEC ((ACEXML_SAXException))
 {
   // no-op
 }
@@ -304,7 +311,6 @@ ACEXML_Svcconf_Handler::startElement (const ACEXML_Char *,
                                       const ACEXML_Char *,
                                       const ACEXML_Char *qName,
                                       ACEXML_Attributes *alist ACEXML_ENV_ARG_DECL)
-      ACE_THROW_SPEC ((ACEXML_SAXException))
 {
   if (ACE_OS::strcmp (qName, ACE_TEXT ("dynamic")) == 0)
     {
@@ -490,7 +496,6 @@ ACEXML_Svcconf_Handler::startElement (const ACEXML_Char *,
 void
 ACEXML_Svcconf_Handler::startPrefixMapping (const ACEXML_Char *,
                                             const ACEXML_Char * ACEXML_ENV_ARG_DECL_NOT_USED)
-      ACE_THROW_SPEC ((ACEXML_SAXException))
 {
   // No-op.
 }
@@ -501,7 +506,6 @@ void
 ACEXML_Svcconf_Handler::notationDecl (const ACEXML_Char *,
                                       const ACEXML_Char *,
                                       const ACEXML_Char * ACEXML_ENV_ARG_DECL_NOT_USED)
-      ACE_THROW_SPEC ((ACEXML_SAXException))
 {
   // No-op.
 }
@@ -511,7 +515,6 @@ ACEXML_Svcconf_Handler::unparsedEntityDecl (const ACEXML_Char *,
                                             const ACEXML_Char *,
                                             const ACEXML_Char *,
                                             const ACEXML_Char * ACEXML_ENV_ARG_DECL_NOT_USED)
-      ACE_THROW_SPEC ((ACEXML_SAXException))
 {
   // No-op.
 }
@@ -521,7 +524,6 @@ ACEXML_Svcconf_Handler::unparsedEntityDecl (const ACEXML_Char *,
 ACEXML_InputSource *
 ACEXML_Svcconf_Handler::resolveEntity (const ACEXML_Char *,
                                        const ACEXML_Char * ACEXML_ENV_ARG_DECL_NOT_USED)
-      ACE_THROW_SPEC ((ACEXML_SAXException))
 {
   // No-op.
   return 0;
@@ -534,7 +536,6 @@ ACEXML_Svcconf_Handler::resolveEntity (const ACEXML_Char *,
    */
 void
 ACEXML_Svcconf_Handler::error (ACEXML_SAXParseException& ex ACEXML_ENV_ARG_DECL_NOT_USED)
-      ACE_THROW_SPEC ((ACEXML_SAXException))
 {
   ACE_DEBUG ((LM_DEBUG, "%s: line :%d col: %d ", this->locator_->getSystemId(),
               this->locator_->getLineNumber(),
@@ -544,7 +545,6 @@ ACEXML_Svcconf_Handler::error (ACEXML_SAXParseException& ex ACEXML_ENV_ARG_DECL_
 
 void
 ACEXML_Svcconf_Handler::fatalError (ACEXML_SAXParseException& ex ACEXML_ENV_ARG_DECL_NOT_USED)
-      ACE_THROW_SPEC ((ACEXML_SAXException))
 {
   ACE_DEBUG ((LM_DEBUG, "%s: line :%d col: %d ", this->locator_->getSystemId(),
               this->locator_->getLineNumber(),
@@ -554,7 +554,6 @@ ACEXML_Svcconf_Handler::fatalError (ACEXML_SAXParseException& ex ACEXML_ENV_ARG_
 
 void
 ACEXML_Svcconf_Handler::warning (ACEXML_SAXParseException& ex ACEXML_ENV_ARG_DECL_NOT_USED)
-      ACE_THROW_SPEC ((ACEXML_SAXException))
 {
   ACE_DEBUG ((LM_DEBUG, "%s: line :%d col: %d ", this->locator_->getSystemId(),
               this->locator_->getLineNumber(),
@@ -582,7 +581,7 @@ ACEXML_Svcconf_Handler::get_stream_id (ACEXML_Attributes *alist ACEXML_ENV_ARG_D
             msg += ACE_CString (ACE_TEXT ("'\n"));
 
             ACEXML_THROW_RETURN (ACEXML_SAXException (msg.c_str ()),
-                                                                                                          -1);
+                                 -1);
           }
       }
   return 0;
@@ -650,7 +649,7 @@ ACEXML_Svcconf_Handler::get_dynamic_attrs (ACEXML_Attributes *alist ACEXML_ENV_A
                   msg += ACE_CString (ACE_TEXT ("'\n"));
 
                   ACEXML_THROW_RETURN (ACEXML_SAXException (msg.c_str ()),
-                                  -1);
+                                       -1);
                 }
             }
           else if (ACE_OS::strcmp (alist->getQName (i), ACE_TEXT ("type")) == 0)

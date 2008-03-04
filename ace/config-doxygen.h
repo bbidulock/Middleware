@@ -78,6 +78,8 @@
 #define TAO_HAS_AMI 1
 #define TAO_HAS_INTERCEPTORS 1
 #define TAO_HAS_SCIOP 1
+#define TAO_HAS_COIOP 1
+#define TAO_HAS_TRANSPORT_CURRENT 1
 
 /// Generate token library documentation
 #define ACE_HAS_TOKENS_LIBRARY
@@ -89,7 +91,7 @@
 #define ACE_HAS_XTI_ATM
 
 /// Generate ACE_Dev_Poll_Reactor documentation
-#define ACE_HAS_EVENT_POLL
+#define ACE_HAS_DEV_POLL
 
 /// Generate ACE_Event_Handler_T documentation
 #define ACE_HAS_TEMPLATE_TYPEDEFS
@@ -112,5 +114,7 @@
 
 /// Enable netlink socket support
 #define ACE_HAS_NETLINK
+
+#define ACE_HAS_IP_MULTICAST
 
 #endif /* ACE_CONFIG_DOXYGEN_H */

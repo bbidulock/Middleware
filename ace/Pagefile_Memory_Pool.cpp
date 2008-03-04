@@ -22,7 +22,7 @@
 
 ACE_RCSID(ace, Pagefile_Memory_Pool, "$Id$")
 
-#if defined (ACE_WIN32)
+#if defined (ACE_WIN32) && !defined (ACE_HAS_PHARLAP)
 #if !defined (ACE_HAS_WINCE)
 #define ACE_MAP_FILE(_hnd, _access, _offHigh, _offLow, _nBytes, _baseAdd)\
   MapViewOfFileEx (_hnd, _access, _offHigh, _offLow, _nBytes, _baseAdd)
@@ -91,7 +91,7 @@ ACE_Pagefile_Memory_Pool::ACE_Pagefile_Memory_Pool (const ACE_TCHAR *backing_sto
   if (update_backing_store_name
       && ACE_OS::strlen (this->backing_store_name_) < sizeof this->backing_store_name_)
       ACE_OS::strcat (this->backing_store_name_,
-                      ACE_LIB_TEXT ("_"));
+                      ACE_TEXT ("_"));
 }
 
 void *
@@ -229,7 +229,7 @@ ACE_Pagefile_Memory_Pool::map (int &first_time,
   // Create file mapping, if not yet done
   if (object_handle_ == 0)
     {
-#if (defined (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0))
+#if !defined (ACE_LACKS_WIN32_SECURITY_DESCRIPTORS)
       // Allow access by all users.
       SECURITY_ATTRIBUTES sa;
       SECURITY_DESCRIPTOR sd;
@@ -242,7 +242,7 @@ ACE_Pagefile_Memory_Pool::map (int &first_time,
       sa.nLength = sizeof (SECURITY_ATTRIBUTES);
       sa.lpSecurityDescriptor = &sd;
       sa.bInheritHandle = FALSE;
-#endif /* (defined (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0)) */
+#endif /* ACE_LACKS_WIN32_SECURITY_DESCRIPTORS */
 
       // Get an object handle to the named reserved memory object.
       DWORD size_high;
@@ -257,11 +257,11 @@ ACE_Pagefile_Memory_Pool::map (int &first_time,
 
       object_handle_ =
         ACE_TEXT_CreateFileMapping (INVALID_HANDLE_VALUE,
-#if (defined (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0))
+#if !defined (ACE_LACKS_WIN32_SECURITY_DESCRIPTORS)
                                     &sa,
 #else
                                     0,
-#endif /* (defined (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0)) */
+#endif /* !ACE_LACKS_WIN32_SECURITY_DESCRIPTORS */
                                     PAGE_READWRITE | SEC_RESERVE,
                                     size_high,
                                     size_low,
@@ -381,5 +381,4 @@ ACE_Pagefile_Memory_Pool::map (int &first_time,
 
 ACE_END_VERSIONED_NAMESPACE_DECL
 
-#endif /* ACE_WIN32 */
-
+#endif /* ACE_WIN32 && !ACE_HAS_PHARLAP */

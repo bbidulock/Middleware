@@ -15,6 +15,7 @@
 #include "ace/Pipe.h"
 #include "ace/Event_Handler.h"
 #include "ace/Reactor.h"
+#include "ace/Select_Reactor.h"
 
 ACE_RCSID (tests,
            Bug_2540_Regression_Test,
@@ -36,8 +37,10 @@ class Handler : public ACE_Event_Handler
 public:
     Handler();
 
+    //FUZZ: disable check_for_lack_ACE_OS
     /// Initialize the pipe and register with the reactor
     int open(ACE_Reactor * reactor);
+    //FUZZ: enable check_for_lack_ACE_OS
 
     /// Return the current count
     size_t handle_input_count() const;
@@ -74,8 +77,11 @@ class Timer : public ACE_Event_Handler
 public:
     Timer();
 
+    //FUZZ: disable check_for_lack_ACE_OS
     int open(ACE_Reactor * reactor);
     void close();
+    //FUZZ: enable check_for_lack_ACE_OS
+
     bool check_expected_results() const;
 
     virtual int handle_timeout(ACE_Time_Value const &, void const*);
@@ -99,27 +105,33 @@ run_main (int, ACE_TCHAR *[])
 {
   ACE_START_TEST (ACE_TEXT ("Bug_2540_Regression_Test"));
 
-  ACE_Reactor * reactor = ACE_Reactor::instance();
+  // Bug 2540 is all about ACE_Select_Reactor, so run it on that reactor
+  // regardless of platform. In particular, this test relies on a handler
+  // that doesn't consume ready-to-read data being called back - this won't
+  // happen with ACE_WFMO_Reactor.
+  ACE_Select_Reactor select_reactor;
+  ACE_Reactor reactor (&select_reactor);
 
   // Create the timer, this is the main driver for the test
   Timer * timer = new Timer;
 
   // Initialize the timer and register with the reactor
-  if (-1 == timer->open(reactor))
-  {
+  if (-1 == timer->open (&reactor))
+    {
       ACE_ERROR_RETURN ((LM_ERROR, "Cannot initialize timer\n"), -1);
-  }
+    }
 
-  reactor->run_reactor_event_loop();
+  reactor.run_reactor_event_loop ();
 
   // Verify that the results are what we expect
-  if (!timer->check_expected_results())
-  {
+  if (!timer->check_expected_results ())
+    {
       ACE_ERROR_RETURN ((LM_ERROR, "Test failed\n"), -1);
-  }
+    }
 
   // Cleanup
-  timer->close();
+  timer->close ();
+  delete timer;
 
   ACE_END_TEST;
 
@@ -133,16 +145,15 @@ Handler::Handler()
 {
 }
 
-int Handler::
-open(ACE_Reactor * r)
+int Handler::open(ACE_Reactor * r)
 {
     if(-1 == the_pipe_.open(handles_))
     {
-	return -1;
+      return -1;
     }
     if(-1 == r->register_handler(this, ACE_Event_Handler::READ_MASK))
     {
-	return -1;
+      return -1;
     }
     return 0;
 }
@@ -176,8 +187,8 @@ int Handler::handle_input(ACE_HANDLE /* h */)
 
     if(auto_remove_flag_)
     {
-	auto_remove_flag_ = false;
-	return -1;
+      auto_remove_flag_ = false;
+      return -1;
     }
 
     return 0;
@@ -203,15 +214,14 @@ int Timer::open(ACE_Reactor * r)
   {
       if (-1 == handler_[i].open(r))
       {
-	  ACE_ERROR_RETURN ((LM_ERROR, "Could not open dummy handler %d\n", i), -1);
+        ACE_ERROR_RETURN ((LM_ERROR, "Could not open dummy handler %d\n", i), -1);
       }
   }
 
   ACE_Time_Value const interval(0, ACE_ONE_SECOND_IN_USECS / 10);
   ACE_Time_Value const startup (0, ACE_ONE_SECOND_IN_USECS / 20);
 
-  if ( -1 == r->schedule_timer(
-	   this, 0, startup, interval))
+  if ( -1 == r->schedule_timer(this, 0, startup, interval))
   {
       ACE_ERROR_RETURN((LM_ERROR, "Could not schedule timer\n"), -1);
   }
@@ -233,7 +243,7 @@ bool Timer::check_expected_results() const
     // We expect at least one more call after the other handlers are removed.
     if(recorded_count_ + 1 < special_handler().handle_input_count() )
     {
-	return true;
+      return true;
     }
     return false;
 }
@@ -242,44 +252,44 @@ int Timer::handle_timeout(ACE_Time_Value const &, void const *)
 {
     if (iteration_ == 0)
     {
-	// Sending data on the first iteration makes the handles always
-	// "ready" for reading because the Handler::handle_input() function
-	// never consumes the data.
-	send_data_through_handlers();
+      // Sending data on the first iteration makes the handles always
+      // "ready" for reading because the Handler::handle_input() function
+      // never consumes the data.
+      send_data_through_handlers();
     }
 
     ++iteration_;
     if (iteration_ < initial_iterations)
     {
-	// The first iterations are there just to prime things.
-	return 0;
+      // The first iterations are there just to prime things.
+      return 0;
     }
     
     if (iteration_ == initial_iterations)
     {
-	// We expect the special_handler() to work normally after this
-	// iteration, i.e., more calls to handle_input() should be delivered
-	// to it.
-	recorded_count_  = special_handler().handle_input_count();
+      // We expect the special_handler() to work normally after this
+      // iteration, i.e., more calls to handle_input() should be delivered
+      // to it.
+      recorded_count_  = special_handler().handle_input_count();
 
-	// Remove the handlers the next time the loop runs
-	remove_some_handlers();
+      // Remove the handlers the next time the loop runs
+      remove_some_handlers();
 
-	// Run the event loop, this causes the handlers to be removed from the
-	// reactor, except for special_handler()
-	ACE_Time_Value interval(0, ACE_ONE_SECOND_IN_USECS / 50);
-	reactor()->handle_events(&interval);
+      // Run the event loop, this causes the handlers to be removed from the
+      // reactor, except for special_handler()
+      ACE_Time_Value interval(0, ACE_ONE_SECOND_IN_USECS / 50);
+      reactor()->handle_events(&interval);
 
-	return 0;
+      return 0;
     }
 
     if (iteration_ < total_iterations)
     {
-	// Run a while more to make sure the special_handler() is used.
-	return 0;
+      // Run a while more to make sure the special_handler() is used.
+      return 0;
     }
 
-    reactor()->end_event_loop();
+    reactor()->end_reactor_event_loop();
 
     return 0;
 }
@@ -288,7 +298,7 @@ void Timer::send_data_through_handlers()
 {
     for(int i = 0; i != nhandlers; ++i)
     {
-	handler_[i].send_dummy_data();
+      handler_[i].send_dummy_data();
     }
 }
 
@@ -296,7 +306,7 @@ void Timer::remove_some_handlers()
 {
     for(int i = 0; i != nhandlers - 1; ++i)
     {
-	handler_[i].simulate_socket_closure();
+      handler_[i].simulate_socket_closure();
     }
 }
 

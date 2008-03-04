@@ -1,7 +1,7 @@
 //  -*- MPC -*- now wouldn't this be cool...
 // $Id$
 
-project(ACE) : acedefaults, core, other, codecs, token, svcconf, uuid, filecache, versioned_namespace, pkgconfig {
+project(ACE) : acedefaults, install, other, codecs, token, svcconf, uuid, filecache, versioned_namespace, pkgconfig, support_ostream {
   avoids       = ace_for_tao
   libout       = $(ACE_ROOT)/lib
   sharedname   = ACE
@@ -11,6 +11,7 @@ project(ACE) : acedefaults, core, other, codecs, token, svcconf, uuid, filecache
     ACE.cpp
     ACE_crc_ccitt.cpp
     ACE_crc32.cpp
+    ace_wchar.cpp
     Activation_Queue.cpp
     Active_Map_Manager.cpp
     Addr.cpp
@@ -60,6 +61,7 @@ project(ACE) : acedefaults, core, other, codecs, token, svcconf, uuid, filecache
     Dirent_Selector.cpp
     Dump.cpp
     Dynamic.cpp
+    Dynamic_Message_Strategy.cpp
     Event.cpp
     Event_Handler.cpp
     FIFO.cpp
@@ -118,6 +120,8 @@ project(ACE) : acedefaults, core, other, codecs, token, svcconf, uuid, filecache
     MEM_Stream.cpp
     Message_Block.cpp
     Message_Queue.cpp
+    Message_Queue_NT.cpp
+    Message_Queue_Vx.cpp
     Method_Request.cpp
     MMAP_Memory_Pool.cpp
     Msg_WFMO_Reactor.cpp
@@ -125,6 +129,7 @@ project(ACE) : acedefaults, core, other, codecs, token, svcconf, uuid, filecache
     Mutex.cpp
     Netlink_Addr.cpp
     Notification_Strategy.cpp
+    Notification_Queue.cpp
     Obchunk.cpp
     Object_Manager.cpp
     Object_Manager_Base.cpp
@@ -247,14 +252,9 @@ project(ACE) : acedefaults, core, other, codecs, token, svcconf, uuid, filecache
     Thread_Manager.cpp
     Thread_Mutex.cpp
     Thread_Semaphore.cpp
-    Time_Request_Reply.cpp
+    Throughput_Stats.cpp
     Time_Value.cpp
     Timeprobe.cpp
-    Timer_Hash.cpp
-    Timer_Heap.cpp
-    Timer_List.cpp
-    Timer_Queue.cpp
-    Timer_Wheel.cpp
     TLI.cpp
     TLI_Acceptor.cpp
     TLI_Connector.cpp
@@ -364,7 +364,6 @@ project(ACE) : acedefaults, core, other, codecs, token, svcconf, uuid, filecache
     Lock_Adapter_T.inl
     Refcounted_Auto_Ptr.inl
     Reverse_Lock_T.inl
-    Swap.inl
     TSS_T.inl
     ace_wchar.inl
     OS.inl
@@ -409,6 +408,7 @@ project(ACE) : acedefaults, core, other, codecs, token, svcconf, uuid, filecache
     Reactor_Timer_Interface.h
     Refcounted_Auto_Ptr.h
     Reverse_Lock_T.h
+    Select_Reactor.h
     SOCK_Netlink.h
     SStringfwd.h
     Static_Object_Lock.h
@@ -416,7 +416,6 @@ project(ACE) : acedefaults, core, other, codecs, token, svcconf, uuid, filecache
     String_Base_Const.h
     Svc_Conf.h
     Svc_Conf_Tokens.h
-    Swap.h
     Synch.h
     Synch_Traits.h
     TSS_T.h
@@ -427,6 +426,7 @@ project(ACE) : acedefaults, core, other, codecs, token, svcconf, uuid, filecache
     Version.h
     Versioned_Namespace.h
     ace_wchar.h
+    checked_iterator.h
     config-WinCE.h
     config-all.h
     config-borland-common.h
@@ -439,7 +439,6 @@ project(ACE) : acedefaults, core, other, codecs, token, svcconf, uuid, filecache
     config-win32-msvc-7.h
     config-win32-msvc-8.h
     config-win32-msvc.h
-    config-win32-visualage.h
     config-win32.h
     config.h
     iosfwd.h

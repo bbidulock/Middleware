@@ -94,7 +94,7 @@ ACE_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::open
   // socket handle is "ready" and when we call <accept>.  During this
   // interval, the client can shutdown the connection, in which case,
   // the <accept> call can hang!
-  this->peer_acceptor_.enable (ACE_NONBLOCK);
+  (void) this->peer_acceptor_.enable (ACE_NONBLOCK);
 
   int const result = reactor->register_handler (this,
                                                 ACE_Event_Handler::ACCEPT_MASK);
@@ -136,8 +136,8 @@ ACE_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::ACE_Acceptor
                   use_select,
                   reuse_addr) == -1)
     ACE_ERROR ((LM_ERROR,
-                ACE_LIB_TEXT ("%p\n"),
-                ACE_LIB_TEXT ("ACE_Acceptor::ACE_Acceptor")));
+                ACE_TEXT ("%p\n"),
+                ACE_TEXT ("ACE_Acceptor::ACE_Acceptor")));
 }
 
 template <class SVC_HANDLER, ACE_PEER_ACCEPTOR_1>
@@ -178,10 +178,10 @@ ACE_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::info (ACE_TCHAR **strp,
     return -1;
 
   ACE_OS::sprintf (buf,
-                   ACE_LIB_TEXT ("%s\t %s %s"),
-                   ACE_LIB_TEXT ("ACE_Acceptor"),
+                   ACE_TEXT ("%s\t %s %s"),
+                   ACE_TEXT ("ACE_Acceptor"),
                    addr_str,
-                   ACE_LIB_TEXT ("# acceptor factory\n"));
+                   ACE_TEXT ("# acceptor factory\n"));
 
   if (*strp == 0 && (*strp = ACE_OS::strdup (buf)) == 0)
     return -1;
@@ -233,7 +233,7 @@ ACE_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::handle_close (ACE_HANDLE,
       // Shut down the listen socket to recycle the handles.
       if (this->peer_acceptor_.close () == -1)
         ACE_ERROR ((LM_ERROR,
-                    ACE_LIB_TEXT ("close\n")));
+                    ACE_TEXT ("close\n")));
       // Set the Reactor to 0 so that we don't try to close down
       // again.
       this->reactor (0);
@@ -384,23 +384,21 @@ ACE_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::handle_input (ACE_HANDLE listene
         {
           if (ACE::debug ())
             ACE_DEBUG ((LM_DEBUG,
-                        ACE_LIB_TEXT ("%p\n"),
-                        ACE_LIB_TEXT ("make_svc_handler")));
+                        ACE_TEXT ("%p\n"),
+                        ACE_TEXT ("make_svc_handler")));
           return 0;
         }
       // Accept connection into the Svc_Handler.
-
       else if (this->accept_svc_handler (svc_handler) == -1)
         {
           // Note that <accept_svc_handler> closes the <svc_handler>
           // on failure.
           if (ACE::debug ())
             ACE_DEBUG ((LM_DEBUG,
-                        ACE_LIB_TEXT ("%p\n"),
-                        ACE_LIB_TEXT ("accept_svc_handler")));
+                        ACE_TEXT ("%p\n"),
+                        ACE_TEXT ("accept_svc_handler")));
           return 0;
         }
-
       // Activate the <svc_handler> using the designated concurrency
       // strategy (note that this method becomes responsible for
       // handling errors and freeing up the memory if things go
@@ -412,8 +410,8 @@ ACE_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::handle_input (ACE_HANDLE listene
 
           if (ACE::debug ())
             ACE_DEBUG ((LM_DEBUG,
-                        ACE_LIB_TEXT ("%p\n"),
-                        ACE_LIB_TEXT ("activate_svc_handler")));
+                        ACE_TEXT ("%p\n"),
+                        ACE_TEXT ("activate_svc_handler")));
           return 0;
         }
 
@@ -466,17 +464,17 @@ ACE_Strategy_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::dump (void) const
   ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
   ACE_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::dump ();
   this->creation_strategy_->dump ();
-  ACE_DEBUG ((LM_DEBUG, ACE_LIB_TEXT ("delete_creation_strategy_ = %d"), delete_creation_strategy_));
+  ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("delete_creation_strategy_ = %d"), delete_creation_strategy_));
   this->accept_strategy_->dump ();
-  ACE_DEBUG ((LM_DEBUG, ACE_LIB_TEXT ("delete_accept_strategy_ = %d"), delete_accept_strategy_));
+  ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("delete_accept_strategy_ = %d"), delete_accept_strategy_));
   this->concurrency_strategy_->dump ();
-  ACE_DEBUG ((LM_DEBUG, ACE_LIB_TEXT ("delete_concurrency_strategy_ = %d"), delete_concurrency_strategy_));
+  ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("delete_concurrency_strategy_ = %d"), delete_concurrency_strategy_));
   this->scheduling_strategy_->dump ();
-  ACE_DEBUG ((LM_DEBUG, ACE_LIB_TEXT ("delete_scheduling_strategy_ = %d"), delete_scheduling_strategy_));
-  ACE_DEBUG ((LM_DEBUG, ACE_LIB_TEXT ("\nservice_name_ = %s"),
-              this->service_name_ == 0 ? ACE_LIB_TEXT ("<unknown>") : this->service_name_));
-  ACE_DEBUG ((LM_DEBUG, ACE_LIB_TEXT ("\nservice_description_ = %s"),
-              this->service_description_ == 0 ? ACE_LIB_TEXT ("<unknown>") : this->service_description_));
+  ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("delete_scheduling_strategy_ = %d"), delete_scheduling_strategy_));
+  ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("\nservice_name_ = %s"),
+              this->service_name_ == 0 ? ACE_TEXT ("<unknown>") : this->service_name_));
+  ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("\nservice_description_ = %s"),
+              this->service_description_ == 0 ? ACE_TEXT ("<unknown>") : this->service_description_));
   this->service_addr_.dump ();
   ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
@@ -562,7 +560,7 @@ ACE_Strategy_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::open
       ACE_NEW_RETURN (cre_s,
                       CREATION_STRATEGY,
                       -1);
-      this->delete_creation_strategy_ = 1;
+      this->delete_creation_strategy_ = true;
     }
   this->creation_strategy_ = cre_s;
 
@@ -573,7 +571,7 @@ ACE_Strategy_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::open
       ACE_NEW_RETURN (acc_s,
                       ACCEPT_STRATEGY (this->reactor ()),
                       -1);
-      this->delete_accept_strategy_ = 1;
+      this->delete_accept_strategy_ = true;
     }
   this->accept_strategy_ = acc_s;
 
@@ -596,7 +594,7 @@ ACE_Strategy_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::open
       ACE_NEW_RETURN (con_s,
                       CONCURRENCY_STRATEGY,
                       -1);
-      this->delete_concurrency_strategy_ = 1;
+      this->delete_concurrency_strategy_ = true;
     }
   this->concurrency_strategy_ = con_s;
 
@@ -607,7 +605,7 @@ ACE_Strategy_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::open
       ACE_NEW_RETURN (sch_s,
                       SCHEDULING_STRATEGY,
                       -1);
-      this->delete_scheduling_strategy_ = 1;
+      this->delete_scheduling_strategy_ = true;
     }
   this->scheduling_strategy_ = sch_s;
 
@@ -627,13 +625,13 @@ ACE_Strategy_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::ACE_Strategy_Acceptor
    int use_select,
    int reuse_addr)
     : creation_strategy_ (0),
-      delete_creation_strategy_ (0),
+      delete_creation_strategy_ (false),
       accept_strategy_ (0),
-      delete_accept_strategy_ (0),
+      delete_accept_strategy_ (false),
       concurrency_strategy_ (0),
-      delete_concurrency_strategy_ (0),
+      delete_concurrency_strategy_ (false),
       scheduling_strategy_ (0),
-      delete_scheduling_strategy_ (0),
+      delete_scheduling_strategy_ (false),
       service_name_ (0),
       service_description_ (0)
 {
@@ -662,13 +660,13 @@ ACE_Strategy_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::ACE_Strategy_Acceptor
    int use_select,
    int reuse_addr)
     : creation_strategy_ (0),
-      delete_creation_strategy_ (0),
+      delete_creation_strategy_ (false),
       accept_strategy_ (0),
-      delete_accept_strategy_ (0),
+      delete_accept_strategy_ (false),
       concurrency_strategy_ (0),
-      delete_concurrency_strategy_ (0),
+      delete_concurrency_strategy_ (false),
       scheduling_strategy_ (0),
-      delete_scheduling_strategy_ (0),
+      delete_scheduling_strategy_ (false),
       service_name_ (0),
       service_description_ (0)
 {
@@ -685,8 +683,8 @@ ACE_Strategy_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::ACE_Strategy_Acceptor
                   use_select,
                   reuse_addr) == -1)
     ACE_ERROR ((LM_ERROR,
-                ACE_LIB_TEXT ("%p\n"),
-                ACE_LIB_TEXT ("ACE_Strategy_Acceptor::ACE_Strategy_Acceptor")));
+                ACE_TEXT ("%p\n"),
+                ACE_TEXT ("ACE_Strategy_Acceptor::ACE_Strategy_Acceptor")));
 }
 
 // Perform termination activities when <this> is removed from the
@@ -704,22 +702,22 @@ ACE_Strategy_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::handle_close (ACE_HANDL
 
       if (this->delete_creation_strategy_)
         delete this->creation_strategy_;
-      this->delete_creation_strategy_ = 0;
+      this->delete_creation_strategy_ = false;
       this->creation_strategy_ = 0;
 
       if (this->delete_accept_strategy_)
         delete this->accept_strategy_;
-      this->delete_accept_strategy_ = 0;
+      this->delete_accept_strategy_ = false;
       this->accept_strategy_ = 0;
 
       if (this->delete_concurrency_strategy_)
         delete this->concurrency_strategy_;
-      this->delete_concurrency_strategy_ = 0;
+      this->delete_concurrency_strategy_ = false;
       this->concurrency_strategy_ = 0;
 
       if (this->delete_scheduling_strategy_)
         delete this->scheduling_strategy_;
-      this->delete_scheduling_strategy_ = 0;
+      this->delete_scheduling_strategy_ = false;
       this->scheduling_strategy_ = 0;
 
       // We must use the <handle> obtained *before* we deleted the
@@ -817,13 +815,13 @@ ACE_Strategy_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::info (ACE_TCHAR **strp,
 
   // @@ Should add the protocol in...
   ACE_OS::sprintf (buf,
-                   ACE_LIB_TEXT ("%s\t %s #%s\n"),
+                   ACE_TEXT ("%s\t %s #%s\n"),
                    this->service_name_ == 0
-                   ? ACE_LIB_TEXT ("<unknown>")
+                   ? ACE_TEXT ("<unknown>")
                    : this->service_name_,
                    service_addr_str,
                    this->service_description_ == 0
-                   ? ACE_LIB_TEXT ("<unknown>")
+                   ? ACE_TEXT ("<unknown>")
                    : this->service_description_);
 
   if (*strp == 0 && (*strp = ACE_OS::strdup (buf)) == 0)
@@ -849,10 +847,10 @@ ACE_Oneshot_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::dump (void) const
   ACE_TRACE ("ACE_Oneshot_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::dump");
 
   ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
-  ACE_DEBUG ((LM_DEBUG,  ACE_LIB_TEXT ("\nsvc_handler_ = %x"), this->svc_handler_));
-  ACE_DEBUG ((LM_DEBUG,  ACE_LIB_TEXT ("\nrestart_ = %d"), this->restart_));
+  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("\nsvc_handler_ = %x"), this->svc_handler_));
+  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("\nrestart_ = %d"), this->restart_));
   this->peer_acceptor_.dump ();
-  ACE_DEBUG ((LM_DEBUG,  ACE_LIB_TEXT ("delete_concurrency_strategy_ = %d"),
+  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("delete_concurrency_strategy_ = %d"),
               delete_concurrency_strategy_));
   this->concurrency_strategy_->dump ();
   ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
@@ -875,7 +873,7 @@ ACE_Oneshot_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::open
       ACE_NEW_RETURN (con_s,
                       ACE_Concurrency_Strategy<SVC_HANDLER>,
                       -1);
-      this->delete_concurrency_strategy_ = 1;
+      this->delete_concurrency_strategy_ = true;
     }
   this->concurrency_strategy_ = con_s;
 
@@ -885,7 +883,7 @@ ACE_Oneshot_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::open
 
 template <class SVC_HANDLER, ACE_PEER_ACCEPTOR_1>
 ACE_Oneshot_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::ACE_Oneshot_Acceptor (void)
-  : delete_concurrency_strategy_ (0)
+  : delete_concurrency_strategy_ (false)
 {
   ACE_TRACE ("ACE_Oneshot_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::ACE_Oneshot_Acceptor");
   this->reactor (0);
@@ -896,13 +894,13 @@ ACE_Oneshot_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::ACE_Oneshot_Acceptor
   (const ACE_PEER_ACCEPTOR_ADDR &local_addr,
    ACE_Reactor *reactor,
    ACE_Concurrency_Strategy<SVC_HANDLER> *cs)
-    : delete_concurrency_strategy_ (0)
+    : delete_concurrency_strategy_ (false)
 {
   ACE_TRACE ("ACE_Oneshot_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::ACE_Oneshot_Acceptor");
   if (this->open (local_addr, reactor, cs) == -1)
     ACE_ERROR ((LM_ERROR,
-                ACE_LIB_TEXT ("%p\n"),
-                ACE_LIB_TEXT ("ACE_Oneshot_Acceptor::ACE_Oneshot_Acceptor")));
+                ACE_TEXT ("%p\n"),
+                ACE_TEXT ("ACE_Oneshot_Acceptor::ACE_Oneshot_Acceptor")));
 }
 
 template <class SVC_HANDLER, ACE_PEER_ACCEPTOR_1>
@@ -929,7 +927,7 @@ ACE_Oneshot_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::handle_close (ACE_HANDLE
   if (this->delete_concurrency_strategy_)
     {
       delete this->concurrency_strategy_;
-      this->delete_concurrency_strategy_ = 0;
+      this->delete_concurrency_strategy_ = false;
       this->concurrency_strategy_ = 0;
     }
   // Note that if we aren't actually registered with the
@@ -942,7 +940,7 @@ ACE_Oneshot_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::handle_close (ACE_HANDLE
 
   if (this->peer_acceptor_.close () == -1)
     ACE_ERROR ((LM_ERROR,
-                ACE_LIB_TEXT ("close\n")));
+                ACE_TEXT ("close\n")));
   return 0;
 }
 
@@ -1174,10 +1172,10 @@ ACE_Oneshot_Acceptor<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>::info (ACE_TCHAR **strp,
     return -1;
 
   ACE_OS::sprintf (buf,
-                   ACE_LIB_TEXT ("%s\t %s %s"),
-                   ACE_LIB_TEXT ("ACE_Oneshot_Acceptor"),
+                   ACE_TEXT ("%s\t %s %s"),
+                   ACE_TEXT ("ACE_Oneshot_Acceptor"),
                    addr_str,
-                   ACE_LIB_TEXT ("#oneshot acceptor factory\n"));
+                   ACE_TEXT ("#oneshot acceptor factory\n"));
 
   if (*strp == 0 && (*strp = ACE_OS::strdup (buf)) == 0)
     return -1;

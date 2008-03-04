@@ -60,6 +60,8 @@
 #define ACE_LACKS_CONDATTR_PSHARED
 #define ACE_LACKS_MUTEXATTR_PSHARED
 
+#define ACE_LACKS_SUSECONDS_T
+
 // Platform/compiler has the sigwait(2) prototype
 #define ACE_HAS_SIGWAIT
 #define ACE_HAS_SIGTIMEDWAIT
@@ -238,7 +240,6 @@
 
 // IRIX 6.2 supports a variant of POSIX Pthreads, supposedly POSIX 1c
 #define ACE_HAS_PTHREADS
-#define ACE_HAS_PTHREADS_STD
 
 // Compiler/platform has thread-specific storage
 #define ACE_HAS_THREAD_SPECIFIC_STORAGE

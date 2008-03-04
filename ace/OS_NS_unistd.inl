@@ -21,7 +21,7 @@
 
 #if defined (ACE_VXWORKS) || defined (ACE_HAS_WINCE)
 #  include "ace/os_include/os_unistd.h"
-#  if defined (ACE_VXWORKS) && ((ACE_VXWORKS == 0x620) || (ACE_VXWORKS == 0x630) || (ACE_VXWORKS == 0x640))
+#  if defined (ACE_VXWORKS) && ((ACE_VXWORKS >= 0x620) && (ACE_VXWORKS <= 0x660))
 #    if defined (__RTP__)
 #      include "ace/os_include/os_strings.h"
 #    else
@@ -42,7 +42,7 @@ ACE_OS::access (const char *path, int amode)
   // Hard coded read access here.
   ACE_UNUSED_ARG (amode);
   FILE* handle = ACE_OS::fopen (ACE_TEXT_CHAR_TO_TCHAR(path),
-                                ACE_LIB_TEXT ("r"));
+                                ACE_TEXT ("r"));
   if (handle != 0)
     {
       ACE_OS::fclose (handle);
@@ -95,7 +95,7 @@ ACE_OS::getpagesize (void)
   SYSTEM_INFO sys_info;
   ::GetSystemInfo (&sys_info);
   return (long) sys_info.dwPageSize;
-#elif defined (_SC_PAGESIZE)
+#elif defined (_SC_PAGESIZE) && !defined (ACE_HAS_NOTSUP_SC_PAGESIZE)
   return ::sysconf (_SC_PAGESIZE);
 #elif defined (ACE_HAS_GETPAGESIZE)
   return ::getpagesize ();
@@ -124,17 +124,11 @@ ACE_OS::chdir (const char *path)
   ACE_OS_TRACE ("ACE_OS::chdir");
 #if defined (ACE_HAS_NONCONST_CHDIR)
   ACE_OSCALL_RETURN (::chdir (const_cast<char *> (path)), int, -1);
-
-#elif defined (ACE_WIN32) && defined (__IBMCPP__) && (__IBMCPP__ >= 400)
-  ACE_OSCALL_RETURN (::_chdir (const_cast<char *> (path)), int, -1);
-
 #elif defined (ACE_HAS_WINCE)
   ACE_UNUSED_ARG (path);
   ACE_NOTSUP_RETURN (-1);
-
 #else
   ACE_OSCALL_RETURN (::chdir (path), int, -1);
-
 #endif /* ACE_HAS_NONCONST_CHDIR */
 }
 
@@ -142,7 +136,7 @@ ACE_OS::chdir (const char *path)
 ACE_INLINE int
 ACE_OS::chdir (const wchar_t *path)
 {
-#if defined (ACE_WIN32)
+#if defined (ACE_WIN32) && !defined (ACE_HAS_WINCE)
   ACE_OSCALL_RETURN (::_wchdir (path), int, -1);
 #else /* ACE_WIN32 */
   return ACE_OS::chdir (ACE_Wide_To_Ascii (path).char_rep ());
@@ -154,9 +148,7 @@ ACE_OS::chdir (const wchar_t *path)
 ACE_INLINE int
 ACE_OS::rmdir (const char *path)
 {
-#if defined (ACE_WIN32) && defined (__IBMCPP__) && (__IBMCPP__ >= 400)
-  ACE_OSCALL_RETURN (::_rmdir ((char *) path), int, -1);
-#elif defined (ACE_HAS_WINCE)
+#if defined (ACE_HAS_WINCE)
   ACE_WIN32CALL_RETURN (ACE_ADAPT_RETVAL (::RemoveDirectory (ACE_TEXT_CHAR_TO_TCHAR (path)),
                                           ace_result_),
                         int, -1);
@@ -355,7 +347,7 @@ ACE_OS::ftruncate (ACE_HANDLE handle, ACE_OFF_T offset)
 {
   ACE_OS_TRACE ("ACE_OS::ftruncate");
 #if defined (ACE_WIN32)
-#  if !defined (ACE_LACKS_SETFILEPOINTEREX)
+#  if !defined (ACE_LACKS_WIN32_SETFILEPOINTEREX)
   LARGE_INTEGER loff;
   loff.QuadPart = offset;
   if (::SetFilePointerEx (handle, loff, 0, FILE_BEGIN))
@@ -530,7 +522,7 @@ ACE_OS::hostname (char name[], size_t maxnamelen)
 #elif defined (ACE_VXWORKS) || defined (ACE_HAS_WINCE)
   ACE_OSCALL_RETURN (::gethostname (name, maxnamelen), int, -1);
 #elif defined (ACE_WIN32)
-  if (::gethostname (name, ACE_Utils::Truncate<int> (maxnamelen)) == 0)
+  if (::gethostname (name, ACE_Utils::truncate_cast<int> (maxnamelen)) == 0)
   {
     return 0;
   }
@@ -659,7 +651,7 @@ ACE_OS::llseek (ACE_HANDLE handle, ACE_LOFF_T offset, int whence)
   ACE_OSCALL_RETURN (::lseek64 (handle, offset, whence), ACE_LOFF_T, -1);
 #elif defined (ACE_HAS_LLSEEK)
 # if defined (ACE_WIN32)
-#  ifndef ACE_LACKS_SETFILEPOINTEREX
+#  ifndef ACE_LACKS_WIN32_SETFILEPOINTEREX
   LARGE_INTEGER distance, new_file_pointer;
 
   distance.QuadPart = offset;
@@ -669,19 +661,21 @@ ACE_OS::llseek (ACE_HANDLE handle, ACE_LOFF_T offset, int whence)
      ? new_file_pointer.QuadPart
      : static_cast<ACE_LOFF_T> (-1));
 #  else
-  LONG low_offset = ACE_LOW_PART(offset);
-  LONG high_offset = ACE_HIGH_PART(offset);
+  LARGE_INTEGER l_offset;
+  l_offset.QuadPart = offset;
+  LONG low_offset = l_offset.LowPart;
+  LONG high_offset = l_offset.HighPart;
 
-  ACE_OFF_T const result = ::SetFilePointer (handle,
-                                             low_offset,
-                                             &high_offset,
-                                             whence);
-
-  return
-    ((result != INVALID_SET_FILE_POINTER || GetLastError () == NO_ERROR)
-     ? result
-     : static_cast<ACE_LOFF_T> (-1));
-#  endif  /* ACE_LACKS_SETFILEPOINTEREX */
+  l_offset.LowPart = ::SetFilePointer (handle,
+                                       low_offset,
+                                       &high_offset,
+                                       whence);
+  if (l_offset.LowPart == INVALID_SET_FILE_POINTER &&
+      GetLastError () != NO_ERROR)
+    return static_cast<ACE_LOFF_T> (-1);
+  l_offset.HighPart = high_offset;
+  return l_offset.QuadPart;
+#  endif  /* ACE_LACKS_WIN32_SETFILEPOINTEREX */
 # else
     ACE_OSCALL_RETURN (::llseek (handle, offset, whence), ACE_LOFF_T, -1);
 # endif /* WIN32 */
@@ -783,7 +777,7 @@ ACE_OS::pipe (ACE_HANDLE fds[])
 }
 
 ACE_INLINE void *
-ACE_OS::sbrk (ptrdiff_t brk)
+ACE_OS::sbrk (intptr_t brk)
 {
 #if defined (ACE_LACKS_SBRK)
   ACE_UNUSED_ARG (brk);
@@ -903,7 +897,9 @@ ACE_OS::sleep (u_int seconds)
   // Initializer doesn't work with Green Hills 1.8.7
   rqtp.tv_sec = seconds;
   rqtp.tv_nsec = 0L;
+  //FUZZ: disable check_for_lack_ACE_OS
   ACE_OSCALL_RETURN (::nanosleep (&rqtp, 0), int, -1);
+  //FUZZ: enable check_for_lack_ACE_OS
 #else
   ACE_OSCALL_RETURN (::sleep (seconds), int, -1);
 #endif /* ACE_WIN32 */
@@ -918,7 +914,9 @@ ACE_OS::sleep (const ACE_Time_Value &tv)
   return 0;
 #elif defined (ACE_HAS_CLOCK_GETTIME)
   timespec_t rqtp = tv;
+  //FUZZ: disable check_for_lack_ACE_OS
   ACE_OSCALL_RETURN (::nanosleep (&rqtp, 0), int, -1);
+  //FUZZ: enable check_for_lack_ACE_OS
 #else
 # if defined (ACE_HAS_NONCONST_SELECT_TIMEVAL)
   // Copy the timeval, because this platform doesn't declare the timeval
@@ -927,11 +925,15 @@ ACE_OS::sleep (const ACE_Time_Value &tv)
 #  if defined(ACE_TANDEM_T1248_PTHREADS)
      ACE_OSCALL_RETURN (::spt_select (0, 0, 0, 0, &tv_copy), int, -1);
 #  else
+     //FUZZ: disable check_for_lack_ACE_OS
      ACE_OSCALL_RETURN (::select (0, 0, 0, 0, &tv_copy), int, -1);
+     //FUZZ: enable check_for_lack_ACE_OS
 #  endif
 # else  /* ! ACE_HAS_NONCONST_SELECT_TIMEVAL */
   const timeval *tvp = tv;
+  //FUZZ: disable check_for_lack_ACE_OS
   ACE_OSCALL_RETURN (::select (0, 0, 0, 0, tvp), int, -1);
+  //FUZZ: enable check_for_lack_ACE_OS
 # endif /* ACE_HAS_NONCONST_SELECT_TIMEVAL */
 #endif /* ACE_WIN32 */
 }
@@ -942,6 +944,26 @@ ACE_OS::swab (const void *src,
               ssize_t length)
 {
 #if defined (ACE_LACKS_SWAB)
+  // ------------------------------------------------------------
+  // The following copyright notice applies to the swab()
+  // implementation within this "ACE_LACKS_SWAB" block of code.
+  // ------------------------------------------------------------
+  /*
+    Copyright (c) 1994-2006  Red Hat, Inc. All rights reserved.
+
+    This copyrighted material is made available to anyone wishing to
+    use, modify, copy, or redistribute it subject to the terms and
+    conditions of the BSD License.   This program is distributed in
+    the hope that it will be useful, but WITHOUT ANY WARRANTY
+    expressed or implied, including the implied warranties of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  A copy of
+    this license is available at
+    http://www.opensource.org/licenses. Any Red Hat trademarks that
+    are incorporated in the source code or documentation are not
+    subject to the BSD License and may only be used or replicated with
+    the express permission of Red Hat, Inc.
+  */
+
   const char *from = static_cast<const char*> (src);
   char *to = static_cast<char *> (dest);
   ssize_t ptr = 0;
@@ -1006,7 +1028,7 @@ ACE_OS::truncate (const ACE_TCHAR *filename,
                                     O_WRONLY,
                                     ACE_DEFAULT_FILE_PERMS);
 
-#  if !defined (ACE_LACKS_SETFILEPOINTEREX)
+#  if !defined (ACE_LACKS_WIN32_SETFILEPOINTEREX)
   LARGE_INTEGER loffset;
   loffset.QuadPart = offset;
 #else
@@ -1017,7 +1039,7 @@ ACE_OS::truncate (const ACE_TCHAR *filename,
   if (handle == ACE_INVALID_HANDLE)
     ACE_FAIL_RETURN (-1);
 
-#  if !defined (ACE_LACKS_SETFILEPOINTEREX)
+#  if !defined (ACE_LACKS_WIN32_SETFILEPOINTEREX)
   else if (::SetFilePointerEx (handle,
                                loffset,
                                0,
@@ -1028,7 +1050,7 @@ ACE_OS::truncate (const ACE_TCHAR *filename,
                              &high_offset,
                              FILE_BEGIN) != INVALID_SET_FILE_POINTER
            || GetLastError () == NO_ERROR)
-#  endif
+#  endif /* ACE_LACKS_WIN32_SETFILEPOINTEREX */
     {
       BOOL result = ::SetEndOfFile (handle);
       ::CloseHandle (handle);

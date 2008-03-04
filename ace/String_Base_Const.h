@@ -28,8 +28,11 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 /**
  * @class ACE_String_Base_Const
  *
- * @brief This class defines a constant for ACE_String_Base to
- *        circumvent a bug in SunCC 6.0.
+ * @brief This class defines a constant for ACE_String_Base
+ *        which originally was there to circumvent a bug in SunCC 6.0.
+ *        This could be moved to ACE_String_Base but that
+ *        adds a lot of footprint to the user applications which
+ *        is not something we want.
  */
 class ACE_Export ACE_String_Base_Const
 {

@@ -1,4 +1,4 @@
-// $Id$
+ // $Id$
 
 #ifndef ACE_FUTURE_CPP
 #define ACE_FUTURE_CPP
@@ -56,9 +56,11 @@ ACE_Future_Rep<T>::dump (void) const
  (int) this->ref_count_));
   ACE_DEBUG ((LM_INFO,"value_: \n"));
   if (this->value_)
-    ACE_DEBUG ((LM_DEBUG, ACE_LIB_TEXT (" (NON-NULL)\n")));
+    ACE_DEBUG ((LM_DEBUG, ACE_TEXT (" (NON-NULL)\n")));
   else
-    ACE_DEBUG ((LM_DEBUG, ACE_LIB_TEXT (" (NULL)\n")));
+    //FUZZ: disable check_for_NULL
+    ACE_DEBUG ((LM_DEBUG, ACE_TEXT (" (NULL)\n")));
+    //FUZZ: enable check_for_NULL
 
   ACE_DEBUG ((LM_INFO,"value_ready_: \n"));
   this->value_ready_.dump ();
@@ -146,7 +148,7 @@ template <class T>
 ACE_Future_Rep<T>::ACE_Future_Rep (void)
   : value_ (0),
     ref_count_ (0),
-    value_ready_ (this->value_ready_mutex_)
+    value_ready_ (value_ready_mutex_)
 {
 }
 
@@ -183,10 +185,10 @@ ACE_Future_Rep<T>::set (const T &r,
                           -1);
 
           // Remove and notify all subscribed observers.
-          ACE_TYPENAME OBSERVER_COLLECTION::iterator iterator =
+          typename OBSERVER_COLLECTION::iterator iterator =
             this->observer_collection_.begin ();
 
-          ACE_TYPENAME OBSERVER_COLLECTION::iterator end =
+          typename OBSERVER_COLLECTION::iterator end =
             this->observer_collection_.end ();
 
           while (iterator != end)

@@ -29,9 +29,9 @@
 // The following defines the Neutrino compiler.
 // gcc should know to call g++ as necessary
 #ifdef __GNUC__
-# define ACE_CC_NAME ACE_LIB_TEXT ("gcc")
+# define ACE_CC_NAME ACE_TEXT ("gcc")
 #else
-# define ACE_CC_NAME ACE_LIB_TEXT ("NTO compiler ??")
+# define ACE_CC_NAME ACE_TEXT ("NTO compiler ??")
 #endif
 
 // /usr/nto/include/float.h defines
@@ -68,7 +68,6 @@
 #define ACE_HAS_POSIX_SEM
 #define ACE_HAS_POSIX_TIME
 #define ACE_HAS_PTHREADS
-#define ACE_HAS_PTHREADS_STD
 #define ACE_HAS_P_READ_WRITE
 #define ACE_HAS_REENTRANT_FUNCTIONS
 #define ACE_HAS_SELECT_H
@@ -104,7 +103,6 @@
 #define ACE_LACKS_NETDB_REENTRANT_FUNCTIONS
 #define ACE_LACKS_POLL_H
 #define ACE_LACKS_PTHREAD_THR_SIGSETMASK
-#define ACE_LACKS_RTTI
 #define ACE_LACKS_RWLOCK_T
 #define ACE_LACKS_SBRK
 #define ACE_LACKS_SEEKDIR

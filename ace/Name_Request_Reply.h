@@ -152,7 +152,7 @@ private:
     ACE_UINT32 block_forever_;
 
     /// Max seconds willing to wait for name if not blocking forever.
-    ACE_UINT32 sec_timeout_;
+    ACE_UINT64 sec_timeout_;
 
     /// Max micro seconds to wait for name if not blocking forever.
     ACE_UINT32 usec_timeout_;
@@ -249,7 +249,7 @@ private:
     ACE_INT32 type_;
 
     /// Indicates why error occurred if <this->type_> == failure (-1).
-    /// Typical reasons include: <ETIME> (if the client timed out after
+    /// Typical reasons include: @c ETIME (if the client timed out after
     /// waiting for the name).
     ACE_UINT32 errno_;
   };

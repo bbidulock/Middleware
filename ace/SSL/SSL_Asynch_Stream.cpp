@@ -550,11 +550,13 @@ ACE_SSL_Asynch_Stream::do_SSL_read (void)
   ACE_Message_Block & mb = this->ext_read_result_->message_block ();
   size_t bytes_req = this->ext_read_result_->bytes_to_read ();
 
+  ERR_clear_error();
+
   const int bytes_trn = ::SSL_read (this->ssl_,
                                     mb.wr_ptr (),
                                     bytes_req);
 
-  int status = ::SSL_get_error (this->ssl_, bytes_trn);
+  int const status = ::SSL_get_error (this->ssl_, bytes_trn);
 
   switch (status)
     {
@@ -607,11 +609,13 @@ ACE_SSL_Asynch_Stream::do_SSL_write (void)
   ACE_Message_Block & mb = this->ext_write_result_->message_block ();
   size_t       bytes_req = this->ext_write_result_->bytes_to_write ();
 
+  ERR_clear_error();
+
   const int bytes_trn = ::SSL_write (this->ssl_,
                                      mb.rd_ptr (),
                                      bytes_req);
 
-  int status = ::SSL_get_error (this->ssl_, bytes_trn);
+  int const status = ::SSL_get_error (this->ssl_, bytes_trn);
 
   switch (status)
     {
@@ -951,7 +955,7 @@ ACE_SSL_Asynch_Stream::handle_write_stream (
   size_t len       = bytes_req - bytes_trn;
 
   if (errval != 0)                    // error ?
-    this->bio_out_errno_ = errval;    // save error code
+    this->bio_out_errno_ = errval;    // save err code
   else if (len > 0)                   // TCP/IP overloaded ?
     {                                 // continue, rd_ptr at right place
       if (this->bio_ostream_.write (
@@ -992,7 +996,7 @@ ACE_SSL_Asynch_Stream::handle_read_stream (
   u_long errval    = result.error ();
 
   if (errval != 0)                     // error ?
-     this->bio_inp_errno_ = errval;    // save error code
+     this->bio_inp_errno_ = errval;    // save err code
   else if (bytes_trn == 0)             // end of stream ?
      this->bio_inp_flag_ |= BF_EOS;    // set flag EOS
 

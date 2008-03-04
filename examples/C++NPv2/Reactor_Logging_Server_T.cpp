@@ -10,8 +10,8 @@ template <class ACCEPTOR>
 Reactor_Logging_Server<ACCEPTOR>::Reactor_Logging_Server
   (int argc, char *argv[], ACE_Reactor *reactor)
   : ACCEPTOR (reactor) {
-  u_short logger_port = argc > 0 ? atoi (argv[0]) : 0;
-  ACE_TYPENAME ACCEPTOR::PEER_ADDR server_addr;
+  u_short logger_port = argc > 0 ? ACE_OS::atoi (argv[0]) : 0;
+  typename ACCEPTOR::PEER_ADDR server_addr;
   int result;
 
   if (logger_port != 0)

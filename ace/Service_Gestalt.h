@@ -83,7 +83,7 @@ public:
   /// Constructor either associates the instance with the process-wide
   /// singleton instance of ACE_Service_Repository, or creates and
   /// manages its own instance of the specified size.
-  ACE_Service_Gestalt (size_t size,
+  ACE_Service_Gestalt (size_t size = 1024,
                        bool svc_repo_is_owned = true,
                        bool no_static_svcs = true);
 
@@ -98,14 +98,14 @@ public:
    * Performs an open without parsing command-line arguments.  The
    * @a logger_key indicates where to write the logging output, which
    * is typically either a STREAM pipe or a socket address.  If
-   * @a ignore_static_svcs is 1 then static services are not loaded,
+   * @a ignore_static_svcs is true then static services are not loaded,
    * otherwise, they are loaded.  If @a ignore_default_svc_conf_file is
-   * non-0 then the <svc.conf> configuration file will be ignored.
+   * true then the <svc.conf> configuration file will be ignored.
    * Returns zero upon success, -1 if the file is not found or cannot
    * be opened (errno is set accordingly), otherwise returns the
    * number of errors encountered loading the services in the
    * specified svc.conf configuration file.  If @a ignore_debug_flag is
-   * non-0 then the application is responsible for setting the
+   * true then the application is responsible for setting the
    * <ACE_Log_Msg::priority_mask> appropriately.
    */
   int open (const ACE_TCHAR program_name[],
@@ -195,18 +195,18 @@ public:
    * @return Returns -1 if the service cannot be 'loaded'.
    */
   int process_directive (const ACE_Static_Svc_Descriptor &ssd,
-                         int force_replace = 0);
+                         bool force_replace = false);
 
   /// Process a file containing a list of service configuration
   /// directives.
   int process_file (const ACE_TCHAR file[]);
 
   /**
-   * Locate an entry with <name> in the table.  If <ignore_suspended>
+   * Locate an entry with @a name in the table.  If <ignore_suspended>
    * is set then only consider services marked as resumed.  If the
    * caller wants the located entry, pass back a pointer to the
-   * located entry via <srp>.  If <name> is not found, -1 is returned.
-   * If <name> is found, but it is suspended and the caller wants to
+   * located entry via <srp>.  If @a name is not found, -1 is returned.
+   * If @a name is found, but it is suspended and the caller wants to
    * ignore suspended services a -2 is returned.
    */
   int find (const ACE_TCHAR name[],
@@ -312,6 +312,9 @@ public:
     const ACE_Static_Svc_Descriptor *assd_;
   };
 
+  /// Get the current ACE_Service_Repository held by this object.
+  ACE_Service_Repository* current_service_repository (void);
+
 protected:
 
   /**
@@ -350,7 +353,7 @@ protected:
   /// the global table. This avoids multiple additions when processing
   /// directives in non-global gestalts.
   int process_directive_i (const ACE_Static_Svc_Descriptor &ssd,
-                           int force_replace = 0);
+                           bool force_replace = false);
 
 #if (ACE_USES_CLASSIC_SVC_CONF == 1)
   /// This is the implementation function that process_directives()
@@ -446,6 +449,45 @@ protected:
 
 }; /* class ACE_Service_Gestalt */
 
+
+/**
+ * @class ACE_Service_Type_Dynamic_Guard
+ *
+ * @brief A forward service declaration guard.
+ *
+ * Helps to resolve an issue with hybrid services, i.e. dynamic
+ * services, accompanied by static services in the same DLL.  Only
+ * automatic instances of SDG are supposed to exist. Those are
+ * created during (dynamic) service initialization and serve to:
+ *
+ * (a) Ensure the service we are loading is ordered last in the
+ * repository, following any other services it may cause to register,
+ * as part of its own registration. This is a common case when
+ * loading dynamic services from DLLs - there are often static
+ * initializers, which register static services.
+ *
+ * (b) The SDG instance destructor detects if the dynamic service
+ * initialized successfully and "fixes-up" all the newly registered
+ * static services to hold a reference to the DLL, from which they
+ * have originated.
+ */
+class ACE_Export ACE_Service_Type_Dynamic_Guard
+{
+public:
+  ACE_Service_Type_Dynamic_Guard (ACE_Service_Repository &r,
+                                  ACE_TCHAR const *name);
+
+  ~ACE_Service_Type_Dynamic_Guard (void);
+
+private:
+  ACE_Service_Repository & repo_;
+  size_t repo_begin_;
+  ACE_TCHAR const * const name_;
+  ACE_Service_Type const * dummy_;
+# if defined (ACE_MT_SAFE) && (ACE_MT_SAFE != 0)
+  ACE_Guard< ACE_Recursive_Thread_Mutex > repo_monitor_;
+#endif
+};
 
 
 ACE_END_VERSIONED_NAMESPACE_DECL

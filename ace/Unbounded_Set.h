@@ -35,7 +35,7 @@ class ACE_Unbounded_Set_Iterator
 {
 public:
   // = Initialization method.
-  ACE_Unbounded_Set_Iterator (ACE_Unbounded_Set<T> &s, int end = 0);
+  ACE_Unbounded_Set_Iterator (ACE_Unbounded_Set<T> &s, bool end = false);
 
   // = Iteration methods.
 
@@ -65,7 +65,7 @@ public:
   /// Prefix advance.
   ACE_Unbounded_Set_Iterator<T>& operator++ (void);
 
-  /// Returns a reference to the internal element <this> is pointing to.
+  /// Returns a reference to the internal element @c this is pointing to.
   T& operator* (void);
 
   /// Check if two iterators point to the same position
@@ -94,7 +94,8 @@ class ACE_Unbounded_Set_Const_Iterator
 {
 public:
   // = Initialization method.
-  ACE_Unbounded_Set_Const_Iterator (const ACE_Unbounded_Set<T> &s, int end = 0);
+  ACE_Unbounded_Set_Const_Iterator (const ACE_Unbounded_Set<T> &s,
+                                    bool end = false);
 
   // = Iteration methods.
 
@@ -124,7 +125,7 @@ public:
   /// Prefix advance.
   ACE_Unbounded_Set_Const_Iterator<T>& operator++ (void);
 
-  /// Returns a reference to the internal element <this> is pointing to.
+  /// Returns a reference to the internal element @c this is pointing to.
   T& operator* (void);
 
   /// Check if two iterators point to the same position
@@ -218,17 +219,17 @@ public:
 
   // = Check boundary conditions.
 
-  /// Returns 1 if the container is empty, otherwise returns 0.
+  /// Returns @c true if the container is empty, otherwise returns @c false.
   /**
    * Constant time is_empty check.
    */
-  int is_empty (void) const;
+  bool is_empty (void) const;
 
-  /// Returns 0.
+  /// Returns @c false.
   /**
-   * Always returns 0 since the set can never fill up.
+   * Always returns @c false since the set can never fill up.
    */
-  int is_full (void) const;
+  bool is_full (void) const;
 
   // = Classic unordered set operations.
 
@@ -271,15 +272,17 @@ public:
   /// Dump the state of an object.
   void dump (void) const;
 
-  /// Reset the <ACE_Unbounded_Set> to be empty.
+  /// Reset the ACE_Unbounded_Set to be empty.
   /**
    * Delete the nodes of the set.
    */
   void reset (void);
 
   // = STL-styled unidirectional iterator factory.
-  ACE_Unbounded_Set_Iterator<T> begin (void);
-  ACE_Unbounded_Set_Iterator<T> end (void);
+  iterator begin (void);
+  iterator end (void);
+  const_iterator begin (void) const;
+  const_iterator end (void) const;
 
   /// Declare the dynamic allocation hooks.
   ACE_ALLOC_HOOK_DECLARE;

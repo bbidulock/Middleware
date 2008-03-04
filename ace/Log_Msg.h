@@ -38,6 +38,7 @@
 #define ACE_DEBUG(X) do {} while (0)
 #define ACE_ERROR_INIT(VALUE, FLAGS)
 #else
+#if !defined (ACE_HEX_DUMP)
 #define ACE_HEX_DUMP(X) \
   do { \
     int __ace_error = ACE_Log_Msg::last_error_adapter (); \
@@ -45,6 +46,8 @@
     ace___->conditional_set (__FILE__, __LINE__, 0, __ace_error); \
     ace___->log_hexdump X; \
   } while (0)
+#endif
+#if !defined (ACE_RETURN)
 #define ACE_RETURN(Y) \
   do { \
     int __ace_error = ACE_Log_Msg::last_error_adapter (); \
@@ -53,6 +56,8 @@
                  ace___->msg_ostream (), ace___->msg_callback ()); \
     return Y; \
   } while (0)
+#endif
+#if !defined (ACE_ERROR_RETURN)
 #define ACE_ERROR_RETURN(X, Y) \
   do { \
     int __ace_error = ACE_Log_Msg::last_error_adapter (); \
@@ -61,6 +66,8 @@
     ace___->log X; \
     return Y; \
   } while (0)
+#endif
+#if !defined (ACE_ERROR)
 #define ACE_ERROR(X) \
   do { \
     int __ace_error = ACE_Log_Msg::last_error_adapter (); \
@@ -68,6 +75,8 @@
     ace___->conditional_set (__FILE__, __LINE__, -1, __ace_error); \
     ace___->log X; \
   } while (0)
+#endif
+#if !defined (ACE_DEBUG)
 #define ACE_DEBUG(X) \
   do { \
     int __ace_error = ACE_Log_Msg::last_error_adapter (); \
@@ -75,12 +84,17 @@
     ace___->conditional_set (__FILE__, __LINE__, 0, __ace_error); \
     ace___->log X; \
   } while (0)
+#endif
+#if !defined (ACE_ERROR_INIT)
 #define ACE_ERROR_INIT(VALUE, FLAGS) \
   do { \
     ACE_Log_Msg *ace___ = ACE_Log_Msg::instance (); \
     ace___->set_flags (FLAGS); ace___->op_status (VALUE); \
   } while (0)
+#endif
+#if !defined (ACE_ERROR_BREAK)
 #define ACE_ERROR_BREAK(X) { ACE_ERROR (X); break; }
+#endif
 #endif /* ACE_NLOGGING */
 
 #include "ace/OS_Log_Msg_Attributes.h"
@@ -123,31 +137,30 @@ class ACE_Log_Record;
  *
  * This class is very flexible since it allows formatted error
  * messages to be printed in a thread-safe manner to various
- * locations, such as stdout, stderr, cerr, a distributed logger, etc.
- * The current message is also kept in a thread-specific storage
- * location (threads spawned using ACE_Thread_Manager automatically get
- * an ACE_Log_Msg object that inherits the spawning thread's settings), which
- * can be used to communicate errors between framework methods and
- * callers.  A message is logged by the log() method, only if the
+ * locations, such as stderr, cerr, a distributed logger, etc.  The
+ * current message is also kept in a thread-specific storage location
+ * (threads spawned using ACE_Thread_Manager automatically get an
+ * ACE_Log_Msg object that inherits the spawning thread's settings),
+ * which can be used to communicate errors between framework methods
+ * and callers.  A message is logged by the log() method, only if the
  * message priority is currently enabled.  Moreover, only the current
  * log message is stored here -- it will be overwritten by the
  * subsequent call to log().
  *
  * The ACE_Log_Msg class uses two priority masks to control its
- * logging behavior.  The @c priority_mask_ object attribute is thread-
- * specific and specifies the priority levels logged by the thread.
- * The @c process_priority_mask_ class attribute is not thread-specific
- * and specifies the priority levels that will be logged by all
- * threads in the process.  By default, all levels are disabled for
- * @c priority_mask_ and all levels are enabled for
- * @c process_priority_mask_ (i.e. the process-wide mask controls
- * the settings, and each instance can expand on it if desired).
- * Both priority masks can be modified using the priority_mask()
- * method of this class.
+ * logging behavior.  The @c priority_mask_ object attribute is
+ * thread- specific and specifies the priority levels logged by the
+ * thread.  The @c process_priority_mask_ class attribute is not
+ * thread-specific and specifies the priority levels that will be
+ * logged by all threads in the process.  By default, all levels are
+ * disabled for @c priority_mask_ and all levels are enabled for @c
+ * process_priority_mask_ (i.e. the process-wide mask controls the
+ * settings, and each instance can expand on it if desired).  Both
+ * priority masks can be modified using the priority_mask() method of
+ * this class.
  */
 class ACE_Export ACE_Log_Msg
 {
-
 public:
   // Logger Flags.
   enum
@@ -188,6 +201,7 @@ public:
 
   /// Returns the current program name used for logging.
   static const ACE_TCHAR * program_name (void);
+
   /// Clears the flag from the default priority mask used to
   /// initialize ACE_Log_Msg instances.
   static void disable_debug_messages (ACE_Log_Priority priority = LM_DEBUG);
@@ -271,7 +285,7 @@ public:
 
   /// Get the result of the operation status (by convention, -1 means
   /// error).
-  int op_status (void);
+  int op_status (void) const;
 
   /// Set the value of the errnum (by convention this corresponds to
   /// errno).
@@ -279,13 +293,13 @@ public:
 
   /// Get the value of the errnum (by convention this corresponds to
   /// errno).
-  int errnum (void);
+  int errnum (void) const;
 
   /// Set the line number where an error occurred.
   void linenum (int);
 
   /// Get the line number where an error occurred.
-  int linenum (void);
+  int linenum (void) const;
 
   /// Set the file name where an error occurred.
   void file (const char *);
@@ -305,7 +319,7 @@ public:
 
   /// Get the field that indicates whether interrupted calls should be
   /// restarted.
-  int restart (void);
+  int restart (void) const;
 
   // = Notice that the following two function is equivalent to
   //   "void msg_ostream (HANDLE)" and "HANDLE msg_ostream (void)"
@@ -315,11 +329,11 @@ public:
   void msg_ostream (ACE_OSTREAM_TYPE *);
 
   /**
-   * delete_stream == 1, forces Log_Msg.h to delete the stream in
+   * delete_stream == true, forces Log_Msg.h to delete the stream in
    * its own ~dtor (assumes control of the stream)
    * use only with proper ostream (eg: fstream), not (cout, cerr)
    */
-  void msg_ostream (ACE_OSTREAM_TYPE *, int delete_ostream);
+  void msg_ostream (ACE_OSTREAM_TYPE *, bool delete_ostream);
 
   /// Get the ostream that is used to print error messages.
   ACE_OSTREAM_TYPE *msg_ostream (void) const;
@@ -353,16 +367,16 @@ public:
   int dec (void);
 
   /// Get trace depth.
-  int trace_depth (void);
+  int trace_depth (void) const;
 
   /// Set trace depth.
   void trace_depth (int);
 
   /// Set trace active status.
-  int trace_active (void);
+  bool trace_active (void) const;
 
   /// Get trace active status.
-  void trace_active (int value);
+  void trace_active (bool value);
 
   /// Get the TSS thread descriptor.
   ACE_Thread_Descriptor *thr_desc (void) const;
@@ -402,7 +416,7 @@ public:
   void start_tracing (void);
 
   /// Query tracing status on a per-thread basis...
-  int  tracing_enabled (void);
+  bool tracing_enabled (void) const;
 
   typedef enum
   {
@@ -472,6 +486,8 @@ public:
    *  - 'A': print an ACE_timer_t value (which could be either double
    *         or ACE_UINT32.)
    *  - 'a': abort the program at this point abruptly.
+   *  - 'b': print a ssize_t value
+   *  - 'B': print a size_t value
    *  - 'c': print a character
    *  - 'C': print a character string
    *  - 'i', 'd': print a decimal number
@@ -497,7 +513,7 @@ public:
    *         to var-argument.
    *  - 's': print out a character string
    *  - 'T': print timestamp in hour:minute:sec:usec format.
-   *  - 'D': print timestamp in month/day/year hour:minute:sec:usec format.
+   *  - 'D': print timestamp as Weekday Month day year hour:minute:sec.usec
    *  - 't': print thread id (1 if single-threaded)
    *  - 'u': print as unsigned int
    *  - 'w': prints a wide character
@@ -506,6 +522,7 @@ public:
    *  - 'X': print as a hex number
    *  - 'z': print an ACE_OS::WChar character
    *  - 'Z': print an ACE_OS::WChar character string
+   *  - ':': print a time_t value as an integral number
    *  - '%': print out a single percent sign, '%'
    */
   ssize_t log (ACE_Log_Priority priority, const ACE_TCHAR *format, ...);
@@ -596,13 +613,13 @@ private:
   int trace_depth_;
 
   /// Are we already within an ACE_Trace constructor call?
-  int trace_active_;
+  bool trace_active_;
 
   /// Are we allowing tracing in this thread?
-  int tracing_enabled_;
+  bool tracing_enabled_;
 
   /// Are we deleting this ostream?
-  int delete_ostream_;
+  bool delete_ostream_;
 
   /**
    * If we're running in the context of an ACE_Thread_Manager this
@@ -647,7 +664,7 @@ private:
   static u_long flags_;
 
   /// Offset of msg_[].
-  static long msg_off_;
+  static ptrdiff_t msg_off_;
 
   /**
    * Number of existing ACE_Log_Msg instances; when 0, delete program/host
@@ -720,6 +737,10 @@ ACE_TSS_CLEANUP_NAME (void *ptr);
 #if defined(ACE_LEGACY_MODE)
 #include "ace/Log_Msg_Callback.h"
 #endif /* ACE_LEGACY_MODE */
+
+#if defined (__ACE_INLINE__)
+#include "ace/Log_Msg.inl"
+#endif /* __ACE_INLINE__ */
 
 #include /**/ "ace/post.h"
 #endif /* ACE_LOG_MSG_H */

@@ -7,6 +7,7 @@
 #endif /* __ACE_INLINE__ */
 
 #include "ace/ARGV.h"
+#include "ace/Auto_Ptr.h"
 #include "ace/Signal.h"
 #include "ace/SString.h"
 #include "ace/Log_Msg.h"
@@ -18,6 +19,7 @@
 #include "ace/OS_NS_unistd.h"
 #include "ace/OS_Memory.h"
 #include "ace/Countdown_Time.h"
+#include "ace/Truncate.h"
 
 #if defined (ACE_VXWORKS) && (ACE_VXWORKS > 0x600) && defined (__RTP__)
 # include <rtpLib.h>
@@ -75,7 +77,7 @@ ACE_Process::prepare (ACE_Process_Options &)
 pid_t
 ACE_Process::spawn (ACE_Process_Options &options)
 {
-  if (prepare (options) < 0)
+  if (this->prepare (options) < 0)
     return ACE_INVALID_PID;
 
   // Stash the passed/duped handle sets away in this object for later
@@ -111,15 +113,21 @@ ACE_Process::spawn (ACE_Process_Options &options)
            h != ACE_INVALID_HANDLE && curr_len + 20 < max_len;
            h = h_iter ())
         {
-#if defined (ACE_WIN64)
+#if defined (ACE_WIN32)
+# if defined (ACE_WIN64)
           curr_len += ACE_OS::sprintf (&cmd_line_buf[curr_len],
-                                       ACE_LIB_TEXT (" +H %I64d"),
+                                       ACE_TEXT (" +H %I64p"),
                                        h);
+# else
+          curr_len += ACE_OS::sprintf (&cmd_line_buf[curr_len],
+                                       ACE_TEXT (" +H %p"),
+                                       h);
+# endif  /* ACE_WIN64 */
 #else
           curr_len += ACE_OS::sprintf (&cmd_line_buf[curr_len],
-                                       ACE_LIB_TEXT (" +H %d"),
+                                       ACE_TEXT (" +H %d"),
                                        h);
-#endif /* ACE_WIN64 */
+#endif /* ACE_WIN32 */
         }
     }
 
@@ -345,9 +353,16 @@ ACE_Process::spawn (ACE_Process_Options &options)
       if (options.getgroup () != ACE_INVALID_PID
           && ACE_OS::setpgid (0,
                               options.getgroup ()) < 0)
-        ACE_ERROR ((LM_ERROR,
-                    ACE_LIB_TEXT ("%p.\n"),
-                    ACE_LIB_TEXT ("ACE_Process::spawn: setpgid failed.")));
+        {
+#if !defined (ACE_HAS_THREADS) 
+          // We can't emit this log message because ACE_ERROR(), etc.
+          // will invoke async signal unsafe functions, which results
+          // in undefined behavior in threaded programs.
+          ACE_ERROR ((LM_ERROR,
+                      ACE_TEXT ("%p.\n"),
+                      ACE_TEXT ("ACE_Process::spawn: setpgid failed.")));
+#endif
+        }
 # endif /* ACE_LACKS_SETPGID */
 
 # if !defined (ACE_LACKS_SETREGID)
@@ -355,9 +370,16 @@ ACE_Process::spawn (ACE_Process_Options &options)
           || options.getegid () != (uid_t) -1)
         if (ACE_OS::setregid (options.getrgid (),
                               options.getegid ()) == -1)
-          ACE_ERROR ((LM_ERROR,
-                      ACE_LIB_TEXT ("%p.\n"),
-                      ACE_LIB_TEXT ("ACE_Process::spawn: setregid failed.")));
+          {
+#if !defined (ACE_HAS_THREADS)
+            // We can't emit this log message because ACE_ERROR(), etc.
+            // will invoke async signal unsafe functions, which results
+            // in undefined behavior in threaded programs.
+            ACE_ERROR ((LM_ERROR,
+                        ACE_TEXT ("%p.\n"),
+                        ACE_TEXT ("ACE_Process::spawn: setregid failed.")));
+#endif
+          }
 # endif /* ACE_LACKS_SETREGID */
 
 # if !defined (ACE_LACKS_SETREUID)
@@ -366,9 +388,16 @@ ACE_Process::spawn (ACE_Process_Options &options)
           || options.geteuid () != (uid_t) -1)
         if (ACE_OS::setreuid (options.getruid (),
                               options.geteuid ()) == -1)
-          ACE_ERROR ((LM_ERROR,
-                      ACE_LIB_TEXT ("%p.\n"),
-                      ACE_LIB_TEXT ("ACE_Process::spawn: setreuid failed.")));
+          {
+#if !defined (ACE_HAS_THREADS)
+            // We can't emit this log message because ACE_ERROR(), etc.
+            // will invoke async signal unsafe functions, which results
+            // in undefined behavior in threaded programs.
+            ACE_ERROR ((LM_ERROR,
+                        ACE_TEXT ("%p.\n"),
+                        ACE_TEXT ("ACE_Process::spawn: setreuid failed.")));
+#endif
+          }
 # endif /* ACE_LACKS_SETREUID */
 
       this->child (ACE_OS::getppid ());
@@ -682,13 +711,13 @@ ACE_Process::close_passed_handles (void)
   return;
 }
 
-ACE_Process_Options::ACE_Process_Options (int ie,
-                                          int cobl,
-                                          int ebl,
-                                          int mea)
+ACE_Process_Options::ACE_Process_Options (bool inherit_environment,
+                                          int command_line_buf_len,
+                                          int env_buf_len,
+                                          int max_env_args)
   :
 #if !defined (ACE_HAS_WINCE)
-    inherit_environment_ (ie),
+    inherit_environment_ (inherit_environment),
 #endif /* ACE_HAS_WINCE */
     creation_flags_ (0),
     avoid_zombies_ (0),
@@ -711,26 +740,26 @@ ACE_Process_Options::ACE_Process_Options (int ie,
     environment_buf_index_ (0),
     environment_argv_index_ (0),
     environment_buf_ (0),
-    environment_buf_len_ (ebl),
-    max_environment_args_ (mea),
-    max_environ_argv_index_ (mea - 1),
+    environment_buf_len_ (env_buf_len),
+    max_environment_args_ (max_env_args),
+    max_environ_argv_index_ (max_env_args - 1),
 #endif /* !ACE_HAS_WINCE */
     command_line_argv_calculated_ (0),
     command_line_buf_ (0),
     command_line_copy_ (0),
-    command_line_buf_len_ (cobl),
+    command_line_buf_len_ (command_line_buf_len),
     process_group_ (ACE_INVALID_PID)
 {
   ACE_NEW (command_line_buf_,
-           ACE_TCHAR[cobl]);
+           ACE_TCHAR[command_line_buf_len]);
   command_line_buf_[0] = '\0';
 
 #if !defined (ACE_HAS_WINCE)
   working_directory_[0] = '\0';
   ACE_NEW (environment_buf_,
-           ACE_TCHAR[ebl]);
+           ACE_TCHAR[env_buf_len]);
   ACE_NEW (environment_argv_,
-           ACE_TCHAR *[mea]);
+           ACE_TCHAR *[max_env_args]);
   environment_buf_[0] = '\0';
   environment_argv_[0] = 0;
   process_name_[0] = '\0';
@@ -766,8 +795,8 @@ ACE_Process_Options::inherit_environment (void)
       if (this->setenv_i (existing_environment + slot, len) == -1)
         {
           ACE_ERROR ((LM_ERROR,
-                      ACE_LIB_TEXT ("%p.\n"),
-                      ACE_LIB_TEXT ("ACE_Process_Options::ACE_Process_Options")));
+                      ACE_TEXT ("%p.\n"),
+                      ACE_TEXT ("ACE_Process_Options::ACE_Process_Options")));
           break;
         }
 
@@ -841,29 +870,72 @@ int
 ACE_Process_Options::setenv (const ACE_TCHAR *variable_name,
                              const ACE_TCHAR *format, ...)
 {
-  ACE_TCHAR newformat[DEFAULT_COMMAND_LINE_BUF_LEN];
+  // To address the potential buffer overflow,
+  // we now allocate the buffer on heap with a variable size.
+  size_t const buflen = ACE_OS::strlen (variable_name) + ACE_OS::strlen (format) + 2;
+  ACE_TCHAR *newformat = 0;
+  ACE_NEW_RETURN (newformat, ACE_TCHAR[buflen], -1);
+  ACE_Auto_Basic_Array_Ptr<ACE_TCHAR> safe_newformat (newformat);
 
   // Add in the variable name.
-  ACE_OS::sprintf (newformat,
-                   ACE_LIB_TEXT ("%s=%s"),
+  ACE_OS::sprintf (safe_newformat.get (),
+                   ACE_TEXT ("%s=%s"),
                    variable_name,
                    format);
-
-  ACE_TCHAR stack_buf[DEFAULT_COMMAND_LINE_BUF_LEN];
 
   // Start varargs.
   va_list argp;
   va_start (argp, format);
 
   // Add the rest of the varargs.
-  ACE_OS::vsprintf (stack_buf, newformat, argp);
+  size_t tmp_buflen = DEFAULT_COMMAND_LINE_BUF_LEN > buflen
+                      ? static_cast<size_t> (DEFAULT_COMMAND_LINE_BUF_LEN) : buflen;
+  int retval = 0;
+
+  ACE_TCHAR *stack_buf = 0;
+  ACE_NEW_RETURN (stack_buf, ACE_TCHAR[tmp_buflen], -1);
+  ACE_Auto_Basic_Array_Ptr<ACE_TCHAR> safe_stack_buf (stack_buf);
+
+  do
+    {
+      retval = ACE_OS::vsnprintf (safe_stack_buf.get (), tmp_buflen, safe_newformat.get (), argp);
+      if (retval > ACE_Utils::truncate_cast<int> (tmp_buflen))
+        {
+          tmp_buflen *= 2;
+          ACE_NEW_RETURN (stack_buf, ACE_TCHAR[tmp_buflen], -1);
+          safe_stack_buf.reset (stack_buf);
+        }
+      else
+        break;
+    }
+  while (1);
+
+  if (retval == -1)
+    {
+      // In case that vsnprintf is not supported,
+      // e.g., LynxOS and VxWorks 5, we have to
+      // fall back to vsprintf.
+      if (errno == ENOTSUP)
+        {
+          // ALERT: Since we have to use vsprintf here, there is still a chance that
+          // the stack_buf overflows, i.e., the length of the resulting string
+          // can still possibly go beyond the allocated stack_buf.
+          retval = ACE_OS::vsprintf (safe_stack_buf.get (), safe_newformat.get (), argp);
+          if (retval == -1)
+            // vsprintf is failed.
+            return -1;
+        }
+      else
+        // vsnprintf is failed.
+        return -1;
+    }
 
   // End varargs.
   va_end (argp);
 
   // Append the string to our environment buffer.
-  if (this->setenv_i (stack_buf,
-                      ACE_OS::strlen (stack_buf)) == -1)
+  if (this->setenv_i (safe_stack_buf.get (),
+                      ACE_OS::strlen (safe_stack_buf.get ())) == -1)
     return -1;
 
 #if defined (ACE_WIN32)
@@ -1002,7 +1074,7 @@ ACE_Process_Options::command_line (const ACE_TCHAR *const argv[])
       while (argv[++i])
         {
           ACE_OS::strcat (command_line_buf_,
-                          ACE_LIB_TEXT (" "));
+                          ACE_TEXT (" "));
           ACE_OS::strcat (command_line_buf_,
                           argv[i]);
         }
@@ -1022,10 +1094,10 @@ ACE_Process_Options::command_line (const ACE_TCHAR *format, ...)
   if (command_line_buf_len_ < 1)
     return -1;
 
-#if defined (ACE_HAS_SNPRINTF)
-  // sprintf the format and args into command_line_buf__.
+#if !defined (ACE_LACKS_VSNPRINTF) || defined (ACE_HAS_TRIO)
+  // vsnprintf the format and args into command_line_buf__.
   ACE_OS::vsnprintf (command_line_buf_,
-                     command_line_buf_len_ - 1,
+                     command_line_buf_len_,
                      format,
                      argp);
 #else

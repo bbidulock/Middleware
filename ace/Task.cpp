@@ -12,16 +12,20 @@ ACE_RCSID (ace,
            Task,
            "$Id$")
 
-
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
 ACE_Task_Base::ACE_Task_Base (ACE_Thread_Manager *thr_man)
   : thr_count_ (0),
     thr_mgr_ (thr_man),
     flags_ (0),
-    grp_id_ (-1),
-    last_thread_id_ (0)
+    grp_id_ (-1)
+#if !(defined (ACE_MVS) || defined(__TANDEM))
+    ,last_thread_id_ (0)
+#endif /* !defined (ACE_MVS) */
 {
+#if (defined (ACE_MVS) || defined(__TANDEM))
+   ACE_OS::memset( &this->last_thread_id_, '\0', sizeof( this->last_thread_id_ ));
+#endif /* defined (ACE_MVS) */
 }
 
 ACE_Task_Base::~ACE_Task_Base (void)
@@ -122,7 +126,8 @@ ACE_Task_Base::activate (long flags,
                          ACE_hthread_t thread_handles[],
                          void *stack[],
                          size_t stack_size[],
-                         ACE_thread_t thread_ids[])
+                         ACE_thread_t thread_ids[],
+                         const char* thr_name[])
 {
   ACE_TRACE ("ACE_Task_Base::activate");
 
@@ -167,7 +172,8 @@ ACE_Task_Base::activate (long flags,
                                task,
                                thread_handles,
                                stack,
-                               stack_size);
+                               stack_size,
+                               thr_name);
   else
     // thread names were specified
     grp_spawned =
@@ -181,7 +187,8 @@ ACE_Task_Base::activate (long flags,
                                stack,
                                stack_size,
                                thread_handles,
-                               task);
+                               task,
+                               thr_name);
   if (grp_spawned == -1)
     {
       // If spawn_n fails, restore original thread count.
@@ -192,7 +199,11 @@ ACE_Task_Base::activate (long flags,
   if (this->grp_id_ == -1)
     this->grp_id_ = grp_spawned;
 
+#if defined (ACE_MVS) || defined(__TANDEM)
+  ACE_OS::memcpy( &this->last_thread_id_, '\0', sizeof(this->last_thread_id_));
+#else
   this->last_thread_id_ = 0;    // Reset to prevent inadvertant match on ID
+#endif /* defined (ACE_MVS) */
 
   return 0;
 
@@ -209,6 +220,7 @@ ACE_Task_Base::activate (long flags,
     ACE_UNUSED_ARG (stack);
     ACE_UNUSED_ARG (stack_size);
     ACE_UNUSED_ARG (thread_ids);
+    ACE_UNUSED_ARG (thr_name);
     ACE_NOTSUP_RETURN (-1);
   }
 #endif /* ACE_MT_SAFE */
@@ -260,14 +272,14 @@ ACE_Task_Base::svc_run (void *args)
 #endif /* ACE_HAS_SIG_C_FUNC */
 
   // Call the Task's svc() hook method.
-  int svc_status = t->svc ();
+  int const svc_status = t->svc ();
   ACE_THR_FUNC_RETURN status;
-#if (defined (__BORLANDC__) && (__BORLANDC__ < 0x600)) || defined (__MINGW32__) || (defined (_MSC_VER) && (_MSC_VER <= 1400)) || (defined (ACE_WIN32) && (defined(__IBMCPP__) || defined (__DCC__)))
-  // Some compilers complain about reinterpret_cast from int to unsigned long...
+#if defined (ACE_HAS_INTEGRAL_TYPE_THR_FUNC_RETURN)
+  // Reinterpret case between integral types is not mentioned in the C++ spec
   status = static_cast<ACE_THR_FUNC_RETURN> (svc_status);
 #else
   status = reinterpret_cast<ACE_THR_FUNC_RETURN> (svc_status);
-#endif /* (__BORLANDC__ < 0x600) || __MINGW32__ || _MSC_VER <= 1400 || __IBMCPP__ */
+#endif /* ACE_HAS_INTEGRAL_TYPE_THR_FUNC_RETURN */
 
 // If we changed this zero change the other if in OS.cpp Thread_Adapter::invoke
 #if 1

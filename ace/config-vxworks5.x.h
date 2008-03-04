@@ -36,23 +36,13 @@
 
 # define ACE_LACKS_LINEBUFFERED_STREAMBUF
 
-// An explicit check for Tornado 2.1, which had very limited release.
-// See include/makeinclude/platform_vxworks5.x_g++.GNU for details
-// on version conventions used by ACE for VxWorks.
-# if ACE_VXWORKS == 0x542
-    // Older versions of Tornado accidentally omitted math routines from
-    // the link library to support long long arithmetic. These could be
-    // found and used from another library in the distro.
-    // Recent versions of Tornado include these symbols, so we no longer
-    // have a problem.
-#   define ACE_LACKS_LONGLONG_T
-#   define ACE_LACKS_CLEARERR
-#   define ACE_LACKS_AUTO_PTR
-# endif /* ACE_VXWORKS == 0x542 */
+# if (__GNUC__ == 2)
+#   define ACE_CDR_IMPLEMENT_WITH_NATIVE_DOUBLE 1
+# endif
 
 # if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3))
-	// GNU 3.3+ toolchain supports long long types but fails to define this so STL
-	// skips some definitions
+  // GNU 3.3+ toolchain supports long long types but fails to define this so STL
+  // skips some definitions
 #   if !defined (_GLIBCPP_USE_LONG_LONG)
 #     define _GLIBCPP_USE_LONG_LONG
 #   endif
@@ -134,9 +124,12 @@
 #define ACE_HAS_SIGINFO_T
 #define ACE_HAS_SIGWAIT
 #define ACE_HAS_SIG_ATOMIC_T
+#define ACE_HAS_SOCKADDR_IN_SIN_LEN
+#define ACE_HAS_SOCKADDR_IN6_SIN6_LEN
 #define ACE_HAS_STRDUP_EMULATION
 #define ACE_HAS_STRERROR
 #define ACE_HAS_THREADS
+#define ACE_LACKS_ALPHASORT
 #define ACE_LACKS_ACCESS
 #define ACE_LACKS_EXEC
 #define ACE_LACKS_FCNTL
@@ -283,7 +276,6 @@
 // It is possible to enable pthread support with VxWorks, when the user decides
 // to use this, we need some more defines
 #if defined ACE_HAS_PTHREADS
-# define ACE_HAS_PTHREADS_STD
 # define ACE_LACKS_CONDATTR_PSHARED
 # define ACE_LACKS_MUTEXATTR_PSHARED
 # define ACE_HAS_THREAD_SPECIFIC_STORAGE
@@ -293,6 +285,7 @@
 // so that hopefully in the future we can zap this include
 #include "types/vxTypesOld.h"
 #else
+# define ACE_HAS_VXTHREADS
 # define ACE_LACKS_PTHREAD_H
 # define ACE_LACKS_COND_T
 // VxWorks has no recursive mutexes. This was set in the past but it doesn't
@@ -316,6 +309,13 @@
 // ACE_OS::gethrtime () can use the RDTSC instruction.
 # define ACE_HAS_PENTIUM
 #endif
+
+# if defined (TOOL) && (TOOL == gnu)
+#  if defined (CPU) && (CPU == PPC85XX || CPU == PPC604 || CPU == PPC603)
+// These PPC's do lack log2
+#   define ACE_LACKS_LOG2
+#  endif
+# endif
 
 #if !defined (ACE_NEEDS_HUGE_THREAD_STACKSIZE)
 # define ACE_NEEDS_HUGE_THREAD_STACKSIZE 65536

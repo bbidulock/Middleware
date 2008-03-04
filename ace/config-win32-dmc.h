@@ -23,8 +23,8 @@
 # undef ACE_LACKS_STRUCT_DIR
 #endif
 
-// Changed ACE_TEXT to ACE_LIB_TEXT in the following line
-# define ACE_CC_NAME ACE_LIB_TEXT ("Digital Mars")
+// Changed ACE_TEXT to ACE_TEXT in the following line
+# define ACE_CC_NAME ACE_TEXT ("Digital Mars")
 # define ACE_CC_MAJOR_VERSION (1)
 # define ACE_CC_MINOR_VERSION (8)
 # define ACE_CC_BETA_VERSION (9)
@@ -56,8 +56,6 @@
 # define ACE_HAS_STRING_CLASS 1
 # define ACE_HAS_TEMPLATE_SPECIALIZATION 1
 # define ACE_HAS_TEMPLATE_TYPEDEFS 1
-# define ACE_HAS_TYPENAME_KEYWORD 1
-//# define ACE_HAS_EXPLICIT_TEMPLATE_INSTANTIATION
 # define ACE_HAS_USER_MODE_MASKS 1
 //# define ACE_LACKS_LINEBUFFERED_STREAMBUF 1
 # define ACE_LACKS_STRPTIME 1
@@ -65,7 +63,7 @@
 //# define ACE_NEW_THROWS_EXCEPTIONS 1
 # define ACE_SIZEOF_LONG_DOUBLE 10
 # define ACE_TEMPLATES_REQUIRE_SOURCE 1
-// Changed ACE_TEXT to ACE_LIB_TEXT in the following two lines
+// Changed ACE_TEXT to ACE_TEXT in the following two lines
 # define ACE_USES_STD_NAMESPACE_FOR_STDCPP_LIB 1
 # define ACE_HAS_STRBUF_T
 #define ACE_HAS_3_PARAM_WCSTOK
@@ -104,7 +102,7 @@ typedef long o_gid_t;
 #undef tell;
 
 # if !defined (ACE_LD_DECORATOR_STR) && defined (_DEBUG)
-#  define ACE_LD_DECORATOR_STR ACE_LIB_TEXT ("d")
+#  define ACE_LD_DECORATOR_STR ACE_TEXT ("d")
 # endif
 
 #include /**/ "ace/post.h"

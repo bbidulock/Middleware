@@ -97,13 +97,8 @@ find_another_host (ACE_TCHAR other_host[])
 
       // @@ We really need to add wrappers for these hostent methods.
 
-      // AIX 4.3 has problems with DNS usage when sethostent(1) is
-      // called - further DNS lookups don't work at all.
-#if defined (ACE_AIX_MINOR_VERS) && (ACE_AIX_MINOR_VERS == 3)
-      sethostent (0);
-#else
+      // Optimize for sequential access of DNS or hosts file.
       sethostent (1);
-#endif /* (ACE_AIX_MINOR_VERS) && (ACE_AIX_MINOR_VERS == 3) */
 
       int candidate_count = 0;
 
@@ -140,6 +135,7 @@ find_another_host (ACE_TCHAR other_host[])
             break;
           }
 
+      sethostent (0);
       endhostent ();
 #endif /* ! ACE_LACKS_GETHOSTENT */
 
@@ -152,7 +148,7 @@ find_another_host (ACE_TCHAR other_host[])
 static int
 fail_no_listener_nonblocking (void)
 {
-  ACE_TCHAR test_host[MAXHOSTNAMELEN];
+  ACE_TCHAR test_host[MAXHOSTNAMELEN], test_addr[MAXHOSTNAMELEN + 8];
   int status;
   ACE_INET_Addr nobody_home;
   ACE_SOCK_Connector con;
@@ -160,10 +156,6 @@ fail_no_listener_nonblocking (void)
   ACE_Time_Value nonblock (0, 0);
 
   find_another_host (test_host);
-  ACE_DEBUG ((LM_DEBUG,
-              ACE_TEXT ("Testing to host \"%s\"\n"),
-              test_host));
-
   if (nobody_home.set ((u_short) 42000, test_host) == -1)
     {
       ACE_ERROR ((LM_ERROR,
@@ -172,17 +164,28 @@ fail_no_listener_nonblocking (void)
                   ACE_TEXT ("failed")));
       return -1;
     }
+  nobody_home.addr_to_string (test_addr, MAXHOSTNAMELEN + 8);
+  ACE_DEBUG ((LM_DEBUG,
+              ACE_TEXT ("Testing to host \"%s\" (%s)\n"),
+              test_host, test_addr));
 
   status = con.connect (sock, nobody_home, &nonblock);
 
   // Need a port that will fail.
-  ACE_ASSERT (status == -1);
+  if (status == 0)
+    {
+      ACE_ERROR ((LM_ERROR,
+                  ACE_TEXT ("Connect which should fail didn't\n")));
+      status = -1;
+    }
 
   // On some systems, a failed connect to localhost will return
   // ECONNREFUSED or ENETUNREACH directly, instead of
   // EWOULDBLOCK. That is also fine.
 
-  if (errno == EWOULDBLOCK || errno == ECONNREFUSED || errno == ENETUNREACH)
+  else if (errno == EWOULDBLOCK ||
+           errno == ECONNREFUSED ||
+           errno == ENETUNREACH)
     {
       if (sock.get_handle () != ACE_INVALID_HANDLE)
         status = con.complete (sock);
@@ -227,7 +230,7 @@ fail_no_listener_nonblocking (void)
 static int
 succeed_nonblocking (void)
 {
-  ACE_TCHAR test_host[MAXHOSTNAMELEN];
+  ACE_TCHAR test_host[MAXHOSTNAMELEN], test_addr[MAXHOSTNAMELEN + 8];
   int status;
   ACE_INET_Addr echo_server;
   ACE_SOCK_Connector con;
@@ -242,9 +245,6 @@ succeed_nonblocking (void)
       test_port = 80;        // Echo not available on Win32; try web server
 #endif /* ACE_WIN32 */
     }
-  ACE_DEBUG ((LM_DEBUG,
-              ACE_TEXT ("Testing to host \"%s\", port %d\n"),
-              test_host, test_port));
   if (echo_server.set (test_port, test_host) == -1)
     {
       ACE_ERROR ((LM_ERROR,
@@ -253,6 +253,10 @@ succeed_nonblocking (void)
                   ACE_TEXT ("failed")));
       return -1;
     }
+  echo_server.addr_to_string (test_addr, MAXHOSTNAMELEN + 8);
+  ACE_DEBUG ((LM_DEBUG,
+              ACE_TEXT ("Testing to host \"%s\", port %d (%s)\n"),
+              test_host, test_port, test_addr));
   status = con.connect (sock, echo_server, &nonblock);
 
   // Need to test the call to 'complete' really.

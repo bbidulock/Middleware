@@ -80,8 +80,6 @@ ACE_PAGE_SIZE                           Defines the page size of the
                                         system (not used on Win32 or
                                         with ACE_HAS_GETPAGESIZE).
 ACE_REDEFINES_XTI_FUNCTIONS             Platform redefines the t_... names (UnixWare)
-ACE_SELECT_USES_INT                     Platform uses int for select()
-                                        rather than fd_set
 ACE_TEMPLATES_REQUIRE_PRAGMA            Compiler's template mechanism
                                         must use a pragma This is used
                                         for AIX's C++ compiler.
@@ -91,9 +89,9 @@ ACE_TEMPLATES_REQUIRE_SOURCE            Compiler's template mechanim
                                         GNU G++.
 ACE_TIMEPROBE_ASSERTS_FIXED_SIZE        If enabled then ACE_Timeprobe_Ex<>::timeprobe()
                                         will assert if the end of the
-                                        buffer is reached.  If disabled, the 
+                                        buffer is reached.  If disabled, the
                                         counter wraps around to start
-                                        at the beginning of the buffer.  
+                                        at the beginning of the buffer.
 ACE_TIMER_SKEW                          If a timed ::select () can return
                                         early, then ACE_TIMER_SKEW is the
                                         maximum adjustment, in microseconds,
@@ -141,9 +139,18 @@ ACE_HAS_ALT_CUSERID                     Use ACE's alternate cuserid()
                                         undefined and that the
                                         geteuid() system call exists.
 ACE_HAS_DINKUM_STL                      Using the Dinkum STL library
+ACE_HAS_HEADER_ALLOCATED_CLASS_STATIC_CONST_INT_STOREAGE
+                                        Non-C++ Complient compilers that automatically
+                                        provide storeage for class static const int
+                                        when their declaration is seen. I.e. they object
+                                        to explicit definitions being seen in the .cpp
+                                        file.
 ACE_DEFAULT_THREAD_KEYS                 Number of TSS keys, with
                                         ACE_HAS_TSS_EMULATION _only_.
                                         Defaults to 64.
+ACE_DEFAULT_THREAD_STACKSIZE            Default stack size specified for the
+                                        ACE thread spawning methods. Defaults
+                                        to 0, which defers to OS defaults.
 ACE_DEFAULT_LD_SEARCH_PATH              Specify the platform default search
                                         paths.  This macro should only be
                                         defined on platforms that don't
@@ -244,8 +251,6 @@ ACE_HAS_BROKEN_ACCEPT_ADDR              Platform can't correctly deal
                                         (e.g, VxWorks).
 ACE_HAS_BROKEN_CONDITIONAL_STRING_CASTS Compiler can't handle const char *
                                         as rvalue in conditional operator.
-ACE_HAS_BROKEN_CONVERSIONS              Compiler can't handle calls
-                                        like foo->operator T *()
 ACE_HAS_BROKEN_CTIME                    Compiler/platform uses macro
                                         for ctime (e.g., MVS)
 ACE_HAS_BROKEN_DGRAM_SENDV              Platform sendv() does not work
@@ -310,6 +315,8 @@ ACE_HAS_DLFCN_H_BROKEN_EXTERN_C         For platforms, e.g., RedHat
                                         extern "C" in dlfcn.h.
 ACE_HAS_DLL                             Build ACE using the frigging
                                         PC DLL nonsense...
+ACE_HAS_EBCDIC                          Compile in the ACE code set classes
+                                        that support EBCDIC.
 ACE_HAS_EXCEPTIONS                      Compiler supports C++
                                         exception handling
 ACE_HAS_BROKEN_UNEXPECTED_EXCEPTIONS    Compiler does not call
@@ -319,13 +326,6 @@ ACE_HAS_BROKEN_UNEXPECTED_EXCEPTIONS    Compiler does not call
                                         thrown.  In particular, the
                                         exception specification is not
                                         respected.
-ACE_HAS_EXPLICIT_TEMPLATE_INSTANTIATION Compiler's template
-                                        instantiation mechanism
-                                        supports the use of explicit
-                                        C++ specializations for all
-                                        used templates. This is also
-                                        used for GNU G++ if you don't
-                                        use the "repo" patches.
 ACE_HAS_EXPLICIT_TEMPLATE_INSTANTIATION_EXPORT  When a base-class is a
                                         specialization of a class template
                                         then this class template must be
@@ -370,6 +370,8 @@ ACE_HAS_INLINED_OSCALLS                 Inline all the static class OS
                                         overhead
 ACE_HAS_IP_MULTICAST                    Platform supports IP multicast
 ACE_HAS_IPV6                            Platform supports IPv6.
+ACE_HAS_BROKEN_GETHOSTBYADDR_V4MAPPED   gethostbyaddr does not handle
+                                        IPv6-mapped-IPv4 addresses
 ACE_USES_IPV4_IPV6_MIGRATION            Enable IPv6 support in ACE on
                                         platforms that don't have IPv6
                                         turned on by default.
@@ -602,6 +604,9 @@ ACE_HAS_STHREADS                        Platform supports Solaris
                                         threads
 ACE_HAS_STANDARD_CPP_LIBRARY            Platform/compiler supports
                                         Standard C++ Library
+ACE_HAS_STDCPP_STL_INCLUDES             Standard C++ headers can be
+                                        included in the standard way.
+                                        e.g. #include <vector>
 ACE_HAS_STRBUF_T                        Compiler/platform supports
                                         struct strbuf
 ACE_HAS_STRDUP_EMULATION                Use ACE's strdup() emulation (even
@@ -712,6 +717,9 @@ ACE_HAS_TLI                             Platform supports TLI.  Also
                                         instead of this.
 ACE_HAS_TLI_PROTOTYPES                  Platform provides TLI function
                                         prototypes
+ACE_HAS_TR24731_2005_CRT                The platform provides an implementation
+                                        of C99 draft TR24731 (October 2005),
+                                        C run-time with more secure parameters.
 ACE_HAS_TSS_EMULATION                   ACE provides TSS emulation.
                                         See also
                                         ACE_DEFAULT_THREAD_KEYS.
@@ -829,6 +837,8 @@ ACE_HAS_VOIDPTR_SOCKOPT                 OS/compiler uses void * arg 4
                                         setsockopt() rather than const
                                         char *
 ACE_HAS_WCSNLEN                         Platform supports wcsnlen(3).
+ACE_HAS_WIN32_OVERLAPPED_IO             Platform has Windows overlapped I/O;
+                                        requires I/O completion ports.
 ACE_HAS_WIN32_TRYLOCK                   The Win32 platform support
                                         TryEnterCriticalSection()
                                         (WinNT 4.0 and beyond)
@@ -1111,6 +1121,17 @@ ACE_LACKS_TELLDIR                       Platform uses ACE_HAS_DIRENT
 ACE_LACKS_THREAD_STACK_SIZE             Platform lacks
                                         pthread_attr_setstacksize()
                                         (e.g., Linux pthreads)
+ACE_LACKS_THR_CONCURRENCY_FUNCS		(ONLY APPLIES TO SOLARIS)
+					Platform does not support
+					thr_getconcurrency/thr_setconcurrency
+					functions, or their implementation
+					is effectively a "no-op".  This
+					notably applies for Solaris >= 5.9.
+					Note that if you build on Solaris 8
+					and run on Solaris 9+, you can
+					encounter thread creation errors
+					unless you rebuild on the target
+					platform.
 ACE_LACKS_TIMEDWAIT_PROTOTYPES          MIT pthreads platform lacks
                                         the timedwait prototypes
 ACE_LACKS_TIMESPEC_T                    Platform does not define
@@ -1151,7 +1172,12 @@ ACE_LACKS_UNAME                         Platform lacks uname calls
 ACE_LACKS_WAIT                          The platform lacks wait
 ACE_LACKS_WILDCARD_BIND                 The bind() call will not
                                         select the port if it's 0.
-
+ACE_LACKS_WIN32_GETPROCESSTIMES         The Windows platform doesn't have
+                                        GetProcessTimes().
+ACE_LACKS_WIN32_MOVEFILEEX              The Windows platform doesn't have
+                                        MoveFileEx().
+ACE_LACKS_WIN32_SECURITY_DESCRIPTORS    The Windows platform doesn't have
+                                        security descriptor support.
 ACE_LACKS_WRITEV                        Platform doesn't define
                                         writev, so use our own
 

@@ -26,8 +26,13 @@
 // ============================================================================
 
 #include "test_config.h"
+#include "ace/SString.h"
+#include "ace/Atomic_Op.h"
+#include "ace/Task.h"
 #include "ace/OS_NS_unistd.h"
+#include "ace/OS_NS_string.h"
 #include "ace/Process_Manager.h"
+#include "ace/Synch_Traits.h"
 #include "ace/Get_Opt.h"
 #include "ace/Thread.h"
 #include "ace/Reactor.h"
@@ -102,6 +107,92 @@ const ACE_TCHAR *cmdline_format = ACE_TEXT (".") ACE_DIRECTORY_SEPARATOR_STR ACE
   return result;
 }
 
+ACE_CString order;
+
+ACE_Atomic_Op<ACE_SYNCH_MUTEX, int> running_tasks = 0;
+
+class Process_Task : public ACE_Task<ACE_SYNCH>
+{
+public:
+  Process_Task (const ACE_TCHAR *argv0,
+                ACE_Process_Manager &mgr,
+                int sleep_time)
+    : argv0_ (argv0),
+      mgr_ (mgr),
+      sleep_time_ (sleep_time) { }
+
+  int open (void*)
+  {
+    char tmp[10];
+    order += ACE_OS::itoa (sleep_time_, tmp, 10);
+    running_tasks++;
+    activate ();
+    return 0;
+  }
+
+  int svc (void)
+  {
+    int result = 0;
+    ACE_exitcode exitcode;
+    pid_t my_child = spawn_child (argv0_,
+                                  mgr_,
+                                  sleep_time_);
+    result = mgr_.wait (my_child,
+                        &exitcode);
+    if (result != my_child)
+      {
+        ACE_ERROR ((LM_ERROR,
+                    ACE_TEXT ("(%P) Error: expected to reap child (%d); got %d\n"),
+                    my_child,
+                    result));
+        if (result == ACE_INVALID_PID)
+          ACE_ERROR ((LM_ERROR, ACE_TEXT ("(%P) %p\n"), ACE_TEXT ("error")));
+        //test_status = 1;
+      }
+    else
+      ACE_DEBUG ((LM_DEBUG,
+                  ACE_TEXT ("(%P) reaped child, pid %d: %d\n"),
+                  my_child,
+                  exitcode));
+    char tmp[10];
+    order += ACE_OS::itoa (sleep_time_, tmp, 10);
+    return 0;
+  }
+
+  int close (u_long)
+  {
+    running_tasks--;
+    return 0;
+  }
+
+private:
+  const ACE_TCHAR *argv0_;
+  ACE_Process_Manager &mgr_;
+  int sleep_time_;
+};
+
+static int
+command_line_test (void)
+{
+  ACE_DEBUG ((LM_DEBUG,
+              ACE_TEXT ("Testing for last character of command line\n")));
+  int result = 0;
+  const ACE_TCHAR *command = ACE_TEXT ("test Hello");
+  size_t command_len = ACE_OS::strlen (command);
+  ACE_Process_Options options (1, command_len + 1);
+  options.command_line (command);
+  ACE_TCHAR * const *procargv = options.command_line_argv ();
+  if (ACE_OS::strcmp (procargv [1], ACE_TEXT ("Hello")) != 0)
+    {
+      ACE_ERROR ((LM_ERROR,
+                  ACE_TEXT ("command_line_test failed: expected \"%s\"; got \"%s\"\n"),
+                  ACE_TEXT ("Hello"),
+                  procargv [1]));
+      result = 1;
+    }
+  return result;
+}
+
 int
 run_main (int argc, ACE_TCHAR *argv[])
 {
@@ -142,9 +233,14 @@ run_main (int argc, ACE_TCHAR *argv[])
 
   ACE_START_TEST (ACE_TEXT ("Process_Manager_Test"));
 
+  int result = 0;
+  int test_status = 0;
+
+  if ((result = command_line_test ()) != 0)
+    test_status = result;
+
   // Try the explicit <ACE_Process_Manager::wait> functions
 
-  int result = 0, test_status = 0;
   ACE_Process_Manager mgr;
 
   mgr.register_handler (new Exit_Handler ("default"));
@@ -162,11 +258,11 @@ run_main (int argc, ACE_TCHAR *argv[])
   if (result != child1)
     {
       ACE_ERROR ((LM_ERROR,
-                  ACE_TEXT ("Error: expected to reap child1 (%d); got %d\n"),
+                  ACE_TEXT ("(%P) Error: expected to reap child1 (%d); got %d\n"),
                   child1,
                   result));
       if (result == ACE_INVALID_PID)
-        ACE_ERROR ((LM_ERROR, ACE_TEXT ("%p\n"), ACE_TEXT ("error")));
+        ACE_ERROR ((LM_ERROR, ACE_TEXT ("(%P) %p\n"), ACE_TEXT ("error")));
       test_status = 1;
     }
   else
@@ -189,11 +285,11 @@ run_main (int argc, ACE_TCHAR *argv[])
   if (result != child3)
     {
       ACE_ERROR ((LM_ERROR,
-                  ACE_TEXT ("Error: expected to reap child3 (%d); got %d\n"),
+                  ACE_TEXT ("(%P) Error: expected to reap child3 (%d); got %d\n"),
                   child3,
                   result));
       if (result == ACE_INVALID_PID)
-        ACE_ERROR ((LM_ERROR, ACE_TEXT ("%p\n"), ACE_TEXT ("error")));
+        ACE_ERROR ((LM_ERROR, ACE_TEXT ("(%P) %p\n"), ACE_TEXT ("error")));
       test_status = 1;
     }
   else
@@ -209,11 +305,11 @@ run_main (int argc, ACE_TCHAR *argv[])
   if (result != child2)
     {
       ACE_ERROR ((LM_ERROR,
-                  ACE_TEXT ("Error: expected to reap child2 (%d); got %d\n"),
+                  ACE_TEXT ("(%P) Error: expected to reap child2 (%d); got %d\n"),
                   child2,
                   result));
       if (result == ACE_INVALID_PID)
-        ACE_ERROR ((LM_ERROR, ACE_TEXT ("%p\n"), ACE_TEXT ("error")));
+        ACE_ERROR ((LM_ERROR, ACE_TEXT ("(%P) %p\n"), ACE_TEXT ("error")));
       test_status = 1;
     }
   else
@@ -234,11 +330,11 @@ run_main (int argc, ACE_TCHAR *argv[])
   if (result != child4)
     {
       ACE_ERROR ((LM_ERROR,
-                  ACE_TEXT ("Error: expected to reap child4 (%d); got %d\n"),
+                  ACE_TEXT ("(%P) Error: expected to reap child4 (%d); got %d\n"),
                   child4,
                   result));
       if (result == ACE_INVALID_PID)
-        ACE_ERROR ((LM_ERROR, ACE_TEXT ("%p\n"), ACE_TEXT ("error")));
+        ACE_ERROR ((LM_ERROR, ACE_TEXT ("(%P) %p\n"), ACE_TEXT ("error")));
       test_status = 1;
     }
   else
@@ -255,10 +351,10 @@ run_main (int argc, ACE_TCHAR *argv[])
   if (result != 0)
     {
       ACE_ERROR ((LM_ERROR,
-                  ACE_TEXT ("Error: expected wait to time out; got %d\n"),
+                  ACE_TEXT ("(%P) Error: expected wait to time out; got %d\n"),
                   result));
       if (result == ACE_INVALID_PID)
-        ACE_ERROR ((LM_ERROR, ACE_TEXT ("%p\n"), ACE_TEXT ("error")));
+        ACE_ERROR ((LM_ERROR, ACE_TEXT ("(%P) %p\n"), ACE_TEXT ("error")));
       test_status = 1;
     }
   else
@@ -275,7 +371,7 @@ run_main (int argc, ACE_TCHAR *argv[])
                   child5,
                   result));
       if (result == ACE_INVALID_PID)
-        ACE_ERROR ((LM_ERROR, ACE_TEXT ("%p\n"), ACE_TEXT ("error")));
+        ACE_ERROR ((LM_ERROR, ACE_TEXT ("(%P) %p\n"), ACE_TEXT ("error")));
       test_status = 1;
     }
   else
@@ -284,21 +380,85 @@ run_main (int argc, ACE_TCHAR *argv[])
                 result,
                 exitcode));
 
+  // Terminate a child process and make sure we can wait for it.
+  pid_t child6 = spawn_child (argv[0], mgr, 5);
+  ACE_exitcode status6;
+  if (-1 == mgr.terminate (child6))
+    {
+      ACE_ERROR ((LM_ERROR, ACE_TEXT ("(%P) %p\n"), ACE_TEXT ("terminate child6")));
+      test_status = 1;
+      mgr.wait (child6, &status6);  // Wait for child to exit just to clean up
+    }
+  else
+    {
+      if (-1 == mgr.wait (child6, &status6))
+        {
+          ACE_ERROR ((LM_ERROR,
+                      ACE_TEXT ("(%P) wait on child6 reported ACE_INVALID_PID\n")));
+          test_status = 1;
+        }
+      else
+        {
+          // Get the results of the termination.
+#if !defined(ACE_WIN32)
+          if (WIFSIGNALED (status6) != 0)
+            ACE_DEBUG ((LM_DEBUG,
+                        ACE_TEXT ("(%P) child6 died on signal %d - correct\n"),
+                        WTERMSIG (status6)));
+          else
+            ACE_ERROR ((LM_ERROR,
+                        ACE_TEXT ("(%P) child6 should have died on signal, ")
+                        ACE_TEXT ("but didn't; exit status %d\n"),
+                        WEXITSTATUS (status6)));
+#else
+          ACE_DEBUG
+            ((LM_DEBUG,
+              ACE_TEXT ("(%P) The process terminated with exit code %d\n"),
+              status6));
+#endif /*ACE_WIN32*/
+        }
+    }
+
+  Process_Task task1 (argv[0], mgr, 3);
+  Process_Task task2 (argv[0], mgr, 2);
+  Process_Task task3 (argv[0], mgr, 1);
+  task1.open (0);
+  task2.open (0);
+  task3.open (0);
+
+  while (running_tasks!=0)
+    {
+      ACE_OS::sleep (1);
+      ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("(%P) still running tasks\n")));
+    }
+
+  ACE_DEBUG ((LM_DEBUG, 
+              ACE_TEXT ("(%P) result: '%s'\n"), 
+              order.c_str ()));
+
+  if (order != "321123")
+    {
+      ACE_ERROR ((LM_ERROR,
+                  ACE_TEXT ("(%P) wrong order of spawns ('%s', should be '321123')\n"),
+                  order.c_str ()));
+      test_status = 1;
+    }
+
 #if !defined (ACE_OPENVMS)
   // --------------------------------------------------
   // Finally, try the reactor stuff...
   mgr.open (ACE_Process_Manager::DEFAULT_SIZE,
             ACE_Reactor::instance ());
 
-  pid_t child6 = spawn_child (argv[0],
+  pid_t child7 = spawn_child (argv[0],
                               mgr,
                               5);
-  /* pid_t child7 = */ spawn_child (argv[0],
+  /* pid_t child8 = */ spawn_child (argv[0],
                                     mgr,
                                     6);
 
   mgr.register_handler (new Exit_Handler ("specific"),
-                        child6);
+                        child7);
 
   ACE_Time_Value how_long (10);
 
@@ -312,8 +472,7 @@ run_main (int argc, ACE_TCHAR *argv[])
     ACE_ERROR ((LM_ERROR,
                 ACE_TEXT ("(%P) %d processes left in manager\n"),
                 nr_procs));
-
-#endif
+#endif /* !defined (ACE_OPENVMS) */
   ACE_END_TEST;
   return test_status;
 }

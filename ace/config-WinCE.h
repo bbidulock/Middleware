@@ -40,6 +40,15 @@
 # define ACE_HAS_WINCE 1
 #endif
 
+#if defined (_MSC_VER) && (_MSC_VER < 1400)
+// WinCE prior to Visual Studio 2005 integration doesn't have most of
+// the standard C library time functions. It also doesn't define struct tm.
+// SYSTEMTIME has pretty much the same info though, so we can map it when
+// needed. Define struct tm here and use it when needed. This is taken
+// from the standard C library.
+# define ACE_LACKS_STRUCT_TM
+#endif
+
 // We need these libraries to build:
 #pragma comment(lib,"corelibc.lib")
 #pragma comment(linker, "/nodefaultlib:oldnames.lib")
@@ -53,7 +62,7 @@
 // Need to define LD search path explicitly on CE because
 // CE doesn't have environment variables and we can't get
 // the information using getenv.
-#define ACE_DEFAULT_LD_SEARCH_PATH ACE_LIB_TEXT (".\\;\\windows")
+#define ACE_DEFAULT_LD_SEARCH_PATH ACE_TEXT (".\\;\\windows")
 
 #define ACE_LACKS_FCNTL_H
 #define ACE_LACKS_SYS_TYPES_H
@@ -63,16 +72,14 @@
 #define ACE_LACKS_GMTIME
 #define ACE_LACKS_GMTIME_R
 #define ACE_LACKS_LOCALTIME
+#define ACE_LACKS_PERROR
 #define ACE_LACKS_STRFTIME
-#define ACE_LACKS_SETFILEPOINTEREX
+#define ACE_LACKS_WIN32_SETFILEPOINTEREX
+#define ACE_LACKS_WIN32_SERVICES
+#define ACE_LACKS_WIN32_SECURITY_DESCRIPTORS
+#define ACE_LACKS_GETPROCESSTIMES
 
 #define ACE_HAS_POSITION_INDEPENDENT_POINTERS 1
-
-// CE is not NT.
-#if defined (ACE_HAS_WINNT4)
-# undef ACE_HAS_WINNT4
-#endif  // ACE_HAS_WINNT4
-#define ACE_HAS_WINNT4 0
 
 #define ACE_LACKS_MSG_WFMO
 #define ACE_LACKS_UMASK
@@ -104,7 +111,7 @@
 #endif  // SH3 && _DEBUG
 
 #ifndef ACE_DEFAULT_SERVER_HOST
-# define ACE_DEFAULT_SERVER_HOST ACE_LIB_TEXT("localhost")
+# define ACE_DEFAULT_SERVER_HOST ACE_TEXT("localhost")
 #endif  // ACE_DEFAULT_SERVER_HOST
 
 // @@ Need to remap every function that uses any of these flags to
@@ -183,8 +190,8 @@
 #define ACE_LACKS_SIGACTION
 #define ACE_LACKS_PIPE
 
-#define ACE_LACKS_CUSERID
-#define ACE_LACKS_CHDIR
+//#define ACE_LACKS_CUSERID
+//#define ACE_LACKS_CHDIR
 #define ACE_LACKS_ENV
 #define ACE_LACKS_HOSTNAME
 #define ACE_LACKS_REALPATH

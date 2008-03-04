@@ -31,19 +31,18 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
  * @brief Defines the methods for the ACE socket wrapper I/O routines
  * (e.g., send/recv).
  *
- *
- * If <timeout> == 0, then the call behaves as a normal
+ * If @a timeout == 0, then the call behaves as a normal
  * send/recv call, i.e., for blocking sockets, the call will
  * block until action is possible; for non-blocking sockets,
  * -1 will be returned with errno == EWOULDBLOCK if no action is
  * immediately possible.
- * If <timeout> != 0, the call will wait until the relative time
- * specified in *<timeout> elapses.
+ * If @a timeout != 0, the call will wait until the relative time
+ * specified in *@a timeout elapses.
  * Errors are reported by -1 and 0 return values.  If the
- * operation times out, -1 is returned with <errno == ETIME>.
+ * operation times out, -1 is returned with @c errno == ETIME.
  * If it succeeds the number of bytes transferred is returned.
- * Methods with the extra <flags> argument will always result in
- * <send> getting called. Methods without the extra <flags>
+ * Methods with the extra @a flags argument will always result in
+ * <send> getting called. Methods without the extra @a flags
  * argument will result in <send> getting called on Win32
  * platforms, and <write> getting called on non-Win32 platforms.
  */
@@ -58,32 +57,21 @@ public:
   /// Destructor.
   ~ACE_SOCK_IO (void);
 
-  /// Recv an <n> byte buffer from the connected socket.
+  /// Recv an @a n byte buffer from the connected socket.
   ssize_t recv (void *buf,
                 size_t n,
                 int flags,
                 const ACE_Time_Value *timeout = 0) const;
 
-  /// Recv an <n> byte buffer from the connected socket.
+  /// Recv an @a n byte buffer from the connected socket.
   ssize_t recv (void *buf,
                 size_t n,
                 const ACE_Time_Value *timeout = 0) const;
 
-  /// Recv an <iovec> of size <n> from the connected socket.
-  /**
-   * @note The value of @a n will be silently reduced to the maximum
-   * value an @c int can hold if needed. This is due to the underlying
-   * system calls on many OSes limiting the number of @c iovec structures
-   * that can be passed in one call.
-   */
+  /// Recv an <iovec> of size @a n from the connected socket.
   ssize_t recvv (iovec iov[],
-                 size_t n,
+                 int n,
                  const ACE_Time_Value *timeout = 0) const;
-
-  /// @deprecated Same as above.  Deprecated.
-  ssize_t recv (iovec iov[],
-                size_t n,
-                const ACE_Time_Value *timeout = 0) const;
 
   /**
    * Allows a client to read from a socket without having to provide a
@@ -96,51 +84,36 @@ public:
   ssize_t recvv (iovec *io_vec,
                  const ACE_Time_Value *timeout = 0) const;
 
-  /// Same as above.  Deprecated.
-  ssize_t recv (iovec *io_vec,
-                const ACE_Time_Value *timeout = 0) const;
-
-  /// Recv <n> varargs messages to the connected socket.
+  /// Recv @a n varargs messages to the connected socket.
   ssize_t recv (size_t n,
                 ...) const;
 
-  /// Recv <n> bytes via Win32 <ReadFile> using overlapped I/O.
+  /// Recv @a n bytes via Win32 <ReadFile> using overlapped I/O.
   ssize_t recv (void *buf,
                 size_t n,
                 ACE_OVERLAPPED *overlapped) const;
 
-  /// Send an <n> byte buffer to the connected socket.
+  /// Send an @a n byte buffer to the connected socket.
   ssize_t send (const void *buf,
                 size_t n,
                 int flags,
                 const ACE_Time_Value *timeout = 0) const;
 
-  /// Send an <n> byte buffer to the connected socket.
+  /// Send an @a n byte buffer to the connected socket.
   ssize_t send (const void *buf,
                 size_t n,
                 const ACE_Time_Value *timeout = 0) const;
 
-  /// Send an <iovec> of size <n> to the connected socket.
-  /**
-   * @note The value of @a n will be silently reduced to the maximum
-   * value an @c int can hold if needed. This is due to the underlying
-   * system calls on many OSes limiting the number of @c iovec structures
-   * that can be passed in one call.
-   */
+  /// Send an <iovec> of size @a n to the connected socket.
   ssize_t sendv (const iovec iov[],
-                 size_t n,
+                 int n,
                  const ACE_Time_Value *timeout = 0) const;
 
-  /// Same as above.  Deprecated.
-  ssize_t send (const iovec iov[],
-                size_t n,
-                const ACE_Time_Value *timeout = 0) const;
-
-  /// Send <n> varargs messages to the connected socket.
+  /// Send @a n varargs messages to the connected socket.
   ssize_t send (size_t n,
                 ...) const;
 
-  /// Send <n> bytes via Win32 <WriteFile> using overlapped I/O.
+  /// Send @a n bytes via Win32 <WriteFile> using overlapped I/O.
   ssize_t send (const void *buf,
                 size_t n,
                 ACE_OVERLAPPED *overlapped) const;

@@ -6,6 +6,8 @@ ACE_RCSID(ace, OS_main, "$Id$")
 
 #if defined (ACE_HAS_NONSTATIC_OBJECT_MANAGER) && !defined (ACE_DOESNT_INSTANTIATE_NONSTATIC_OBJECT_MANAGER)
 
+#include "ace/Init_ACE.h"
+
 #  if !defined (ACE_HAS_MINIMAL_ACE_OS)
 #    include "ace/Object_Manager.h"
 #  endif /* ! ACE_HAS_MINIMAL_ACE_OS */
@@ -67,6 +69,17 @@ ace_os_wmain_i (ACE_Main_Base &mbase, int argc, ACE_TCHAR *argv[]) /* user's ent
   return mbase.run (argc, argv);           /* what the user calls "main" */
 }
 #    else /* ! (ACE_WIN32 && ACE_USES_WCHAR) */
+
+ACE_Main_Base::ACE_Main_Base ()
+{
+  ACE::init ();
+}
+
+ACE_Main_Base::~ACE_Main_Base ()
+{
+  ACE::fini ();
+}
+
 int ACE_Main_Base::run (int argc, char *argv[])
 {
   return this->run_i (argc, argv);
@@ -98,7 +111,7 @@ int ACE_Main_Base::run (HINSTANCE,
                         int)
 {
   ACE_TCHAR cmdline[1024];
-  ACE_OS::strcpy (cmdline, ACE_LIB_TEXT ("program "));
+  ACE_OS::strcpy (cmdline, ACE_TEXT ("program "));
   ACE_OS::strcat (cmdline, ACE_TEXT_WCHAR_TO_TCHAR (lpCmdLine));
   ACE_ARGV ce_argv (cmdline);
   ACE::init ();

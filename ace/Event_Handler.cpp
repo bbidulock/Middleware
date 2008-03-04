@@ -34,11 +34,6 @@ ACE_Event_Handler::ACE_Event_Handler (ACE_Reactor *r,
 ACE_Event_Handler::~ACE_Event_Handler (void)
 {
   // ACE_TRACE ("ACE_Event_Handler::~ACE_Event_Handler");
-  if (this->reactor_ != 0)
-    {
-      ACE_Errno_Guard guard (errno);     // purge may get ENOTSUP
-      this->reactor_->purge_pending_notifications (this);
-    }
 }
 
 // Gets the file descriptor associated with this I/O device.
@@ -189,7 +184,7 @@ ACE_Event_Handler::reactor_timer_interface (void) const
 ACE_Event_Handler::Reference_Count
 ACE_Event_Handler::add_reference (void)
 {
-  int reference_counting_required =
+  bool const reference_counting_required =
     this->reference_counting_policy ().value () ==
     ACE_Event_Handler::Reference_Counting_Policy::ENABLED;
 
@@ -202,7 +197,7 @@ ACE_Event_Handler::add_reference (void)
 ACE_Event_Handler::Reference_Count
 ACE_Event_Handler::remove_reference (void)
 {
-  int reference_counting_required =
+  bool const reference_counting_required =
     this->reference_counting_policy ().value () ==
     ACE_Event_Handler::Reference_Counting_Policy::ENABLED;
 

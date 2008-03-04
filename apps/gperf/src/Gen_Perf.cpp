@@ -30,6 +30,7 @@ ACE_RCSID(src, Gen_Perf, "$Id$")
 #include "Vectors.h"
 #include "ace/OS_NS_stdlib.h"
 #include "ace/OS_NS_time.h"
+#include "ace/OS_NS_stdio.h"
 #include "ace/OS_Memory.h"
 
 // Current release version.
@@ -251,7 +252,7 @@ Gen_Perf::open (void)
 
   if (option[RANDOM])
     {
-      ACE_OS::srand (ACE_OS::time (0));
+      ACE_OS::srand ((u_int) ACE_OS::time (0));
 
       for (int i = 0; i < ACE_STANDARD_CHARACTER_SET_SIZE; i++)
         Vectors::asso_values[i] = (ACE_OS::rand () & asso_value_max - 1);
@@ -273,16 +274,16 @@ Gen_Perf::open (void)
   ACE_NEW_RETURN (this->union_set,
                   char[2 * option.max_keysig_size () + 1],
                   -1);
-  printf ("/* ");
+  ACE_OS::printf ("/* ");
 
   if (option[C])
-    printf ("C");
+    ACE_OS::printf ("C");
 
   else if (option[CPLUSPLUS])
-    printf ("C++");
+    ACE_OS::printf ("C++");
 
-  printf (" code produced by gperf version %s */\n",
-          version_string);
+  ACE_OS::printf (" code produced by gperf version %s */\n",
+                  version_string);
   Options::print_options ();
 
   if (option[DEBUGGING])

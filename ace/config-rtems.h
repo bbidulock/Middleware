@@ -31,19 +31,21 @@
 #  ifdef __cplusplus  /* Let it slide for C compilers. */
 #   error unsupported compiler in ace/config-rtems.h
 #  endif  /* __cplusplus */
-#endif /* ! __GNUG__ && ! __KCC */
+#endif /* ! __GNUG__ */
+
+#include "ace/config-posix.h"
 
 // Completely common part :-)
 
 #define ACE_HAS_NONSTATIC_OBJECT_MANAGER
 
+#define ACE_LACKS_ALPHASORT
 #define ACE_LACKS_REGEX_H
 #define ACE_LACKS_STROPTS_H
 #define ACE_LACKS_DLFCN_H
 #define ACE_LACKS_SIGINFO_H
 #define ACE_LACKS_SYS_IPC_H
 #define ACE_LACKS_SYS_SEM_H
-#define ACE_LACKS_SUSECONDS_T
 #define ACE_LACKS_STRINGS_H
 #define ACE_LACKS_SYS_SHM_H
 #define ACE_LACKS_SETEGID
@@ -52,39 +54,42 @@
 #define ACE_HAS_NONCONST_SELECT_TIMEVAL
 #define ACE_LACKS_STRCASECMP
 #define ACE_LACKS_MKSTEMP
-#define ACE_LACKS_PUTENV
 #define ACE_LACKS_STRDUP
 #define ACE_LACKS_STRTOK_R
 #define ACE_LACKS_RAND_REENTRANT_FUNCTIONS
 #define ACE_LACKS_REALPATH
 #define ACE_LACKS_TEMPNAM
-#define ACE_LACKS_INTPTR_T
 
 // Temporarily, enabling this results in compile errors with
 // rtems 4.6.6.
 #define ACE_LACKS_WCHAR_H
 
-// Yes, we do have threads.
-#define ACE_HAS_THREADS
-// And they're even POSIX pthreads (MIT implementation)
-#define ACE_HAS_PTHREADS
-// ... and the final standard even!
-#define ACE_HAS_PTHREADS_STD
-#define ACE_HAS_THREAD_SPECIFIC_STORAGE
-
-// XXX thread defines go here
+#if !defined (ACE_MT_SAFE)
 #define ACE_MT_SAFE 1
-#define ACE_PAGE_SIZE 4096
+#endif
+
+#if ACE_MT_SAFE
+# define ACE_HAS_THREADS
+# define ACE_HAS_PTHREADS
+# define ACE_HAS_THREAD_SPECIFIC_STORAGE
+# define ACE_HAS_PTHREAD_SCHEDPARAM
+# define ACE_LACKS_THREAD_PROCESS_SCOPING
+#else
+# define ACE_HAS_POSIX_GETPWNAM_R
+# define ACE_HAS_2_PARAM_ASCTIME_R_AND_CTIME_R
+#endif
+
 #define ACE_HAS_ALT_CUSERID
 #define ACE_HAS_4_4BSD_SENDMSG_RECVMSG
+#define ACE_HAS_3_PARAM_READDIR_R
 #define ACE_HAS_CLOCK_GETTIME
 #define ACE_HAS_CLOCK_SETTIME
 #define ACE_HAS_DIRENT
 #define ACE_HAS_HANDLE_SET_OPTIMIZED_FOR_SELECT
-#define ACE_HAS_MEMCHR
 #define ACE_HAS_MSG
 #define ACE_HAS_MT_SAFE_MKTIME
 #define ACE_HAS_NONCONST_READV
+#define ACE_HAS_GETPAGESIZE
 #define ACE_HAS_POSIX_SEM
 #define ACE_HAS_POSIX_TIME
 #define ACE_HAS_REENTRANT_FUNCTIONS
@@ -103,7 +108,6 @@
 #define ACE_LACKS_GETPGID
 #define ACE_LACKS_TIMESPEC_T
 #define ACE_LACKS_MADVISE
-#define ACE_LACKS_MKFIFO
 #define ACE_LACKS_MMAP
 #define ACE_LACKS_MPROTECT
 #define ACE_LACKS_MSYNC
@@ -134,12 +138,24 @@
 #define ACE_NEEDS_HUGE_THREAD_STACKSIZE 65536
 #define ACE_NEEDS_SCHED_H
 #define ACE_HAS_POSIX_NONBLOCK
-#define ACE_LACKS_FDOPEN
 #define ACE_HAS_TERMIOS
 
 // rtems 4.7 or higher
 #if (__RTEMS_MAJOR__ > 4) || (__RTEMS_MAJOR__ == 4 && __RTEMS_MINOR__ > 6)
 # define ACE_HAS_UALARM
+#else
+# define ACE_HAS_NOTSUP_SC_PAGESIZE
+# define ACE_LACKS_SUSECONDS_T
+# define ACE_LACKS_INTPTR_T
+# undef ACE_HAS_SHM_OPEN
+# undef ACE_HAS_AIO_CALLS
+#endif
+
+// __RTEMS_REVISION__ could also be used but this is broken according
+// to the rtems people
+
+#if !defined (_POSIX_REALTIME_SIGNALS)
+# define ACE_HAS_CONSISTENT_SIGNAL_PROTOTYPES
 #endif
 
 #if defined (ACE_LACKS_NETWORKING)

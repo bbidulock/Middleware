@@ -32,6 +32,7 @@ ifdef sun
 endif
 
 vxworks_ntbuild ?= 0
+lacks_touch ?= 0
 
 #### TEMPLATE_REPOSITORY can be set in individual platform files
 #### to create template repository directories.  See
@@ -107,12 +108,12 @@ $(VDIR)%.o: %.c
 	$(COMPILE.c) $(CC_OUTPUT_FLAG) $@ $<
 	${MVCMD}
 
-$(VDIR)%.o: %.cpp
+$(VDIR)%.o: %.C
 	$(mk_obj_out_dir)
 	$(COMPILE.cc) $(CC_OUTPUT_FLAG) $@ $<
 	${MVCMD}
 
-$(VDIR)%.o: %.C
+$(VDIR)%.o: %.cpp
 	$(mk_obj_out_dir)
 	$(COMPILE.cc) $(CC_OUTPUT_FLAG) $@ $<
 	${MVCMD}
@@ -246,7 +247,11 @@ ifndef LN_S
     #### Assume we're on a WIN32 host.
     LN_S = cp -p
   else  # ! WIN32
-    LN_S = ln -s
+    ifeq ($(symlinks),absolute)
+      LN_S = ln -s
+    else
+      LN_S = $(ACE_ROOT)/bin/add_rel_link.sh
+    endif # symlinks
   endif # ! WIN32
 endif # ! LN_S
 
@@ -271,21 +276,29 @@ ifeq ($(vxworks_ntbuild),1)
 		echo "Installing $(@F) to $(@D)" && \
 		$(RM) $@ && \
 		$(LN_S) $(shell pwd)/$(@F) $@
-else
-ifneq ($(mingw32),1)
-	@if test $(shell pwd) != $(@D) -o -n "$(SOVERSION)" ; then \
-		if test -s $@ ; then \
-			echo "$(@F) already installed" ; \
-		else \
+else #not vxworks_ntbuild
+  ifeq ($(mingw32),1)
+    #If we're actually copying instead of linking, pay attention to timestamps to know when to install
+    ifeq ($(firstword $(LN_S)),cp)
+      ifneq ($(SOVERSION),)
+	@if test $(call PWD) != $(@D) ; then \
+		if test $(@F) -ot $(@:%.$(SOEXT)$(SOVERSION)=%.$(SOEXT)) ; then \
 			echo "Installing $(@F:%.$(SOEXT)$(SOVERSION)=%.$(SOEXT)) -> $(@D)" ; \
 			$(RM) $(@:%.$(SOEXT)$(SOVERSION)=%.$(SOEXT)); \
-			$(LN_S) $(shell pwd)/$(@F) $(@:%.$(SOEXT)$(SOVERSION)=%.$(SOEXT)); \
-			echo "Installing $(@F) -> $(@D)" ; \
-			$(RM) $@; \
-			$(LN_S) $(shell pwd)/$(@F) $@; \
+			$(LN_S) $(call PWD)/$(@F) $(@:%.$(SOEXT)$(SOVERSION)=%.$(SOEXT)); \
 		fi ; \
 	fi
-else
+      endif #SOVERSION
+	@if test $(call PWD) != $(@D) ; then \
+		if test $@ -nt $(@F) ; then \
+			echo "$(@F) already installed" ; \
+		else \
+			echo "Installing $(@F) -> $(@D)" ; \
+			$(RM) $@; \
+			$(LN_S) $(call PWD)/$(@F) $@; \
+		fi ; \
+	fi
+    else #firstword of LN_S is not cp, so we're using real symlinks
 	@if test $(call PWD) != $(@D) -o -n "$(SOVERSION)" ; then \
 		if test -s $@ ; then \
 			echo "$(@F) already installed" ; \
@@ -298,8 +311,23 @@ else
 			$(LN_S) $(call PWD)/$(@F) $@; \
 		fi ; \
 	fi
-endif
-endif
+    endif #firstword
+  else #not mingw32
+	@if test $(shell pwd) != $(@D) -o -n "$(SOVERSION)" ; then \
+		if test -s $@ ; then \
+			echo "$(@F) already installed" ; \
+		else \
+			echo "Installing $(@F:%.$(SOEXT)$(SOVERSION)=%.$(SOEXT)) -> $(@D)" ; \
+			$(RM) $(@:%.$(SOEXT)$(SOVERSION)=%.$(SOEXT)); \
+			$(LN_S) $(shell pwd)/$(@F) $(@:%.$(SOEXT)$(SOVERSION)=%.$(SOEXT)); \
+			echo "Installing $(@F) -> $(@D)" ; \
+			$(RM) $@; \
+			$(LN_S) $(shell pwd)/$(@F) $@; \
+		fi ; \
+	fi
+  endif #mingw32
+endif #vxworks_ntbuild
+
 ifdef MVSLIB
 #special for MVS in order to use the .x files
 	@if test -w $(@D) ; then \
@@ -418,7 +446,7 @@ ORIGdepend.local: $(MAKEFILE)
 
 ifneq ($(MAKEFILE),$(DEPENDENCY_FILE))
 $(DEPENDENCY_FILE):
-ifeq ($(vxworks_ntbuild),1)
+ifeq ($(lacks_touch),1)
 	copy NUL "$(DEPENDENCY_FILE)"
 else
 	touch $(DEPENDENCY_FILE)
@@ -427,7 +455,13 @@ depend.local: $(DEPENDENCY_FILE)
 -include $(DEPENDENCY_FILE)
 endif
 
-DEPGEN ?= $(ACE_ROOT)/bin/depgen.pl
+ifdef COMSPEC
+  DEPGEN ?= perl $(ACE_ROOT)/bin/depgen.pl
+else
+  DEPGEN ?= $(ACE_ROOT)/bin/depgen.pl
+  DEPGEN_ENV := ACE_PLATFORM_CONFIG=$(ACE_PLATFORM_CONFIG) \
+ACE_DEPEND_SED_CMD="$(ACE_DEPEND_SED_CMD)"
+endif
 
 # Use findstring just in case the script was preceded by /usr/bin/perl
 ifeq ($(findstring depgen.pl, $(notdir $(DEPGEN))), depgen.pl)
@@ -437,13 +471,12 @@ ifeq ($(findstring depgen.pl, $(notdir $(DEPGEN))), depgen.pl)
   endif
 endif
 
+
 depend.local: $(MAKEFILE) idl_stubs.local
 	@$(RM) $(DEPENDENCY_FILE).old
 	@cp $(DEPENDENCY_FILE) $(DEPENDENCY_FILE).old
-	ACE_PLATFORM_CONFIG=$(ACE_PLATFORM_CONFIG) \
-	ACE_DEPEND_SED_CMD="$(ACE_DEPEND_SED_CMD)" \
-	$(DEPGEN) -A $(DEPEND_CMD_ARGS) -e config.h -f $(DEPENDENCY_FILE) $(CPPFLAGS) \
-	-DMAKEDEPEND $(CCFLAGS) $(LSRC) $(SRC) $(PSRC)
+	$(DEPGEN_ENV) $(DEPGEN) -A $(DEPEND_CMD_ARGS) -e config.h -f $(DEPENDENCY_FILE) \
+	$(CPPFLAGS) -t gnu -DMAKEDEPEND $(CCFLAGS) $(LSRC) $(SRC) $(PSRC)
 	@if cmp -s $(DEPENDENCY_FILE) $(DEPENDENCY_FILE).old ;\
 	then echo "GNUmakefile dependencies unchanged." ;\
 	else \
@@ -459,15 +492,6 @@ IDL_FILES ?=
 IDL_CLIENT_HDR_EXT ?=
 
 idl_stubs.local: $(foreach file, $(IDL_FILES), $(file)$(IDL_CLIENT_HDR_EXT))
-
-ifdef $(TAO_IDL_DEP)
-$(TAO_IDL_DEP):
-	@if test ! -s $(TAO_IDL_DEP); then \
-	  echo " ***"; \
-	  echo " *** ERROR: $(TAO_IDL_DEP) not found."; \
-	  echo " ***"; \
-	  echo; /bin/false; fi
-endif # TAO_IDL_DEP
 
 #----------------------------------------------------------------------------
 #       RCS info target
@@ -497,3 +521,10 @@ SPLIT:
 	@echo "Splitting source files..."
 	@$(ACE_ROOT)/bin/split-cpp -s Svc_Conf_l.cpp -s Svc_Conf_y.cpp $(LSRC)
 	@echo "done."
+
+svnignore.local:
+	if [ "n$(BIN)" != "n" ]; then \
+	  (svn propget svn:ignore .; echo $(BIN)) | sort | uniq | sed '/^$$/d' >SvNiGnOrE; \
+	  svn propset svn:ignore -F SvNiGnOrE .; \
+	  rm SvNiGnOrE; \
+	fi

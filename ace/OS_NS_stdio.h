@@ -39,21 +39,75 @@
 #endif
 #define ACE_EXPORT_MACRO ACE_Export
 
-/**
- * On some platforms clearerr is a macro. Defining ACE_OS::clearerr()
- * becomes really hard, as there is no way to save the macro
- * definition using the pre-processor.
+/*
+ * We inline and undef some functions that may be implemented
+ * as macros on some platforms. This way macro definitions will
+ * be usable later as there is no way to save the macro definition
+ * using the pre-processor.
+ *
  */
-# if !defined (ACE_LACKS_CLEARERR)
-#   if defined (clearerr)
-#     define __ace_clearerr_hack
-inline void __ace_clearerr(FILE *stream)
+#if !defined (ACE_LACKS_CLEARERR)
+inline void ace_clearerr_helper (FILE *stream)
 {
-  clearerr(stream);
+#  if defined (clearerr)
+  clearerr (stream);
+#  undef clearerr
+#  else
+  ACE_STD_NAMESPACE::clearerr (stream);
+#  endif /* defined (clearerr) */
 }
-#     undef clearerr
-#   endif /* defined (clearerr) */
-# endif /* !ACE_LACKS_CLEARERR */
+#endif /* !ACE_LACKS_CLEARERR */
+
+inline int ace_fgetc_helper (FILE *fp)
+{
+#if defined (fgetc)
+  return fgetc (fp);
+#undef fgetc
+#else
+  return ACE_STD_NAMESPACE::fgetc (fp);
+#endif /* defined (fgetc) */
+}
+
+inline int ace_fputc_helper (int ch, FILE *fp)
+{
+#if defined (fputc)
+  return fputc (ch, fp);
+#undef fputc
+#else
+  return ACE_STD_NAMESPACE::fputc (ch, fp);
+#endif /* defined (fputc) */
+}
+
+inline int ace_getc_helper (FILE *fp)
+{
+#if defined (getc)
+  return getc (fp);
+#undef getc
+#else
+  return ACE_STD_NAMESPACE::getc (fp);
+#endif /* defined (getc) */
+}
+
+inline int ace_putc_helper (int ch, FILE *fp)
+{
+#if defined (putc)
+  return putc (ch, fp);
+#undef putc
+#else
+  return ACE_STD_NAMESPACE::putc (ch, fp);
+#endif /* defined (putc) */
+}
+
+inline int ace_ungetc_helper (int ch, FILE *fp)
+{
+#if defined (ungetc)
+  return ungetc (ch, fp);
+#undef ungetc
+#else
+  return ACE_STD_NAMESPACE::ungetc (ch, fp);
+#endif /* defined (ungetc) */
+}
+
 
 #if !defined (ACE_LACKS_CUSERID) && !defined(ACE_HAS_ALT_CUSERID) \
     && !defined(ACE_WIN32) && !defined (ACE_VXWORKS)
@@ -154,6 +208,14 @@ namespace ACE_OS {
 # endif /* ACE_LACKS_CUSERID */
   //@}
 
+  extern ACE_Export
+  int asprintf (char **bufp, const char* format, ...);
+
+# if defined (ACE_HAS_WCHAR)
+  extern ACE_Export
+  int asprintf (wchar_t **bufp, const wchar_t* format, ...);
+#endif /* ACE_HAS_WCHAR */
+
   ACE_NAMESPACE_INLINE_FUNCTION
   int fclose (FILE *fp);
 
@@ -169,6 +231,9 @@ namespace ACE_OS {
 
   ACE_NAMESPACE_INLINE_FUNCTION
   int fgetc (FILE* fp);
+
+  ACE_NAMESPACE_INLINE_FUNCTION
+  int getc (FILE* fp);
 
   ACE_NAMESPACE_INLINE_FUNCTION
   int fgetpos (FILE* fp, fpos_t* pos);
@@ -291,6 +356,18 @@ namespace ACE_OS {
 # endif /* ACE_HAS_WCHAR */
 
   ACE_NAMESPACE_INLINE_FUNCTION
+  int ungetc (int c,
+              FILE *fp);
+
+  ACE_NAMESPACE_INLINE_FUNCTION
+  int fputc (int c,
+             FILE *fp);
+
+  ACE_NAMESPACE_INLINE_FUNCTION
+  int putc (int c,
+            FILE *fp);
+
+  ACE_NAMESPACE_INLINE_FUNCTION
   int fputs (const char *s,
              FILE *stream);
 
@@ -338,6 +415,11 @@ namespace ACE_OS {
 
   extern ACE_Export
   int printf (const char *format, ...);
+
+#if defined (ACE_HAS_WCHAR)
+  extern ACE_Export
+  int printf (const wchar_t *format, ...);
+#endif
 
   ACE_NAMESPACE_INLINE_FUNCTION
   int puts (const char *s);
@@ -389,6 +471,15 @@ namespace ACE_OS {
 #endif /* ACE_HAS_WCHAR */
 
   ACE_NAMESPACE_INLINE_FUNCTION
+  int vasprintf (char **bufp, const char *format, va_list argptr);
+
+  ACE_NAMESPACE_INLINE_FUNCTION
+  int vprintf (const char *format, va_list argptr);
+
+  ACE_NAMESPACE_INLINE_FUNCTION
+  int vfprintf (FILE *fp, const char *format, va_list argptr);
+
+  ACE_NAMESPACE_INLINE_FUNCTION
   int vsprintf (char *buffer, const char *format, va_list argptr);
 
   ACE_NAMESPACE_INLINE_FUNCTION
@@ -396,11 +487,32 @@ namespace ACE_OS {
 
 # if defined (ACE_HAS_WCHAR)
   ACE_NAMESPACE_INLINE_FUNCTION
+  int vasprintf (wchar_t **bufp, const wchar_t *format, va_list argptr);
+
+  ACE_NAMESPACE_INLINE_FUNCTION
+  int vprintf (const wchar_t *format, va_list argptr);
+
+  ACE_NAMESPACE_INLINE_FUNCTION
+  int vfprintf (FILE *fp, const wchar_t *format, va_list argptr);
+
+  ACE_NAMESPACE_INLINE_FUNCTION
   int vsprintf (wchar_t *buffer, const wchar_t *format, va_list argptr);
 
   ACE_NAMESPACE_INLINE_FUNCTION
   int vsnprintf (wchar_t *buffer, size_t maxlen, const wchar_t *format, va_list argptr);
 # endif /* ACE_HAS_WCHAR */
+
+#if !defined (ACE_HAS_VASPRINTF)
+  extern ACE_Export
+  int vasprintf_emulation (char **bufp, const char *format, va_list argptr); 
+#endif /* !ACE_HAS_VASPRINTF */
+
+#if defined (ACE_HAS_WCHAR)
+#if !defined (ACE_HAS_VASWPRINTF)
+  extern ACE_Export
+  int vaswprintf_emulation (wchar_t **bufp, const wchar_t *format, va_list argptr);
+#endif /* !ACE_HAS_VASWPRINTF */
+#endif /* ACE_HAS_WCHAR */
 
 } /* namespace ACE_OS */
 

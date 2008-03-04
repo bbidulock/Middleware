@@ -33,18 +33,17 @@ ACE_FILE_Addr::set (const ACE_FILE_Addr &sa)
       ACE_OS::strcpy (this->filename_,
                       ACE_DEFAULT_TEMP_FILE);
 #else /* ACE_DEFAULT_TEMP_FILE */
-      if (ACE::get_temp_dir (this->filename_,
-                                      MAXPATHLEN - 15) == -1)
+      if (ACE::get_temp_dir (this->filename_, MAXPATHLEN - 15) == -1)
         // -15 for ace-file-XXXXXX
         {
           ACE_ERROR ((LM_ERROR,
-                      ACE_LIB_TEXT ("Temporary path too long, ")
-                      ACE_LIB_TEXT ("defaulting to current directory\n")));
+                      ACE_TEXT ("Temporary path too long, ")
+                      ACE_TEXT ("defaulting to current directory\n")));
           this->filename_[0] = 0;
         }
 
       // Add the filename to the end
-      ACE_OS::strcat (this->filename_, ACE_LIB_TEXT ("ace-fileXXXXXX"));
+      ACE_OS::strcat (this->filename_, ACE_TEXT ("ace-fileXXXXXX"));
 
 #endif /* ACE_DEFAULT_TEMP_FILE */
 
@@ -55,12 +54,9 @@ ACE_FILE_Addr::set (const ACE_FILE_Addr &sa)
     }
   else
     {
-      (void) ACE_OS::strsncpy (this->filename_,
-                               sa.filename_,
-                               sa.get_size ());
+      (void)ACE_OS::strsncpy (this->filename_, sa.filename_, sa.get_size ());
 
-      this->base_set (sa.get_type (),
-                      sa.get_size ());
+      this->base_set (sa.get_type (), sa.get_size ());
     }
   return 0;
 }
@@ -111,7 +107,7 @@ ACE_FILE_Addr::addr_to_string (ACE_TCHAR *s, size_t len) const
 void *
 ACE_FILE_Addr::get_addr (void) const
 {
-  return (void *) &this->filename_;
+  return (void *)&this->filename_;
 }
 
 void
@@ -121,7 +117,7 @@ ACE_FILE_Addr::dump (void) const
   ACE_TRACE ("ACE_FILE_Addr::dump");
 
   ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
-  ACE_DEBUG ((LM_DEBUG,  ACE_LIB_TEXT ("filename_ = %s"), this->filename_));
+  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("filename_ = %s"), this->filename_));
   ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
 }

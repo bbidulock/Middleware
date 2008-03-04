@@ -75,11 +75,11 @@
 //#define ACE_HAS_SYSV_IPC
 #define ACE_HAS_VOIDPTR_MMAP
 #define ACE_HAS_CPLUSPLUS_HEADERS
-#define ACE_HAS_MEMCHR 1
 #define ACE_HAS_POLL
 #define ACE_HAS_POSITION_INDEPENDENT_POINTERS 1
 #define ACE_HAS_SOCKADDR_MSG_NAME 1
 #define ACE_LACKS_PRI_T 1
+#define ACE_HAS_3_PARAM_READDIR_R
 
 // Compiler/platform supports alloca().
 // Although ACE does have alloca() on this compiler/platform combination, it is
@@ -160,11 +160,11 @@
 #define ACE_HAS_2_PARAM_ASCTIME_R_AND_CTIME_R
 
 // Cygwin DLL suffix is .dll
-#define ACE_DLL_SUFFIX ACE_LIB_TEXT (".dll")
+#define ACE_DLL_SUFFIX ACE_TEXT (".dll")
 
 // Cygwin runs on Windows, so we have to get the environment variable PATH and
 // not LD_LIBRARY_PATH which is the default in ACE
-#define ACE_LD_SEARCH_PATH ACE_LIB_TEXT ("PATH")
+#define ACE_LD_SEARCH_PATH ACE_TEXT ("PATH")
 
 #if ACE_MT_SAFE
 // Yes, we do have threads.
@@ -181,9 +181,7 @@
 #   define ACE_HAS_PTHREAD_CONTINUE 1
 #   define ACE_HAS_PTHREAD_SUSPEND 1
 
-// ... and the final standard even!
-#  define ACE_HAS_PTHREADS_STD
-#  define ACE_LACKS_THREAD_STACK_ADDR
+#  define ACE_LACKS_PTHREAD_ATTR_SETSTACKADDR
 // Cygwin (see pthread.h): Not supported or implemented.
 #  define ACE_LACKS_SETSCHED
 #  define ACE_LACKS_SETDETACH
@@ -193,6 +191,7 @@
 #  define ACE_LACKS_RWLOCKATTR_PSHARED
 #  define ACE_LACKS_PTHREAD_THR_SIGSETMASK 1
 #  define ACE_LACKS_PTHREAD_YIELD 1
+#  define ACE_LACKS_PTHREAD_ATTR_SETSTACK
 
 // In the 1.5.9 release of Cygwin the pthread_kill gives an access violation
 // so for the time being we say Cygwin doesn't support pthread_kill.

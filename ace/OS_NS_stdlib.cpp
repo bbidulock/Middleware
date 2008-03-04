@@ -6,6 +6,8 @@ ACE_RCSID (ace,
            OS_NS_stdlib,
            "$Id$")
 
+#include "ace/Default_Constants.h"
+
 #if !defined (ACE_HAS_INLINED_OSCALLS)
 # include "ace/OS_NS_stdlib.inl"
 #endif /* ACE_HAS_INLINED_OSCALLS */
@@ -25,6 +27,7 @@ ACE_RCSID (ace,
 # include "ace/OS_NS_fcntl.h"
 # include "ace/OS_NS_ctype.h"
 # include "ace/OS_NS_sys_time.h"
+# include "ace/OS_NS_Thread.h"
 # include "ace/Numeric_Limits.h"
 #endif  /* ACE_LACKS_MKSTEMP */
 
@@ -99,6 +102,76 @@ ACE_OS::getenvstrings (void)
 #else /* ACE_WIN32 */
   ACE_NOTSUP_RETURN (0);
 #endif /* ACE_WIN32 */
+}
+
+// Return a dynamically allocated duplicate of <str>, substituting the
+// environment variables of form $VAR_NAME.  Note that the pointer is
+// allocated with <ACE_OS::malloc> and must be freed by
+// <ACE_OS::free>.
+
+ACE_TCHAR *
+ACE_OS::strenvdup (const ACE_TCHAR *str)
+{
+#if defined (ACE_HAS_WINCE)
+  // WinCE doesn't have environment variables so we just skip it.
+  return ACE_OS::strdup (str);
+#elif defined (ACE_LACKS_ENV)
+  ACE_UNUSED_ARG (str);
+  ACE_NOTSUP_RETURN (0);
+#else
+  const ACE_TCHAR * start = 0;
+  if ((start = ACE_OS::strchr (str, ACE_TEXT ('$'))) != 0)
+    {
+      ACE_TCHAR buf[ACE_DEFAULT_ARGV_BUFSIZ];
+      size_t var_len = ACE_OS::strcspn (&start[1],
+        ACE_TEXT ("$~!#%^&*()-+=\\|/?,.;:'\"`[]{} \t\n\r"));
+      ACE_OS::strncpy (buf, &start[1], var_len);
+      buf[var_len++] = ACE_TEXT ('\0');
+#  if defined (ACE_WIN32)
+      // Always use the ACE_TCHAR for Windows.
+      ACE_TCHAR *temp = ACE_OS::getenv (buf);
+#  else
+      // Use char * for environment on non-Windows.
+      char *temp = ACE_OS::getenv (ACE_TEXT_ALWAYS_CHAR (buf));
+#  endif /* ACE_WIN32 */
+      size_t buf_len = ACE_OS::strlen (str) + 1;
+      if (temp != 0)
+        buf_len += ACE_OS::strlen (temp) - var_len;
+      ACE_TCHAR * buf_p = buf;
+      if (buf_len > ACE_DEFAULT_ARGV_BUFSIZ)
+        {
+          buf_p =
+            (ACE_TCHAR *) ACE_OS::malloc (buf_len * sizeof (ACE_TCHAR));
+          if (buf_p == 0)
+            {
+              errno = ENOMEM;
+              return 0;
+            }
+        }
+      ACE_TCHAR * p = buf_p;
+      size_t len = start - str;
+      ACE_OS::strncpy (p, str, len);
+      p += len;
+      if (temp != 0)
+        {
+#  if defined (ACE_WIN32)
+          p = ACE_OS::strecpy (p, temp) - 1;
+#  else
+          p = ACE_OS::strecpy (p, ACE_TEXT_CHAR_TO_TCHAR (temp)) - 1;
+#  endif /* ACE_WIN32 */
+        }
+      else
+        {
+          ACE_OS::strncpy (p, start, var_len);
+          p += var_len;
+          *p = ACE_TEXT ('\0');
+        }
+      ACE_OS::strcpy (p, &start[var_len]);
+      return (buf_p == buf) ? ACE_OS::strdup (buf) : buf_p;
+    }
+  else
+    return ACE_OS::strdup (str);
+#endif /* ACE_HAS_WINCE */
 }
 
 #if !defined (ACE_HAS_ITOA)
@@ -223,14 +296,14 @@ ACE_OS::mktemp (ACE_TCHAR *s)
     return 0;
   else
     {
-      ACE_TCHAR *xxxxxx = ACE_OS::strstr (s, ACE_LIB_TEXT ("XXXXXX"));
+      ACE_TCHAR *xxxxxx = ACE_OS::strstr (s, ACE_TEXT ("XXXXXX"));
 
       if (xxxxxx == 0)
         // the template string doesn't contain "XXXXXX"!
         return s;
       else
         {
-          ACE_TCHAR unique_letter = ACE_LIB_TEXT ('a');
+          ACE_TCHAR unique_letter = ACE_TEXT ('a');
           ACE_stat sb;
 
           // Find an unused filename for this process.  It is assumed
@@ -240,20 +313,20 @@ ACE_OS::mktemp (ACE_TCHAR *s)
           // template).  This appears to match the behavior of the
           // SunOS 5.5 mktemp().
           ACE_OS::sprintf (xxxxxx,
-                           ACE_LIB_TEXT ("%05d%c"),
+                           ACE_TEXT ("%05d%c"),
                            ACE_OS::getpid (),
                            unique_letter);
           while (ACE_OS::stat (s, &sb) >= 0)
             {
-              if (++unique_letter <= ACE_LIB_TEXT ('z'))
+              if (++unique_letter <= ACE_TEXT ('z'))
                 ACE_OS::sprintf (xxxxxx,
-                                 ACE_LIB_TEXT ("%05d%c"),
+                                 ACE_TEXT ("%05d%c"),
                                  ACE_OS::getpid (),
                                  unique_letter);
               else
                 {
                   // maximum of 26 unique files per template, per process
-                  ACE_OS::sprintf (xxxxxx, ACE_LIB_TEXT ("%s"), ACE_LIB_TEXT (""));
+                  ACE_OS::sprintf (xxxxxx, ACE_TEXT ("%s"), ACE_TEXT (""));
                   return s;
                 }
             }
@@ -602,7 +675,7 @@ ACE_OS::mkstemp_emulation (ACE_TCHAR * s)
     }
 
   // The "XXXXXX" template to be filled in.
-  ACE_TCHAR * const t  = ACE_OS::strstr (s, ACE_LIB_TEXT ("XXXXXX"));
+  ACE_TCHAR * const t  = ACE_OS::strstr (s, ACE_TEXT ("XXXXXX"));
 
   if (t == 0)
     {
@@ -613,8 +686,23 @@ ACE_OS::mkstemp_emulation (ACE_TCHAR * s)
   static unsigned int const NUM_RETRIES = 50;
   static unsigned int const NUM_CHARS   = 6;  // Do not change!
 
-  ACE_RANDR_TYPE seed =
-    static_cast<ACE_RANDR_TYPE> (ACE_OS::gettimeofday ().msec ());
+  // Use ACE_Time_Value::msec(ACE_UINT64&) as opposed to
+  // ACE_Time_Value::msec(void) to avoid truncation.
+  ACE_UINT64 msec;
+
+  // Use a const ACE_Time_Value to resolve ambiguity between
+  // ACE_Time_Value::msec (long) and ACE_Time_Value::msec(ACE_UINT64&) const.
+  ACE_Time_Value const now = ACE_OS::gettimeofday();
+  now.msec (msec);
+
+  // Add the process and thread ids to ensure uniqueness.
+  msec += ACE_OS::getpid();
+  msec += (size_t) ACE_OS::thr_self();
+
+  // ACE_thread_t may be a char* (returned by ACE_OS::thr_self()) so
+  // we need to use a C-style cast as a catch-all in order to use a
+  // static_cast<> to an integral type.
+  ACE_RANDR_TYPE seed = static_cast<ACE_RANDR_TYPE> (msec);
 
   // We only care about UTF-8 / ASCII characters in generated
   // filenames.  A UTF-16 or UTF-32 character could potentially cause
@@ -622,7 +710,12 @@ ACE_OS::mkstemp_emulation (ACE_TCHAR * s)
   // greatly slowing down this mkstemp() implementation.  It is more
   // practical to limit the search space to UTF-8 / ASCII characters
   // (i.e. 127 characters).
-  static float const MAX_VAL =
+  //
+  // Note that we can't make this constant static since the compiler
+  // may not inline the return value of ACE_Numeric_Limits::max(),
+  // meaning multiple threads could potentially initialize this value
+  // in parallel.
+  float const MAX_VAL =
     static_cast<float> (ACE_Numeric_Limits<char>::max ());
 
   // Use high-order bits rather than low-order ones (e.g. rand() %
@@ -634,7 +727,7 @@ ACE_OS::mkstemp_emulation (ACE_TCHAR * s)
   // e.g.: MAX_VAL * rand() / (RAND_MAX + 1.0)
 
   // Factor out the constant coefficient.
-  static float const coefficient =
+  float const coefficient =
     static_cast<float> (MAX_VAL / (RAND_MAX + 1.0f));
 
   // @@ These nested loops may be ineffecient.  Improvements are
@@ -649,8 +742,7 @@ ACE_OS::mkstemp_emulation (ACE_TCHAR * s)
           // selection to work for EBCDIC, as well.
           do
             {
-              r =
-                static_cast<ACE_TCHAR> (coefficient * ACE_OS::rand_r (seed));
+              r = static_cast<ACE_TCHAR> (coefficient * ACE_OS::rand_r (seed));
             }
           while (!ACE_OS::ace_isalnum (r));
 
@@ -681,5 +773,29 @@ ACE_OS::mkstemp_emulation (ACE_TCHAR * s)
   return ACE_INVALID_HANDLE;
 }
 #endif /* ACE_LACKS_MKSTEMP */
+
+#if !defined (ACE_HAS_GETPROGNAME) && !defined (ACE_HAS_SETPROGNAME)
+static const char *__progname = "";
+#endif /* !ACE_HAS_GETPROGNAME && !ACE_HAS_SETPROGNAME */
+
+#if !defined (ACE_HAS_GETPROGNAME)
+const char*
+ACE_OS::getprogname_emulation ()
+{
+    return __progname;
+}
+#endif /* !ACE_HAS_GETPROGNAME */
+
+#if !defined (ACE_HAS_SETPROGNAME)
+void
+ACE_OS::setprogname_emulation (const char* progname) 
+{
+  const char *p = ACE_OS::strrchr (progname, '/');
+  if (p != 0)
+    __progname = p + 1;
+  else
+    __progname = progname;
+}
+#endif /* !ACE_HAS_SETPROGNAME */
 
 ACE_END_VERSIONED_NAMESPACE_DECL

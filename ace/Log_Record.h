@@ -61,7 +61,7 @@ public:
    */
   ACE_Log_Record (void);
   ACE_Log_Record (ACE_Log_Priority lp,
-                  long time_stamp,
+                  time_t time_stamp,
                   long pid);
   ACE_Log_Record (ACE_Log_Priority lp,
                   const ACE_Time_Value &time_stamp,
@@ -100,15 +100,21 @@ public:
    */
   static const ACE_TCHAR *priority_name (ACE_Log_Priority p);
 
-  // IMPORTANT: <name> must be a statically allocated const ACE_TCHAR*
+  // IMPORTANT: @a name must be a statically allocated const ACE_TCHAR*
   static void priority_name (ACE_Log_Priority p,
                              const ACE_TCHAR *name);
 
   // = Marshall/demarshall
   /// Encode the <Log_Record> for transmission on the network.
+  /// @deprecated The encode() and decode() metods are deprecated; please use
+  /// the CDR insertion and extraction operators to properly encode and decode
+  /// ACE_Log_Record objects.
   void encode (void);
 
   /// Decode the <Log_Record> received from the network.
+  /// @deprecated The encode() and decode() metods are deprecated; please use
+  /// the CDR insertion and extraction operators to properly encode and decode
+  /// ACE_Log_Record objects.
   void decode (void);
 
   // = Set/get methods
@@ -130,10 +136,12 @@ public:
   /// power of 2, as defined by the enums in <ACE_Log_Priority>).
   void priority (u_long num);
 
-  /// Get the length of the <Log_Record>.
+  /// Get the total length of the <Log_Record>, which includes the
+  /// size of the various data member fields.
   long length (void) const;
 
-  /// Set the length of the <Log_Record>.
+  /// Set the total length of the <Log_Record>, which needs to account for
+  /// the size of the various data member fields.
   void length (long);
 
   /// Get the time stamp of the <Log_Record>.
@@ -182,7 +190,7 @@ private:
   ACE_UINT32 type_;
 
   /// Time that the logging record was generated.
-  ACE_UINT32 secs_;
+  time_t secs_;
   ACE_UINT32 usecs_;
 
   /// Id of process that generated the logging record.
@@ -191,6 +199,10 @@ private:
   /// Logging record data
   ACE_TCHAR *msg_data_;   // Heap-allocated text message area
   size_t msg_data_size_;  // Allocated size of msg_data_ in ACE_TCHARs
+
+  /// disallow copying...
+  ACE_Log_Record (const ACE_Log_Record& rhs);
+  ACE_Log_Record& operator= (const ACE_Log_Record& rhs);
 };
 
 // Forward decls.

@@ -96,11 +96,13 @@
 #   define ACE_USING using
 #endif /* !ACE_LACKS_DEPRECATED_MACROS */
 
-# if defined (ACE_HAS_TYPENAME_KEYWORD)
-#   define ACE_TYPENAME typename
-# else
-#   define ACE_TYPENAME
-# endif /* ACE_HAS_TYPENAME_KEYWORD */
+#if !defined (ACE_LACKS_DEPRECATED_MACROS)
+/**
+ * @deprecated The @c ACE_TYPENAME macros is deprecated.  Use standard
+ *             C++ keyword typename instead.
+ */
+# define ACE_TYPENAME typename
+#endif /* !ACE_LACKS_DEPRECATED_MACROS */
 
 #if !defined (ACE_LACKS_DEPRECATED_MACROS)
 /**
@@ -342,31 +344,17 @@
   #   define ACE_reinterpret_cast_4_ref(TYPE, T1, T2, T3, T4, EXPR)      reinterpret_cast<TYPE<T1, T2, T3, T4> &> (EXPR)
   #   define ACE_reinterpret_cast_5_ref(TYPE, T1, T2, T3, T4, T5, EXPR)  reinterpret_cast<TYPE<T1, T2, T3, T4, T5> &> (EXPR)
 
-  #   if defined (ACE_LACKS_RTTI)
-  #     define ACE_dynamic_cast(TYPE, EXPR)                              static_cast<TYPE> (EXPR)
-  #     define ACE_dynamic_cast_1_ptr(TYPE, T1, EXPR)                    static_cast<TYPE<T1> *> (EXPR)
-  #     define ACE_dynamic_cast_2_ptr(TYPE, T1, T2, EXPR)                static_cast<TYPE<T1, T2> *> (EXPR)
-  #     define ACE_dynamic_cast_3_ptr(TYPE, T1, T2, T3, EXPR)            static_cast<TYPE<T1, T2, T3> *> (EXPR)
-  #     define ACE_dynamic_cast_4_ptr(TYPE, T1, T2, T3, T4, EXPR)        static_cast<TYPE<T1, T2, T3, T4> *> (EXPR)
-  #     define ACE_dynamic_cast_5_ptr(TYPE, T1, T2, T3, T4, T5, EXPR)    static_cast<TYPE<T1, T2, T3, T4, T5> *> (EXPR)
-  #     define ACE_dynamic_cast_1_ref(TYPE, T1, EXPR)                    static_cast<TYPE<T1> &> (EXPR)
-  #     define ACE_dynamic_cast_2_ref(TYPE, T1, T2, EXPR)                static_cast<TYPE<T1, T2> &> (EXPR)
-  #     define ACE_dynamic_cast_3_ref(TYPE, T1, T2, T3, EXPR)            static_cast<TYPE<T1, T2, T3> &> (EXPR)
-  #     define ACE_dynamic_cast_4_ref(TYPE, T1, T2, T3, T4, EXPR)        static_cast<TYPE<T1, T2, T3, T4> &> (EXPR)
-  #     define ACE_dynamic_cast_5_ref(TYPE, T1, T2, T3, T4, T5, EXPR)    static_cast<TYPE<T1, T2, T3, T4, T5> &> (EXPR)
-  #   else  /* ! ACE_LACKS_RTTI */
-  #     define ACE_dynamic_cast(TYPE, EXPR)                              dynamic_cast<TYPE> (EXPR)
-  #     define ACE_dynamic_cast_1_ptr(TYPE, T1, EXPR)                    dynamic_cast<TYPE<T1> *> (EXPR)
-  #     define ACE_dynamic_cast_2_ptr(TYPE, T1, T2, EXPR)                dynamic_cast<TYPE<T1, T2> *> (EXPR)
-  #     define ACE_dynamic_cast_3_ptr(TYPE, T1, T2, T3, EXPR)            dynamic_cast<TYPE<T1, T2, T3> *> (EXPR)
-  #     define ACE_dynamic_cast_4_ptr(TYPE, T1, T2, T3, T4, EXPR)        dynamic_cast<TYPE<T1, T2, T3, T4> *> (EXPR)
-  #     define ACE_dynamic_cast_5_ptr(TYPE, T1, T2, T3, T4, T5, EXPR)    dynamic_cast<TYPE<T1, T2, T3, T4, T5> *> (EXPR)
-  #     define ACE_dynamic_cast_1_ref(TYPE, T1, EXPR)                    dynamic_cast<TYPE<T1> &> (EXPR)
-  #     define ACE_dynamic_cast_2_ref(TYPE, T1, T2, EXPR)                dynamic_cast<TYPE<T1, T2> &> (EXPR)
-  #     define ACE_dynamic_cast_3_ref(TYPE, T1, T2, T3, EXPR)            dynamic_cast<TYPE<T1, T2, T3> &> (EXPR)
-  #     define ACE_dynamic_cast_4_ref(TYPE, T1, T2, T3, T4, EXPR)        dynamic_cast<TYPE<T1, T2, T3, T4> &> (EXPR)
-  #     define ACE_dynamic_cast_5_ref(TYPE, T1, T2, T3, T4, T5, EXPR)    dynamic_cast<TYPE<T1, T2, T3, T4, T5> &> (EXPR)
-  #   endif /* ! ACE_LACKS_RTTI */
+  #   define ACE_dynamic_cast(TYPE, EXPR)                              dynamic_cast<TYPE> (EXPR)
+  #   define ACE_dynamic_cast_1_ptr(TYPE, T1, EXPR)                    dynamic_cast<TYPE<T1> *> (EXPR)
+  #   define ACE_dynamic_cast_2_ptr(TYPE, T1, T2, EXPR)                dynamic_cast<TYPE<T1, T2> *> (EXPR)
+  #   define ACE_dynamic_cast_3_ptr(TYPE, T1, T2, T3, EXPR)            dynamic_cast<TYPE<T1, T2, T3> *> (EXPR)
+  #   define ACE_dynamic_cast_4_ptr(TYPE, T1, T2, T3, T4, EXPR)        dynamic_cast<TYPE<T1, T2, T3, T4> *> (EXPR)
+  #   define ACE_dynamic_cast_5_ptr(TYPE, T1, T2, T3, T4, T5, EXPR)    dynamic_cast<TYPE<T1, T2, T3, T4, T5> *> (EXPR)
+  #   define ACE_dynamic_cast_1_ref(TYPE, T1, EXPR)                    dynamic_cast<TYPE<T1> &> (EXPR)
+  #   define ACE_dynamic_cast_2_ref(TYPE, T1, T2, EXPR)                dynamic_cast<TYPE<T1, T2> &> (EXPR)
+  #   define ACE_dynamic_cast_3_ref(TYPE, T1, T2, T3, EXPR)            dynamic_cast<TYPE<T1, T2, T3> &> (EXPR)
+  #   define ACE_dynamic_cast_4_ref(TYPE, T1, T2, T3, T4, EXPR)        dynamic_cast<TYPE<T1, T2, T3, T4> &> (EXPR)
+  #   define ACE_dynamic_cast_5_ref(TYPE, T1, T2, T3, T4, T5, EXPR)    dynamic_cast<TYPE<T1, T2, T3, T4, T5> &> (EXPR)
 #endif /* ACE_LACKS_DEPRECATED_MACROS */
 
 # if !defined (ACE_CAST_CONST)
@@ -401,7 +389,7 @@
 # define ACE_UNUSED_ARG(a) (a)
 #endif /* ghs || __GNUC__ || ..... */
 
-#if defined (__sgi) || defined (ghs) || defined (__DECCXX) || defined(__BORLANDC__) || defined (ACE_RM544) || defined (__USLC__) || defined (__DCC__) || defined (__PGI) || defined (__TANDEM) || (defined (__HP_aCC) && (__HP_aCC >= 60500))
+#if defined (_MSC_VER) || defined(__sgi) || defined (ghs) || defined (__DECCXX) || defined(__BORLANDC__) || defined (ACE_RM544) || defined (__USLC__) || defined (__DCC__) || defined (__PGI) || defined (__TANDEM) || (defined (__HP_aCC) && (__HP_aCC >= 60500))
 # define ACE_NOTREACHED(a)
 #else  /* __sgi || ghs || ..... */
 # define ACE_NOTREACHED(a) a
@@ -484,7 +472,18 @@
     if (RESULT == FAILVALUE) \
       ACE_OS::set_errno_to_last_error (); \
   } while (0)
+
 #endif  /* ACE_WIN32 */
+
+// The C99 security-improved run-time returns an error value on failure;
+// 0 on success.
+#if defined (ACE_HAS_TR24731_2005_CRT)
+#  define ACE_SECURECRTCALL(X,TYPE,FAILVALUE,RESULT) \
+  do { \
+    errno_t ___ = X; \
+    if (___ != 0) { errno = ___; RESULT = FAILVALUE; } \
+  } while (0)
+#endif /* ACE_HAS_TR24731_2005_CRT */
 
 // ============================================================================
 // Fundamental types
@@ -514,8 +513,10 @@ typedef ACE_HANDLE ACE_SOCKET;
 # if defined (ACE_VXWORKS) && !defined (ACE_HAS_PTHREADS)
 # include /**/ <taskLib.h>
 typedef int ACE_THR_FUNC_RETURN;
+#define ACE_HAS_INTEGRAL_TYPE_THR_FUNC_RETURN
 # elif defined (ACE_WIN32)
 typedef DWORD ACE_THR_FUNC_RETURN;
+#define ACE_HAS_INTEGRAL_TYPE_THR_FUNC_RETURN
 # else
 typedef void* ACE_THR_FUNC_RETURN;
 # endif /* ACE_VXWORKS */

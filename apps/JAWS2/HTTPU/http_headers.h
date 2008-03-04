@@ -18,6 +18,11 @@
 #include "JAWS/Parse_Headers.h"
 #include "HTTPU/http_export.h"
 
+// A header file on HP-UX defines SERVER
+#if defined (SERVER)
+#undef SERVER
+#endif /* SERVER */
+
 class HTTP_Headers;
 
 class HTTPU_Export HTTP_Hdr_Node
@@ -26,7 +31,7 @@ class HTTPU_Export HTTP_Hdr_Node
   friend class HTTP_HCodes;
 
 public:
-  operator const int (void) const;
+  operator int (void) const;
   operator const char * (void) const;
   const char * format (void) const;
 

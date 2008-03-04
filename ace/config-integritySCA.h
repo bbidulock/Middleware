@@ -75,7 +75,6 @@
 #define ACE_HAS_THREADS
 
 #define ACE_HAS_PTHREADS
-#define ACE_HAS_PTHREADS_STD
 /***** End Threading Defines *****/
 
 /***** Hardware Defines *****/
@@ -187,8 +186,6 @@ extern "C"
 #ifdef ppc
 #define ACE_HAS_POWERPC_TIMER
 #endif
-
-typedef union sigval sigval_t;
 
 /* MIKEC Addtions */
 #define ACE_HAS_NONCONST_SELECT_TIMEVAL

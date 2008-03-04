@@ -21,17 +21,15 @@
 # define ACE_LACKS_NETDB_REENTRANT_FUNCTIONS    // Don't have gethostbyaddr_r and friends.
 # define ACE_HAS_DIRENT
 # define ACE_HAS_STDCPP_STL_INCLUDES
-# define ACE_HAS_TYPENAME_KEYWORD
 # define ACE_HAS_STANDARD_CPP_LIBRARY 1
 # define ACE_USES_STD_NAMESPACE_FOR_STDCPP_LIB 1
 # define ACE_HAS_NONCONST_SELECT_TIMEVAL
-# define ACE_HAS_EXPLICIT_TEMPLATE_INSTANTIATION
 # define ACE_HAS_SIGWAIT
 # define ACE_HAS_SIGINFO_T
 
 #include "ace/config-g++-common.h"
 
-#define ACE_HAS_NEW_NOTHROW	// Need to know 'new's failure semantics.
+#define ACE_HAS_NEW_NOTHROW // Need to know 'new's failure semantics.
 
 #if defined (ACE_HAS_THREADS)
 #define ACE_HAS_THREADS
@@ -39,7 +37,6 @@
 #define _THREAD_SAFE
 #define ACE_MTSAFE 1
 #define ACE_MT_SAFE 1
-#define ACE_HAS_PTHREADS_STD
 #define ACE_LACKS_PTHREAD_YIELD
 #define ACE_HAS_MUTEX_TIMEOUTS
 #else
@@ -73,7 +70,6 @@
 #define ACE_HAS_UALARM
 #define ACE_HAS_TERMIOS
 #define ACE_HAS_SIGWAIT
-#define ACE_LACKS_RTTI                      // DLL_Test checks RTTI, and it fails so...
 
 // Turns off the tracing feature.
 #if !defined (ACE_NTRACE)

@@ -26,6 +26,14 @@ libACEXML_la_CPPFLAGS = \
   -I$(ACE_BUILDDIR) \
   -DACEXML_BUILD_DLL
 
+if BUILD_ZLIB
+if BUILD_ZZIP
+libACEXML_la_CPPFLAGS += \
+  $(ACE_ZZIP_CPPFLAGS) \
+  $(ACE_ZLIB_CPPFLAGS)
+endif BUILD_ZZIP
+endif BUILD_ZLIB
+
 libACEXML_la_SOURCES = \
   Attributes.cpp \
   AttributesImpl.cpp \
@@ -63,8 +71,24 @@ libACEXML_la_SOURCES = \
 libACEXML_la_LDFLAGS = \
  -release @ACE_VERSION_NAME@
 
+if BUILD_ZLIB
+if BUILD_ZZIP
+libACEXML_la_LDFLAGS += \
+  $(ACE_ZZIP_LDFLAGS) \
+  $(ACE_ZLIB_LDFLAGS)
+endif BUILD_ZZIP
+endif BUILD_ZLIB
+
 libACEXML_la_LIBADD = \
   $(ACE_BUILDDIR)/ace/libACE.la
+
+if BUILD_ZLIB
+if BUILD_ZZIP
+libACEXML_la_LIBADD += \
+  $(ACE_ZZIP_LIBS) \
+  $(ACE_ZLIB_LIBS)
+endif BUILD_ZZIP
+endif BUILD_ZLIB
 
 nobase_include_HEADERS = \
   ACEXML_Export.h \

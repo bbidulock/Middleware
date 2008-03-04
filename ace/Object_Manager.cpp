@@ -117,7 +117,7 @@ private:
 ACE_Object_Manager_Preallocations::ACE_Object_Manager_Preallocations (void)
 {
   ACE_STATIC_SVC_DEFINE (ACE_Service_Manager_initializer,
-                         ACE_LIB_TEXT ("ACE_Service_Manager"),
+                         ACE_TEXT ("ACE_Service_Manager"),
                          ACE_SVC_OBJ_T,
                          &ACE_SVC_NAME (ACE_Service_Manager),
                          ACE_Service_Type::DELETE_THIS |
@@ -159,9 +159,9 @@ LONG _stdcall ACE_UnhandledExceptionFilter (PEXCEPTION_POINTERS pExceptionInfo)
   DWORD dwExceptionCode = pExceptionInfo->ExceptionRecord->ExceptionCode;
 
   if (dwExceptionCode == EXCEPTION_ACCESS_VIOLATION)
-    ACE_ERROR ((LM_ERROR, ACE_LIB_TEXT ("\nERROR: ACCESS VIOLATION\n")));
+    ACE_ERROR ((LM_ERROR, ACE_TEXT ("\nERROR: ACCESS VIOLATION\n")));
   else
-    ACE_ERROR ((LM_ERROR, ACE_LIB_TEXT ("\nERROR: UNHANDLED EXCEPTION\n")));
+    ACE_ERROR ((LM_ERROR, ACE_TEXT ("\nERROR: UNHANDLED EXCEPTION\n")));
 
   return EXCEPTION_EXECUTE_HANDLER;
 }
@@ -236,7 +236,11 @@ ACE_Object_Manager::init (void)
 
 #     if defined (ACE_HAS_TSS_EMULATION)
           // Initialize the main thread's TS storage.
-          ACE_TSS_Emulation::tss_open (ts_storage_);
+          if (!ts_storage_initialized_)
+            {
+              ACE_TSS_Emulation::tss_open (ts_storage_);
+              ts_storage_initialized_ = true;
+            }
 #     endif /* ACE_HAS_TSS_EMULATION */
 
 #if defined (ACE_DISABLE_WIN32_ERROR_WINDOWS) && \
@@ -246,6 +250,9 @@ ACE_Object_Manager::init (void)
           _CrtSetReportMode( _CRT_ERROR, _CRTDBG_MODE_FILE );
           _CrtSetReportFile( _CRT_ERROR, _CRTDBG_FILE_STDERR );
 #endif /* _DEBUG && _MSC_VER || __INTEL_COMPILER */
+
+          // The system does not display the critical-error-handler message box
+          SetErrorMode(SEM_FAILCRITICALERRORS);
 
           // And this will catch all unhandled exceptions.
           SetUnhandledExceptionFilter (&ACE_UnhandledExceptionFilter);
@@ -279,6 +286,30 @@ ACE_Object_Manager::init (void)
     }
 }
 
+#if defined (ACE_HAS_TSS_EMULATION)
+int
+ACE_Object_Manager::init_tss (void)
+{
+  return ACE_Object_Manager::instance ()->init_tss_i ();
+}
+
+int
+ACE_Object_Manager::init_tss_i (void)
+{
+  ACE_MT (ACE_GUARD_RETURN (ACE_Recursive_Thread_Mutex, ace_mon,
+    *instance_->internal_lock_, -1));
+
+  if (!ts_storage_initialized_)
+    {
+      ACE_TSS_Emulation::tss_open (ts_storage_);
+      ts_storage_initialized_ = true;
+    }
+
+  return 0;
+}
+
+#endif
+
 ACE_Object_Manager::ACE_Object_Manager (void)
   // With ACE_HAS_TSS_EMULATION, ts_storage_ is initialized by the call to
   // ACE_OS::tss_open () in the function body.
@@ -290,7 +321,10 @@ ACE_Object_Manager::ACE_Object_Manager (void)
 #if defined (ACE_MT_SAFE) && (ACE_MT_SAFE != 0)
   , singleton_null_lock_ (0)
   , singleton_recursive_lock_ (0)
-# endif /* ACE_MT_SAFE */
+#endif /* ACE_MT_SAFE */
+#if defined (ACE_HAS_TSS_EMULATION)
+  , ts_storage_initialized_ (false)
+#endif
 {
 #if defined (ACE_MT_SAFE) && (ACE_MT_SAFE != 0)
   ACE_NEW (internal_lock_, ACE_Recursive_Thread_Mutex);
@@ -314,7 +348,7 @@ ACE_Object_Manager::ACE_Object_Manager (void)
 
 ACE_Object_Manager::~ACE_Object_Manager (void)
 {
-  dynamically_allocated_ = 0;   // Don't delete this again in fini()
+  dynamically_allocated_ = false;   // Don't delete this again in fini()
   fini ();
 }
 
@@ -327,14 +361,14 @@ ACE_Object_Manager::instance (void)
 
   if (instance_ == 0)
     {
-      ACE_Object_Manager *instance_pointer;
+      ACE_Object_Manager *instance_pointer = 0;
 
       ACE_NEW_RETURN (instance_pointer,
                       ACE_Object_Manager,
                       0);
       ACE_ASSERT (instance_pointer == instance_);
 
-      instance_pointer->dynamically_allocated_ = 1;
+      instance_pointer->dynamically_allocated_ = true;
 
       return instance_pointer;
     }
@@ -811,9 +845,10 @@ ACE_Static_Object_Lock::instance (void)
           {
             return 0;
           }
-        ACE_NEW_RETURN (ACE_Static_Object_Lock_lock,
-                        (buffer) ACE_Static_Object_Lock_Type (),
-                        0);
+        // do not use ACE_NEW macros for placement new
+        ACE_Static_Object_Lock_lock = new (buffer)
+                        ACE_Static_Object_Lock_Type ();
+
 #       else   /* ! ACE_SHOULD_MALLOC_STATIC_OBJECT_LOCK */
         ACE_NEW_RETURN (ACE_Static_Object_Lock_lock,
                         ACE_Cleanup_Adapter<ACE_Recursive_Thread_Mutex>,

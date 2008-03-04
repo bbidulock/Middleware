@@ -127,7 +127,10 @@ ACE::HTBP::Session::Session (const ACE::HTBP::Session &other)
 ACE::HTBP::Session&
 ACE::HTBP::Session::operator= (const ACE::HTBP::Session &)
 {
-  ACE_ASSERT (this == 0);
+  // @TODO: figure out why the assignment operator is here if it is
+  // unimplemented? Previously there was an ACE_ASSERT(this == 0)
+  // so apparently something bad had been happening long ago, but I
+  // have no idea what.
   return *this;
 }
 
@@ -171,7 +174,8 @@ ACE::HTBP::Session::reconnect_i (ACE::HTBP::Channel *s)
       ACE_TCHAR buffer[128];
       this->proxy_addr_->addr_to_string(buffer,128, 0);
       ACE_ERROR ((LM_ERROR,
-                  ACE_TEXT("ACE::HTBP::Session::reconnect failed to %s, %p\n"),
+                  ACE_TEXT("(%P|%t) ACE::HTBP::Session::reconnect")
+                  ACE_TEXT(" failed to %s, %p\n"),
                   buffer, s == this->inbound_ ?
                   ACE_TEXT("inbound") : ACE_TEXT ("outbound")));
     }
@@ -200,7 +204,9 @@ ACE::HTBP::Session::detach (ACE::HTBP::Channel *ch)
   else if (this->outbound_ == ch)
     this->outbound_ = 0;
   else
-    ACE_ERROR ((LM_ERROR, "ACE::HTBP::Session::detach called with unknown channel\n"));
+    ACE_ERROR ((LM_ERROR,
+                ACE_TEXT("ACE::HTBP::Session::detach ")
+                ACE_TEXT("called with unknown channel\n")));
 }
 
 void
@@ -236,6 +242,8 @@ ACE::HTBP::Session::flush_outbound_queue (void)
           iov[i].iov_len = msg->length();
           msg = msg->next();
         }
+      if (this->outbound_->state() ==  ACE::HTBP::Channel::Wait_For_Ack)
+        this->outbound_->recv_ack();
       result = this->outbound_->sendv (iov,this->outbound_queue_.message_count(),0);
       delete [] iov;
       while (this->outbound_queue_.dequeue_head(msg))

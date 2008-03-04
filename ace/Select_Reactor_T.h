@@ -58,16 +58,16 @@ public:
 
   // = Initialization and termination methods.
 
-  /// If <disable_notify_pipe> is non-0 then the reactor will
+  /// If @a disable_notify_pipe is non-0 then the reactor will
   /// not create a notification pipe, which will save two I/O handles
-  /// but will elide the <notify()> feature.  If <mask_signals> is
+  /// but will elide the <notify()> feature.  If @a mask_signals is
   /// 1 the reactor is "signal-safe" when dispatching handlers to
-  /// signal events, whereas if <mask_signals> is 0 the reactor will
+  /// signal events, whereas if @a mask_signals is 0 the reactor will
   /// be more efficient, but not signal-safe (which may be perfectly
   /// fine if your application doesn't use the reactor to handle signals).
   ACE_Select_Reactor_T (ACE_Sig_Handler * = 0,
                         ACE_Timer_Queue * = 0,
-                        int disable_notify_pipe = 0,
+                        int disable_notify_pipe = ACE_DISABLE_NOTIFY_PIPE_DEFAULT,
                         ACE_Reactor_Notify *notify = 0,
                         int mask_signals = 1,
                         int s_queue = ACE_SELECT_TOKEN::FIFO);
@@ -92,7 +92,7 @@ public:
                         int restart = 0,
                         ACE_Sig_Handler * = 0,
                         ACE_Timer_Queue * = 0,
-                        int disable_notify_pipe = 0,
+                        int disable_notify_pipe = ACE_DISABLE_NOTIFY_PIPE_DEFAULT,
                         ACE_Reactor_Notify *notify = 0,
                         int mask_signals = 1,
                         int s_queue = ACE_SELECT_TOKEN::FIFO);
@@ -118,11 +118,11 @@ public:
                     int restart = 0,
                     ACE_Sig_Handler * = 0,
                     ACE_Timer_Queue * = 0,
-                    int disable_notify_pipe = 0,
+                    int disable_notify_pipe = ACE_DISABLE_NOTIFY_PIPE_DEFAULT,
                     ACE_Reactor_Notify * = 0);
 
   /// Returns -1 (not used in this implementation);
-  virtual int current_info (ACE_HANDLE, size_t & /* size */);
+  virtual int current_info (ACE_HANDLE, size_t &size);
 
   /// Use a user specified signal handler instead.
   virtual int set_sig_handler (ACE_Sig_Handler *signal_handler);
@@ -146,7 +146,7 @@ public:
    * but does not actually dispatch the event handlers.  By default,
    * don't block while checking this, i.e., "poll".
    */
-  virtual int work_pending (const ACE_Time_Value &max_wait_time =  ACE_Time_Value::zero);
+  virtual int work_pending (const ACE_Time_Value &max_wait_time = ACE_Time_Value::zero);
 
   /**
    * This event loop driver that blocks for @a max_wait_time before
@@ -193,15 +193,15 @@ public:
 
   /**
    * Control whether the Reactor will handle any more incoming events or not.
-   * If <do_stop> == 1, the Reactor will be disabled.  By default, a reactor
+   * If @a do_stop == 1, the Reactor will be disabled.  By default, a reactor
    * is in active state and can be deactivated/reactived as wish.
    */
   virtual void deactivate (int do_stop);
 
   // = Register and remove ACE_Event_Handlers.
   /**
-   * Register a <eh> with a particular <mask>.  Note that the
-   * <Select_Reactor> will call <ACE_Event_Handler::get_handle> to
+   * Register a @a eh with a particular @a mask.  Note that the
+   * <Select_Reactor> will call ACE_Event_Handler::get_handle() to
    * extract the underlying I/O handle.
    */
   virtual int register_handler (ACE_Event_Handler *eh,
@@ -244,9 +244,9 @@ public:
                                 ACE_Reactor_Mask mask);
 
   /**
-   * Register <new_sh> to handle the signal <signum> using the
-   * <new_disp>.  Returns the <old_sh> that was previously registered
-   * (if any), along with the <old_disp> of the signal handler.
+   * Register @a new_sh to handle the signal @a signum using the
+   * @a new_disp. Returns the @a old_sh that was previously registered
+   * (if any), along with the @a old_disp of the signal handler.
    */
   virtual int register_handler (int signum,
                                 ACE_Event_Handler *new_sh,
@@ -254,14 +254,14 @@ public:
                                 ACE_Event_Handler **old_sh = 0,
                                 ACE_Sig_Action *old_disp = 0);
 
-  /// Registers <new_sh> to handle a set of signals <sigset> using the
-  /// <new_disp>.
+  /// Registers @a new_sh to handle a set of signals @a sigset using the
+  /// @a new_disp.
   virtual int register_handler (const ACE_Sig_Set &sigset,
                                 ACE_Event_Handler *new_sh,
                                 ACE_Sig_Action *new_disp = 0);
 
   /**
-   * Removes the <mask> binding of <eh> from the Select_Reactor.  If
+   * Removes the @a mask binding of <eh> from the Select_Reactor.  If
    * there are no more bindings for this <eh> then it is removed from
    * the Select_Reactor.  Note that the Select_Reactor will call
    * <ACE_Event_Handler::get_handle> to extract the underlying I/O
@@ -271,7 +271,7 @@ public:
                               ACE_Reactor_Mask mask);
 
   /**
-   * Removes the <mask> bind of <Event_Handler> whose handle is
+   * Removes the @a mask bind of <Event_Handler> whose handle is
    * <handle> from the Select_Reactor.  If there are no more bindings
    * for this <eh> then it is removed from the Select_Reactor.
    */
@@ -279,7 +279,7 @@ public:
                               ACE_Reactor_Mask);
 
   /**
-   * Removes all the <mask> bindings for handles in the <handle_set>
+   * Removes all the @a mask bindings for handles in the <handle_set>
    * bind of <Event_Handler>.  If there are no more bindings for any
    * of these handlers then they are removed from the Select_Reactor.
    */
@@ -287,11 +287,11 @@ public:
                               ACE_Reactor_Mask);
 
   /**
-   * Remove the ACE_Event_Handler currently associated with <signum>.
+   * Remove the ACE_Event_Handler currently associated with @a signum.
    * <sigkey> is ignored in this implementation since there is only
    * one instance of a signal handler.  Install the new disposition
    * (if given) and return the previous disposition (if desired by the
-   * caller).  Returns 0 on success and -1 if <signum> is invalid.
+   * caller).  Returns 0 on success and -1 if @a signum is invalid.
    */
   virtual int remove_handler (int signum,
                               ACE_Sig_Action *new_disp,
@@ -362,10 +362,10 @@ public:
                                const ACE_Time_Value &interval = ACE_Time_Value::zero);
 
   /**
-   * Resets the interval of the timer represented by <timer_id> to
-   * <interval>, which is specified in relative time to the current
-   * <gettimeofday>.  If <interval> is equal to
-   * <ACE_Time_Value::zero>, the timer will become a non-rescheduling
+   * Resets the interval of the timer represented by @a timer_id to
+   * @a interval, which is specified in relative time to the current
+   * <gettimeofday>.  If @a interval is equal to
+   * ACE_Time_Value::zero, the timer will become a non-rescheduling
    * timer.  Returns 0 if successful, -1 if not.
    */
   virtual int reset_timer_interval (long timer_id,
@@ -373,7 +373,7 @@ public:
 
   /**
    * Cancel all <event_handlers> that match the address of
-   * <event_handler>.  If <dont_call_handle_close> is 0 then the
+   * <event_handler>.  If @a dont_call_handle_close is 0 then the
    * <handle_close> method of <event_handler> will be invoked.
    * Returns number of handler's cancelled.
    */
@@ -381,14 +381,14 @@ public:
                             int dont_call_handle_close = 1);
 
   /**
-   * Cancel the single ACE_Event_Handler that matches the <timer_id>
+   * Cancel the single ACE_Event_Handler that matches the @a timer_id
    * value (which was returned from the <schedule> method).  If arg is
    * non-NULL then it will be set to point to the ``magic cookie''
    * argument passed in when the <Event_Handler> was registered.  This
    * makes it possible to free up the memory and avoid memory leaks.
-   * If <dont_call_handle_close> is 0 then the <handle_close> method
+   * If @a dont_call_handle_close is 0 then the <handle_close> method
    * of <event_handler> will be invoked.  Returns 1 if cancellation
-   * succeeded and 0 if the <timer_id> wasn't found.
+   * succeeded and 0 if the @a timer_id wasn't found.
    */
   virtual int cancel_timer (long timer_id,
                             const void **arg = 0,
@@ -396,19 +396,19 @@ public:
 
   // = High-level Event_Handler scheduling operations
 
-  /// ADD the dispatch MASK "bit" bound with the <eh> and the <mask>.
+  /// ADD the dispatch MASK "bit" bound with the <eh> and the @a mask.
   virtual int schedule_wakeup (ACE_Event_Handler *eh,
                                ACE_Reactor_Mask mask);
 
-  /// ADD the dispatch MASK "bit" bound with the <handle> and the <mask>.
+  /// ADD the dispatch MASK "bit" bound with the <handle> and the @a mask.
   virtual int schedule_wakeup (ACE_HANDLE handle,
                                ACE_Reactor_Mask mask);
 
-  /// CLR the dispatch MASK "bit" bound with the <eh> and the <mask>.
+  /// CLR the dispatch MASK "bit" bound with the <eh> and the @a mask.
   virtual int cancel_wakeup (ACE_Event_Handler *eh,
                              ACE_Reactor_Mask mask);
 
-  /// CLR the dispatch MASK "bit" bound with the <handle> and the <mask>.
+  /// CLR the dispatch MASK "bit" bound with the <handle> and the @a mask.
   virtual int cancel_wakeup (ACE_HANDLE handle,
                              ACE_Reactor_Mask mask);
 
@@ -417,12 +417,12 @@ public:
    * Called by a thread when it wants to unblock the Select_Reactor.
    * This wakeups the <ACE_Select_Reactor> if currently blocked in
    * <select>/<poll>.  Pass over both the <Event_Handler> *and* the
-   * <mask> to allow the caller to dictate which <Event_Handler>
-   * method the <Select_Reactor> will invoke.  The <ACE_Time_Value>
+   * @a mask to allow the caller to dictate which <Event_Handler>
+   * method the <Select_Reactor> will invoke.  The ACE_Time_Value
    * indicates how long to blocking trying to notify the
-   * <Select_Reactor>.  If <timeout> == 0, the caller will block until
+   * <Select_Reactor>.  If @a timeout == 0, the caller will block until
    * action is possible, else will wait until the relative time
-   * specified in *<timeout> elapses).
+   * specified in *@a timeout elapses).
    */
   virtual int notify (ACE_Event_Handler * = 0,
                       ACE_Reactor_Mask = ACE_Event_Handler::EXCEPT_MASK,
@@ -464,24 +464,24 @@ public:
 
   // = Low-level wait_set mask manipulation methods.
   /// GET/SET/ADD/CLR the dispatch mask "bit" bound with the <eh> and
-  /// <mask>.
+  /// @a mask.
   virtual int mask_ops (ACE_Event_Handler *eh,
                         ACE_Reactor_Mask mask,
                         int ops);
 
   /// GET/SET/ADD/CLR the dispatch MASK "bit" bound with the <handle>
-  /// and <mask>.
+  /// and @a mask.
   virtual int mask_ops (ACE_HANDLE handle,
                         ACE_Reactor_Mask mask,
                         int ops);
 
   // = Low-level ready_set mask manipulation methods.
-  /// GET/SET/ADD/CLR the ready "bit" bound with the <eh> and <mask>.
+  /// GET/SET/ADD/CLR the ready "bit" bound with the <eh> and @a mask.
   virtual int ready_ops (ACE_Event_Handler *eh,
                          ACE_Reactor_Mask mask,
                          int ops);
 
-  /// GET/SET/ADD/CLR the ready "bit" bound with the <handle> and <mask>.
+  /// GET/SET/ADD/CLR the ready "bit" bound with the <handle> and @a mask.
   virtual int ready_ops (ACE_HANDLE handle,
                          ACE_Reactor_Mask,
                          int ops);
@@ -507,7 +507,7 @@ public:
 
   /**
    * Check to see if <handle> is associated with a valid Event_Handler
-   * bound to <mask>.  Return the <eh> associated with this <handler>
+   * bound to @a mask.  Return the @a eh associated with this @a handler
    * if <eh> != 0.
    */
   virtual int handler (ACE_HANDLE handle,
@@ -515,9 +515,9 @@ public:
                        ACE_Event_Handler **eh = 0);
 
   /**
-   * Check to see if <signum> is associated with a valid Event_Handler
+   * Check to see if @a signum is associated with a valid Event_Handler
    * bound to a signal.  Return the <eh> associated with this
-   * <handler> if <eh> != 0.
+   * handler if <eh> != 0.
    */
   virtual int handler (int signum,
                        ACE_Event_Handler ** = 0);
@@ -551,7 +551,7 @@ protected:
   // lock is held by the public methods that call down to them.
 
   /// Do the work of actually binding the <handle> and <eh> with the
-  /// <mask>.
+  /// @a mask.
   virtual int register_handler_i (ACE_HANDLE handle,
                                   ACE_Event_Handler *eh,
                                   ACE_Reactor_Mask mask);
@@ -562,7 +562,7 @@ protected:
                                   ACE_Reactor_Mask mask);
 
   /// Do the work of actually unbinding the <handle> and <eh> with the
-  /// <mask>.
+  /// @a mask.
   virtual int remove_handler_i (ACE_HANDLE handle,
                                 ACE_Reactor_Mask);
 
@@ -580,15 +580,15 @@ protected:
   /// Resume the <Event_Handler> associated with <handle>
   virtual int resume_i (ACE_HANDLE handle);
 
-  /// Implement the public <handler> method.
+  /// Implement the public handler method.
   virtual ACE_Event_Handler *find_handler_i (ACE_HANDLE handle);
 
-  /// Implement the public <handler> method.
+  /// Implement the public handler method.
   virtual int handler_i (ACE_HANDLE handle,
                          ACE_Reactor_Mask,
                          ACE_Event_Handler ** = 0);
 
-  /// Implement the public <handler> method.
+  /// Implement the public handler method.
   virtual int handler_i (int signum, ACE_Event_Handler ** = 0);
 
   /**
@@ -655,7 +655,7 @@ protected:
    * Factors the dispatching of an io handle set (each WRITE, EXCEPT
    * or READ set of handles).  It updates the
    * <number_of_handlers_dispatched> and invokes this->notify_handle
-   * for all the handles in <dispatch_set> using the <mask>,
+   * for all the handles in <dispatch_set> using the @a mask,
    * <ready_set> and <callback> parameters.  Must return -1 if
    * this->state_changed otherwise it must return 0.
    */

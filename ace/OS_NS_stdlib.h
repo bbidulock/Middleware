@@ -225,7 +225,7 @@ namespace ACE_OS {
   void srand (u_int seed);
 
   // not in spec
-  ACE_NAMESPACE_INLINE_FUNCTION
+  extern ACE_Export
   ACE_TCHAR *strenvdup (const ACE_TCHAR *str);
 
 #if !defined (ACE_LACKS_STRTOD)
@@ -274,6 +274,28 @@ namespace ACE_OS {
 
   ACE_NAMESPACE_INLINE_FUNCTION
   int system (const ACE_TCHAR *s);
+
+  /// Get the name of the current program
+  ///
+  /// Originally from NetBSD, now found in *BSD, Cygwin, Darwin, etc.
+  ACE_NAMESPACE_INLINE_FUNCTION
+  const char *getprogname ();
+
+#if !defined (ACE_HAS_GETPROGNAME)
+  extern ACE_Export
+  const char *getprogname_emulation ();
+#endif /* !ACE_HAS_GETPROGNAME */
+
+  /// Set the name of the current program
+  ///
+  /// Originally from NetBSD, now found in *BSD, Cygwin, Darwin, etc.
+  ACE_NAMESPACE_INLINE_FUNCTION
+  void setprogname (const char* name);
+
+#if !defined (ACE_HAS_SETPROGNAME)
+  extern ACE_Export
+  void setprogname_emulation (const char* name);
+#endif /* !ACE_HAS_SETPROGNAME */
 
 } /* namespace ACE_OS */
 

@@ -24,9 +24,9 @@
 // Use a signed int to match POSIX
 #define __SIGNED_INT_TIME_T
 
-#define ACE_OPENVMS 0x0821
+#define ACE_OPENVMS __VMS_VER
 
-#define ACE_DLL_SUFFIX ACE_LIB_TEXT("")
+#define ACE_DLL_SUFFIX ACE_TEXT("")
 
 #define ACE_HAS_DUMP    1
 
@@ -40,13 +40,24 @@
 #undef memcpy
 #undef memmove
 
+#if defined(__ia64__)
+  // on OpenVMS IA64 we need this get the singleton exported since we build
+  // ACE/TAO with the NOTEMPLATES export option which prohibits exporting
+  // of any template symbols unless explicitly exported
+  #define ACE_HAS_CUSTOM_EXPORT_MACROS
+  #define ACE_Proper_Export_Flag
+  #define ACE_Proper_Import_Flag
+  #define ACE_EXPORT_SINGLETON_DECLARATION(T) template class __declspec (dllexport) T
+  #define ACE_EXPORT_SINGLETON_DECLARE(SINGLETON_TYPE, CLASS, LOCK) template class __declspec (dllexport) SINGLETON_TYPE<CLASS, LOCK>;
+#else
+  #define ACE_HAS_EXPLICIT_STATIC_TEMPLATE_MEMBER_INSTANTIATION
+#endif
+
 #define ACE_DEFAULT_BASE_ADDR ((char*)(0x30000000))
 
 #define ACE_MAX_UDP_PACKET_SIZE 65535
 
 #define ACE_HAS_STDCPP_STL_INCLUDES 1
-
-#define ACE_HAS_EXPLICIT_STATIC_TEMPLATE_MEMBER_INSTANTIATION
 
 /* missing system headers */
 #define ACE_LACKS_STDINT_H  1
@@ -91,7 +102,6 @@
 #define ACE_HAS_VOIDPTR_GETTIMEOFDAY 1
 #define ACE_HAS_DIRENT 1
 #define ACE_HAS_GETPAGESIZE 1
-#define ACE_HAS_MEMCHR 1
 #define ACE_HAS_MSG
 #define ACE_HAS_NONCONST_SELECT_TIMEVAL 1
 #define ACE_HAS_2_PARAM_ASCTIME_R_AND_CTIME_R 1
@@ -117,11 +127,9 @@
 #define ACE_LACKS_RLIMIT 1
 #define ACE_LACKS_RLIMIT_PROTOTYPE 1
 #define ACE_LACKS_SETSCHED
-//#define ACE_LACKS_SOCKETPAIR 1
 #define ACE_LACKS_SYSCALL 1
 
 /* (missing) standard data types */
-//#define ACE_LACKS_TIMESPEC_T    1
 #define ACE_LACKS_CONST_TIMESPEC_PTR 1
 #define ACE_LACKS_SUSECONDS_T 1
 #define ACE_HAS_IDTYPE_T 1
@@ -140,7 +148,6 @@
 #define ACE_LACKS_THREAD_PROCESS_SCOPING 1
 
 #define ACE_HAS_PTHREADS 1
-#define ACE_HAS_PTHREADS_STD 1
 #define ACE_HAS_PTHREAD_PROCESS_ENUM 1
 #define ACE_LACKS_UNNAMED_SEMAPHORE 1
 #define ACE_MT_SAFE 1
@@ -154,7 +161,6 @@
 #define ACE_HAS_PTHREAD_SETCONCURRENCY 1
 #define ACE_HAS_PTHREAD_GETCONCURRENCY 1
 #define ACE_HAS_PTHREAD_SCHEDPARAM 1
-
 
 /* language/platform conformance */
 #define ACE_NEW_THROWS_EXCEPTIONS 1
@@ -184,5 +190,9 @@
 #define ACE_LACKS_SYSV_SHMEM 1
 #define ACE_LACKS_UNIX_DOMAIN_SOCKETS 1
 #define ACE_LACKS_UNIX_SYSLOG 1
+#define ACE_LACKS_ALPHASORT 1
+
+#define ACE_HAS_SOCK_BUF_SIZE_MAX
+#define ACE_HAS_SOCK_BUF_SIZE_MAX_VALUE 65535
 
 #endif

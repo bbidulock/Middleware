@@ -4,7 +4,6 @@
 # startup ARGV processing that is used by all tests.
 
 use PerlACE::Process;
-##use PerlACE::ProcessVX;
 use PerlACE::ConfigList;
 
 package PerlACE;
@@ -12,20 +11,31 @@ use File::Spec;
 use Cwd;
 
 $PerlACE::ACE_ROOT = $ENV{ACE_ROOT};
-$PerlACE::TAO_ROOT;
 if(exists $ENV{TAO_ROOT}) {
     $PerlACE::TAO_ROOT = $ENV{TAO_ROOT};
 } else {
     $PerlACE::TAO_ROOT = "$PerlACE::ACE_ROOT/TAO";
 }
+if(exists $ENV{CIAO_ROOT}) {
+    $PerlACE::CIAO_ROOT = $ENV{CIAO_ROOT};
+} else {
+    $PerlACE::CIAO_ROOT = "$PerlACE::TAO_ROOT/CIAO";
+}
 
 my $config = new PerlACE::ConfigList;
-$PerlACE::VxWorks_Test = $config->check_config("VxWorks");
-$PerlACE::VxWorks_RTP_Test = $config->check_config("VxWorks_RTP");
+$PerlACE::TestConfig = $config;
 
 # load VxWorks Process helpers in case this is a VxWorks target build
+$PerlACE::VxWorks_Test = $config->check_config("VxWorks");
+$PerlACE::VxWorks_RTP_Test = $config->check_config("VxWorks_RTP");
 if ($PerlACE::VxWorks_Test or $PerlACE::VxWorks_RTP_Test) {
     require PerlACE::ProcessVX;
+}
+
+# Load LabVIEW RT Process helpers in case this is a LabVIEW RT target build.
+$PerlACE::LabVIEW_RT_Test = $config->check_config("LabVIEW_RT");
+if ($PerlACE::LabVIEW_RT_Test) {
+    require PerlACE::ProcessLVRT;
 }
 
 # Figure out the svc.conf extension
@@ -35,10 +45,12 @@ if (!defined $svcconf_ext) {
 }
 
 # Default timeout.  NSCORBA needs more time for process start up.
-$wait_interval_for_process_creation = (($^O eq "lynxos") ? 12 : (($PerlACE::VxWorks_Test or $PerlACE::VxWorks_RTP_Test) ? 60 : 10));
-if ($^O == 'VMS') {
+$wait_interval_for_process_creation = (($PerlACE::VxWorks_Test or $PerlACE::VxWorks_RTP_Test) ? 60 : 15);
+if ($^O eq 'VMS') {
   $wait_interval_for_process_creation *= 3;
 }
+
+$wait_interval_for_process_shutdown = (($PerlACE::VxWorks_Test or $PerlACE::VxWorks_RTP_Test) ? 30 : 10);
 
 # Turn on autoflush
 $| = 1;
@@ -168,6 +180,11 @@ sub is_vxworks_test()
     return ($PerlACE::VxWorks_Test || $PerlACE::VxWorks_RTP_Test);
 }
 
+sub is_vxworks_rtp_test()
+{
+    return ($PerlACE::VxWorks_RTP_Test);
+}
+
 sub add_path {
   my $name   = shift;
   my $value  = shift;
@@ -188,7 +205,41 @@ sub add_lib_path {
   add_path('LIBPATH', $value);
   add_path('SHLIB_PATH', $value);
 
+  if (defined $ENV{"HOST_ROOT"}) {
+    add_path('PATH', VX_HostFile ($value));
+    add_path('LD_LIBRARY_PATH', VX_HostFile ($value));
+    add_path('LIBPATH', VX_HostFile ($value));
+    add_path('SHLIB_PATH', VX_HostFile ($value));
+  }
 }
+
+sub check_privilege_group {
+  if ($^O eq 'hpux') {
+    my($access) = 'RTSCHED';
+    my($status) = 0;
+    my($getprivgrp) = '/bin/getprivgrp';
+
+    if (-x $getprivgrp) {
+      if (open(GPG, "$getprivgrp |")) {
+        while(<GPG>) {
+          if (index($_, $access) >= 0) {
+            $status = 1;
+          }
+        }
+        close(GPG);
+      }
+    }
+
+    if (!$status) {
+      print STDERR "WARNING: You must have $access privileges to run this test.\n",
+                   "         Run \"man 1m setprivgrp\" for more information.\n";
+      exit(0);
+    }
+  }
+}
+
+# Add PWD to the load library path
+add_lib_path ('.');
 
 $sleeptime = 5;
 

@@ -35,7 +35,7 @@ test_duplicates (size_t count)
 
   ACE_Handle_Set handle_set;
 
-  ACE_OS::srand (ACE_OS::time (0L));
+  ACE_OS::srand ((u_int) ACE_OS::time (0L));
 
   for (size_t i = 0; i < count; i++)
     {
@@ -109,16 +109,9 @@ test_boundaries (void)
        (handle = i1 ()) != ACE_INVALID_HANDLE;
        )
     {
-#if defined (ACE_PSOS_DIAB)
-      // Workaround for some compiler confusion with strings in
-      // assertions.
-      const int SET_IS_EMPTY_SO_SHOULD_NOT_SEE_THIS = 1;
-      ACE_ASSERT (0 == SET_IS_EMPTY_SO_SHOULD_NOT_SEE_THIS);
-#else /* ! defined (ACE_PSOS_DIAB) */
       ACE_ASSERT (0 ==
                   ACE_TEXT ("this shouldn't get called since ")
                   ACE_TEXT ("the set is empty!\n"));
-#endif /* defined (ACE_PSOS_DIAB) */
     }
 
   ACE_DEBUG ((LM_DEBUG,
@@ -195,16 +188,6 @@ test_performance (size_t max_handles,
 
   timer.elapsed_time (et);
 
-#if defined (ACE_LACKS_FLOATING_POINT)
-  ACE_DEBUG ((LM_DEBUG,
-              ACE_TEXT ("real time = %u usecs\n"),
-              et.real_time));
-
-  ACE_DEBUG ((LM_DEBUG,
-              ACE_TEXT ("time per each of the %d calls = %u usecs\n"),
-              count,
-              et.real_time / count));
-#else  /* ! ACE_LACKS_FLOATING_POINT */
   ACE_DEBUG ((LM_DEBUG,
               ACE_TEXT ("real time = %f secs, user time = %f secs, ")
                 ACE_TEXT ("system time = %f secs\n"),
@@ -216,7 +199,6 @@ test_performance (size_t max_handles,
               ACE_TEXT ("time per each of the %d calls = %f usecs\n"),
               count,
               et.real_time / double (count) * 1000000));
-#endif /* ! ACE_LACKS_FLOATING_POINT */
 }
 
 int

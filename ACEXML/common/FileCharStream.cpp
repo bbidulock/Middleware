@@ -38,7 +38,7 @@ ACEXML_FileCharStream::open (const ACEXML_Char *name)
   if (ACE_OS::stat (name, &statbuf) < 0)
     return -1;
 
-  this->size_ = ACE_Utils::Truncate<ACE_OFF_T> (statbuf.st_size);
+  this->size_ = ACE_Utils::truncate_cast<ACE_OFF_T> (statbuf.st_size);
   this->filename_ = ACE::strnew (name);
   return this->determine_encoding();
 }
@@ -82,7 +82,7 @@ ACEXML_FileCharStream::determine_encoding (void)
         continue;
       else
         {
-          ungetc (ch, this->infile_);
+          ACE_OS::ungetc (ch, this->infile_);
           break;
         }
     }
@@ -168,7 +168,7 @@ ACEXML_FileCharStream::peek (void)
 #else
 
   ACEXML_Char ch = static_cast<ACEXML_Char> (ACE_OS::fgetc (this->infile_));
-  ::ungetc (ch, this->infile_);
+  ACE_OS::ungetc (ch, this->infile_);
   return ch;
 #endif /* ACE_USES_WCHAR */
 }
@@ -214,7 +214,7 @@ ACEXML_FileCharStream::peek_i (void)
   if (ACE_OS::strcmp (this->encoding_, ACE_TEXT ("UTF-8")) == 0)
     {
       ACEXML_Char ch = (ACEXML_Char) ACE_OS::fgetc (this->infile_);
-      ::ungetc (ch, this->infile_);
+      ACE_OS::ungetc (ch, this->infile_);
       return ch;
     }
 

@@ -25,10 +25,12 @@
 #  pragma once
 # endif /* ACE_LACKS_PRAGMA_ONCE */
 
-#include "ace/os_include/os_unistd.h"
-#include "ace/Time_Value.h"
-#include "ace/os_include/os_stdio.h"
 #include /**/ "ace/ACE_export.h"
+#include "ace/Time_Value.h"
+#include "ace/Basic_Types.h"
+#include "ace/os_include/os_unistd.h"
+#include "ace/os_include/os_stdio.h"
+
 
 #if defined (ACE_EXPORT_MACRO)
 #  undef ACE_EXPORT_MACRO
@@ -64,7 +66,8 @@ namespace ACE_OS
   extern ACE_Export
   int argv_to_string (ACE_TCHAR **argv,
                       ACE_TCHAR *&buf,
-                      bool substitute_env_args = true);
+                      bool substitute_env_args = true,
+                      bool quote_args = false);
 
 #if !defined (ACE_LACKS_CHDIR)
   ACE_NAMESPACE_INLINE_FUNCTION
@@ -138,8 +141,7 @@ namespace ACE_OS
   int fsync (ACE_HANDLE handle);
 
   ACE_NAMESPACE_INLINE_FUNCTION
-  int ftruncate (ACE_HANDLE,
-                 ACE_OFF_T);
+  int ftruncate (ACE_HANDLE handle, ACE_OFF_T offset);
 
   ACE_NAMESPACE_INLINE_FUNCTION
   char *getcwd (char *, size_t);
@@ -244,7 +246,7 @@ namespace ACE_OS
                 ACE_OVERLAPPED *);
 
   /**
-   * Receive <len> bytes into <buf> from <handle> (uses the
+   * Receive @a len bytes into @a buf from <handle> (uses the
    * <ACE_OS::read> call, which uses the <read> system call on UNIX
    * and the <ReadFile> call on Win32). If errors occur, -1 is
    * returned.  If EOF occurs, 0 is returned.  Whatever data has been
@@ -263,7 +265,7 @@ namespace ACE_OS
                     size_t bufsiz);
 
   ACE_NAMESPACE_INLINE_FUNCTION
-  void *sbrk (ptrdiff_t brk);
+  void *sbrk (intptr_t brk);
 
   ACE_NAMESPACE_INLINE_FUNCTION
   int setgid (gid_t);
@@ -345,7 +347,7 @@ namespace ACE_OS
                  ACE_OVERLAPPED *);
 
   /**
-   * Send <len> bytes from <buf> to <handle> (uses the <ACE_OS::write>
+   * Send @a len bytes from @a buf to @a handle (uses the <ACE_OS::write>
    * calls, which is uses the <write> system call on UNIX and the
    * <WriteFile> call on Win32).  If errors occur, -1 is returned.  If
    * EOF occurs, 0 is returned.  Whatever data has been transmitted

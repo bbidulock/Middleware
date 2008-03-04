@@ -72,7 +72,6 @@ AH_TEMPLATE([ACE_HAS_TANDEM_SIGNALS],[])
 AH_TEMPLATE([ACE_HAS_IRIX_53_SIGNALS],[])
 
 AH_TEMPLATE([PTHREAD_STACK_MIN],[])
-AH_TEMPLATE([PTHREAD_STACK_MAX],[])
 
 dnl ///////////////////// OSSAMA'S NEW STUFF ////////////////// */
 dnl THIS STUFF WILL REPLACE THE ABOVE OLDER STUFF AND/OR WILL BE MERGED INTO IT
@@ -90,9 +89,6 @@ dnl /* results from checks for system services */
 
 dnl AIX specific configuration parameters
 AH_TEMPLATE([AIX],[Configure for use on AIX])
-
-dnl DG/UX specific configuration parameters
-AH_TEMPLATE([ACE_DGUX],[])
 
 dnl FreeBSD specific configuration parameters
 dnl Nothing yet
@@ -116,10 +112,6 @@ dnl Nothing yet */
 dnl LynxOS specific configuration parameters
 AH_TEMPLATE([__NO_INCLUDE_WARN__],[])
 
-dnl M88K specific configuration parameters
-AH_TEMPLATE([m88k],[])
-AH_TEMPLATE([__m88k__],[])
-
 dnl MVS specific configuration parameters
 dnl Nothing yet
 
@@ -129,11 +121,6 @@ dnl Nothing yet
 dnl OSF/1 and Digital Unix specific configuration parameters
 AH_TEMPLATE([DEC_CXX],[])
 AH_TEMPLATE([DIGITAL_UNIX],[Configure for use on Digital Unix])
-
-dnl pSOS specific configuration parameters
-AH_TEMPLATE([ACE_PSOS],[Configure for use on pSoS])
-AH_TEMPLATE([ACE_PSOSIM],[])
-AH_TEMPLATE([ACE_PSOSTBD],[])
 
 dnl SCO specific configuration parameters
 AH_TEMPLATE([SCO],[])
@@ -273,9 +260,6 @@ AH_TEMPLATE([ACE_HAS_ALLOCA],[Compiler/platform supports alloca().])
 
 AH_TEMPLATE([ACE_HAS_ALLOCA_H],[Compiler/platform has <alloca.h>])
 
-AH_TEMPLATE([ACE_HAS_ALPHA_TIMER],
-[CPU is an Alpha, with the rpcc instruction to read the tick timer.])
-
 AH_TEMPLATE([ACE_HAS_AUTOMATIC_INIT_FINI],
 [Compiler/platform correctly calls init()/fini() for shared libraries.])
 
@@ -382,6 +366,9 @@ be defined, except on Win32).])
 
 AH_TEMPLATE([ACE_HAS_GNU_CSTRING_H],
 [Denotes that GNU has cstring.h as standard which redefines memchr()])
+
+AH_TEMPLATE([ACE_HAS_INTRINSIC_INTERLOCKED],
+[Platform supports the intrinsic interlocked optimizations.])
 
 AH_TEMPLATE([ACE_HAS_GPERF],
 [The GPERF utility is compiled for this platform])
@@ -495,8 +482,6 @@ AH_TEMPLATE([ACE_HAS_OPTIMIZED_MESSAGE_QUEUE],
 AH_TEMPLATE([ACE_HAS_OSF_TIMOD_H],
 [Platform supports the OSF TLI timod STREAMS module])
 
-AH_TEMPLATE([ACE_HAS_PENTIUM],[Platform is an Intel Pentium microprocessor.])
-
 AH_TEMPLATE([ACE_HAS_POLL],[Platform contains <poll.h>])
 
 AH_TEMPLATE([ACE_HAS_POSITION_INDEPENDENT_POINTERS],
@@ -516,15 +501,18 @@ AH_TEMPLATE([ACE_HAS_POSIX_SEM],
 [Platform supports POSIX real-time semaphores (e.g., VxWorks and
    Solaris)])
 
+AH_TEMPLATE([ACE_HAS_POSIX_SEM_TIMEOUT],
+[Platform supports timed POSIX semaphore acquisitions (sem_timedwait()).])
+
+AH_TEMPLATE([ACE_DISABLE_POSIX_SEM_TIMEOUT_EMULATION],
+[Do not include emulation for timed semaphore acquisitions.])
+
 AH_TEMPLATE([ACE_HAS_POSIX_TIME],
 [Platform supports the POSIX struct timespec type])
 
 AH_TEMPLATE([ACE_HAS_PROC_FS],
 [Platform supports the /proc file system and defines tid_t
    in <sys/procfs.h>])
-
-AH_TEMPLATE([ACE_HAS_POWERPC_TIMER],
-[Platform supports PowerPC time-base register.])
 
 AH_TEMPLATE([ACE_HAS_PRUSAGE_T],[Platform supports the prusage_t struct])
 
@@ -870,9 +858,6 @@ AH_TEMPLATE([ACE_LACKS_PLACEMENT_OPERATOR_DELETE],
 AH_TEMPLATE([ACE_LACKS_PRAGMA_ONCE],
 [Compiler complains about use of obsolete "pragma once"])
 
-AH_TEMPLATE([ACE_LACKS_THREAD_STACK_ADDR],
-[Platform lack pthread_attr_setstackaddr()])
-
 AH_TEMPLATE([ACE_LACKS_PTHREAD_CANCEL],[Platform lacks pthread_cancel()])
 
 AH_TEMPLATE([ACE_LACKS_PWD_FUNCTIONS],
@@ -931,9 +916,6 @@ AH_TEMPLATE([ACE_LACKS_TCP_NODELAY],[OS does not support TCP_NODELAY])
 
 AH_TEMPLATE([ACE_LACKS_THREAD_PROCESS_SCOPING],
 [Platform lacks pthread_attr_setscope()])
-
-AH_TEMPLATE([ACE_LACKS_THREAD_STACK_SIZE],
-[Platform lacks pthread_attr_setstacksize() (e.g., Linux pthreads)])
 
 AH_TEMPLATE([ACE_LACKS_TIMESPEC_T],
 [Platform does not define timepec_t as a typedef for struct timespec.])
@@ -1026,18 +1008,8 @@ AH_TEMPLATE([ACE_TEMPLATES_REQUIRE_SOURCE],
 [Compiler's template mechanim must see source code (i.e., .cpp
    files).  This is used for GNU G++.])
 
-AH_TEMPLATE([ACE_HAS_EXPLICIT_TEMPLATE_INSTANTIATION],
-[Compiler's template instantiation mechanism supports the use of
-   explicit C++ specializations for all used templates. This is also
-   used for GNU G++ if you don't use the "repo" patches.])
-
 AH_TEMPLATE([ACE_HAS_ICMP_SUPPORT],
 [Defined to 1 if platform supports ICMP over raw sockets])
-
-AH_TEMPLATE([ACE_HAS_TEMPLATE_INSTANTIATION_PRAGMA],
-[Compiler's template instantiation mechanism supports the use of
-   "#pragma instantiate".  Edison Design Group compilers, e.g., SGI
-   C++ and Green Hills 1.8.8 and later, support this.])
 
 AH_TEMPLATE([ACE_NEEDS_FUNC_DEFINITIONS],
 [Compiler requires a definition for a "hidden" function, e.g., a
@@ -1052,7 +1024,7 @@ AH_TEMPLATE([ACE_TLI_TCP_DEVICE],
 AH_TEMPLATE([ACE_USE_POLL],
 [The OS/platform supports the poll() event demultiplexor])
 
-AH_TEMPLATE([ACE_HAS_EVENT_POLL],[Platform (Linux) supports event poll 
+AH_TEMPLATE([ACE_HAS_EVENT_POLL],[Platform (Linux) supports event poll
   interface.])
 
 AH_TEMPLATE([ACE_HAS_DEV_POLL],[Platform supports /dev/poll character

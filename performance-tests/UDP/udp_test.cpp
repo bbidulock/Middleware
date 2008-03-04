@@ -102,8 +102,10 @@ public:
   virtual int handle_close (ACE_HANDLE handle,
                             ACE_Reactor_Mask close_mask);
 
+  //FUZZ: disable check_for_lack_ACE_OS
   int send (const char *buf, size_t len);
   // Send the <buf> to the server.
+  //FUZZ: enable check_for_lack_ACE_OS
 
   int get_response (char *buf, size_t len);
   // Wait for the response.
@@ -111,8 +113,10 @@ public:
   int run (void);
   // Send messages to server and record statistics.
 
+  //FUZZ: disable check_for_lack_ACE_OS
   int shutdown (void);
   // Send shutdown message to server.
+  //FUZZ: enable check_for_lack_ACE_OS
 
 private:
   ACE_SOCK_Dgram endpoint_;
@@ -208,14 +212,10 @@ Client::run (void)
   ACE_High_Res_Timer timer;
   ACE_hrtime_t sample;
 
-#if defined (ACE_LACKS_FLOATING_POINT)
-  ACE_hrtime_t sample_mean;
-#else  /* ! ACE_LACKS_FLOATING_POINT */
   int d;
   double std_dev = 0.0;
   double std_err = 0.0;
   double sample_mean = 0.0;
-#endif /* ! ACE_LACKS_FLOATING_POINT */
 
   int                tracking_last_over = 0;
   ACE_High_Res_Timer since_over;
@@ -249,7 +249,7 @@ Client::run (void)
        (*seq)++, i++, j++, timer.reset ())
     {
       timer.start ();
-      if (send (sbuf, bufsz) <= 0)
+      if (this->send (sbuf, bufsz) <= 0)
         ACE_ERROR_RETURN ((LM_ERROR, "(%P) %p\n", "send"), -1);
 
       if ((n = get_response (rbuf, bufsz)) <= 0)
@@ -336,11 +336,7 @@ Client::run (void)
         }
     }
 
-#if defined (ACE_LACKS_FLOATING_POINT)
-  sample_mean = sum / nsamples;
-#else  /* ! ACE_LACKS_FLOATING_POINT */
   sample_mean = ((double) ACE_U64_TO_U32 (sum)) / (double) nsamples;
-#endif /* ! ACE_LACKS_FLOATING_POINT */
 
   if (logfile)
     {
@@ -350,20 +346,20 @@ Client::run (void)
 
       distfp = ACE_OS::fopen(distfile, ACE_TEXT("w"));
 
-      if (distfp == NULL)
+      if (distfp == 0)
         {
           ACE_DEBUG ((LM_DEBUG,
                       "Unable to open dist file!\n\n"));
           logfile = 0;
         }
-      if (logfile && (sampfp = ACE_OS::fopen (sampfile, ACE_TEXT("w"))) == NULL)
+      if (logfile && (sampfp = ACE_OS::fopen (sampfile, ACE_TEXT("w"))) == 0)
         {
           ACE_OS::fclose (distfp);
           ACE_DEBUG ((LM_DEBUG,
                       "Unable to open sample file!\n\n"));
           logfile = 0;
         }
-      if (logfile && (sumfp = ACE_OS::fopen (sumfile, ACE_TEXT("w"))) == NULL)
+      if (logfile && (sumfp = ACE_OS::fopen (sumfile, ACE_TEXT("w"))) == 0)
         {
           ACE_OS::fclose (distfp);
           ACE_OS::fclose (sampfp);
@@ -381,7 +377,6 @@ Client::run (void)
                                        sizeof (u_int));
     }
 
-#if ! defined (ACE_LACKS_FLOATING_POINT)
   for (i = 0; i < (ACE_INT32) nsamples; i++)
     {
       std_dev += ((double) ACE_U64_TO_U32 (Samples[i]) - sample_mean) *
@@ -402,7 +397,6 @@ Client::run (void)
                          "%u\n",
                          ACE_U64_TO_U32 (Samples[i]));
     }
-#endif /* ACE_LACKS_FLOATING_POINT */
 
   if (logfile)
     {
@@ -419,19 +413,6 @@ Client::run (void)
         }
     }
 
-#if defined (ACE_LACKS_FLOATING_POINT)
-  ACE_DEBUG ((LM_DEBUG,
-              "\nResults for %i samples (usec):\n"
-              "\tSample Mean = %u,\n"
-              "\tSample Max = %u, Max index = %u,\n"
-              "\tSample Min = %u, Min index = %u,\n",
-              nsamples,
-              (ACE_UINT32) (sample_mean / (ACE_UINT32) 1000),
-              (ACE_UINT32) (max / (ACE_UINT32) 1000),
-              maxindx,
-              (ACE_UINT32) (min / (ACE_UINT32) 1000),
-              minindx));
-#else  /* ! ACE_LACKS_FLOATING_POINT */
   std_dev = (double) sqrt (std_dev / (double) (nsamples - 1.0));
   std_err = (double) std_dev / sqrt ((double) nsamples);
 
@@ -478,7 +459,6 @@ Client::run (void)
                        std_dev / 1000.0,
                        std_err / 1000.0);
     }
-#endif /* ! ACE_LACKS_FLOATING_POINT */
 
   return 0;
 }
@@ -609,10 +589,12 @@ ACE_TMAIN (int argc, ACE_TCHAR *argv[])
 
   cmd = argv;
 
+  //FUZZ: disable check_for_lack_ACE_OS
   ACE_Get_Opt getopt (argc, argv, ACE_TEXT("x:w:f:vs:I:p:rtn:b:a"));
 
   while ((c = getopt ()) != -1)
     {
+  //FUZZ: enable check_for_lack_ACE_OS
       switch ((char) c)
         {
         case 'x':

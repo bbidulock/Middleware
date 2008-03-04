@@ -17,11 +17,11 @@ use English;
 use Getopt::Std;
 use Cwd;
 
-use Env qw(ACE_ROOT PATH);
+use Env qw(ACE_ROOT PATH TAO_ROOT CIAO_ROOT);
 
 ################################################################################
 
-if (!getopts ('adl:os:tC') || $opt_h) {
+if (!getopts ('adl:os:r:tC') || $opt_h) {
     print "auto_run_tests.pl [-a] [-h] [-s sandbox] [-o] [-t]\n";
     print "\n";
     print "Runs the tests listed in auto_run_tests.lst\n";
@@ -36,6 +36,7 @@ if (!getopts ('adl:os:tC') || $opt_h) {
     print "    -C          CIAO tests only\n";
     print "    -Config cfg Run the tests for the <cfg> configuration\n";
     print "    -l list     Load the list and run only those tests\n";
+    print "    -r dir      Root directory for running the tests\n";
     print "\n";
     $ace_config_list = new PerlACE::ConfigList;
     $ace_config_list->load ($ACE_ROOT."/bin/ace_tests.lst");
@@ -70,18 +71,28 @@ if ($opt_C) {
 push (@file_list, "/bin/ciao_tests.lst");
 }
 
+if ($opt_r) {
+  $startdir = $opt_r;
+}
+else {
+  $startdir = "$ACE_ROOT";
+}
+
 if ($opt_l) {
 push (@file_list, "$opt_l");
 }
 
 if (scalar(@file_list) == 0) {
-push (@file_list, "/bin/ace_tests.lst");
-push (@file_list, "/bin/tao_orb_tests.lst") if -d "$ACE_ROOT/TAO";
-push (@file_list, "/bin/tao_other_tests.lst") if -d "$ACE_ROOT/TAO";
-push (@file_list, "/bin/ciao_tests.lst") if -d "$ACE_ROOT/TAO/CIAO";
+    push (@file_list, "/bin/ace_tests.lst");
+    if (-d $TAO_ROOT || -d "$ACE_ROOT/TAO") {
+        push (@file_list, "/bin/tao_orb_tests.lst");
+        push (@file_list, "/bin/tao_other_tests.lst");
+    }
+    if (-d $CIAO_ROOT || -d "$ACE_ROOT/TAO/CIAO") {
+        push (@file_list, "/bin/ciao_tests.lst");
+    }
 }
 
-$startdir = getcwd();
 foreach my $test_lst (@file_list) {
 
     my $config_list = new PerlACE::ConfigList;
@@ -89,7 +100,7 @@ foreach my $test_lst (@file_list) {
       $config_list->load ($ACE_ROOT.$test_lst);
     }
     elsif (-r "$startdir/$test_list") {
-      $config_list->load ("$stardir/$test_lst");
+      $config_list->load ("$startdir/$test_lst");
     }
     else {
       $config_list->load ($test_list);
@@ -101,6 +112,10 @@ foreach my $test_lst (@file_list) {
     foreach $test ($config_list->valid_entries ()) {
         my $directory = ".";
         my $program = ".";
+
+        ## Remove intermediate '.' directories to allow the
+        ## scoreboard matrix to read things correctly
+        $test =~ s!/./!/!g;
 
         if ($test =~ /(.*)\/([^\/]*)$/) {
             $directory = $1;
@@ -118,15 +133,23 @@ foreach my $test_lst (@file_list) {
             print "auto_run_tests: $test\n";
         }
 
-        $status = 0;
-        if (-d $ACE_ROOT."/$directory") {
-          $status = chdir ($ACE_ROOT."/$directory");
+        my($orig_dir) = $directory;
+        if ($directory =~ m:^TAO/(.*):) {
+          $directory = $1;
         }
-        elsif (-d $startdir."/$directory") {
-          $status = chdir ($startdir."/$directory");
+        if ($directory =~ m:^CIAO/(.*):) {
+          $directory = $1;
         }
-        else {
-          $status = chdir ($directory);
+
+        $status = undef;
+        foreach my $path ($ACE_ROOT."/$directory",
+                          $TAO_ROOT."/$directory",
+                          $CIAO_ROOT."/$directory",
+                          $startdir."/$directory",
+                          $startdir."/$orig_dir") {
+          if (-d $path && ($status = chdir ($path))) {
+            last;
+          }
         }
 
         if (!$status) {
@@ -159,14 +182,8 @@ foreach my $test_lst (@file_list) {
             $cmd = "$opt_s \"perl $program $inherited_options\"";
         }
         else {
-            if ($^O eq 'VMS') {
-              $cmd = "perl $program$inherited_options";
-            }
-            else {
-              $cmd = $program.$inherited_options;
-            }
+            $cmd = "perl $program$inherited_options";
         }
-
 
         my $result = 0;
 

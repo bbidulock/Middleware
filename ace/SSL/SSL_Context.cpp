@@ -342,7 +342,7 @@ ACE_SSL_Context::load_trusted_ca (const char* ca_file,
       // Note: The STACK_OF(X509_NAME) pointer is a copy of the pointer in
       // the CTX; any changes to it by way of these function calls will
       // change the CTX directly.
-      STACK_OF (X509_NAME) * cert_names;
+      STACK_OF (X509_NAME) * cert_names = 0;
       cert_names = ::SSL_CTX_get_client_CA_list (this->context_);
       bool error = false;
 
@@ -573,9 +573,9 @@ ACE_SSL_Context::report_error (unsigned long error_code)
 void
 ACE_SSL_Context::report_error (void)
 {
-  unsigned long error = ::ERR_get_error ();
-  ACE_SSL_Context::report_error (error);
-  ACE_OS::last_error (error);
+  unsigned long err = ::ERR_get_error ();
+  ACE_SSL_Context::report_error (err);
+  ACE_OS::last_error (err);
 }
 
 int
@@ -598,13 +598,13 @@ ACE_SSL_Context::dh_params (const char *file_name,
     DH * ret=0;
     BIO * bio = 0;
 
-    if ((bio = ::BIO_new_file (this->dh_params_.file_name (), "r")) == NULL)
+    if ((bio = ::BIO_new_file (this->dh_params_.file_name (), "r")) == 0)
       {
         this->dh_params_ = ACE_SSL_Data_File ();
         return -1;
       }
 
-    ret = PEM_read_bio_DHparams (bio, NULL, NULL, NULL);
+    ret = PEM_read_bio_DHparams (bio, 0, 0, 0);
     BIO_free (bio);
 
     if (ret == 0)

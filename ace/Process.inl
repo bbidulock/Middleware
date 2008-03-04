@@ -101,11 +101,11 @@ ACE_Process::exit_code (ACE_exitcode code)
 ACE_INLINE u_long
 ACE_Process_Options::creation_flags (void) const
 {
-#if defined (UNICODE) && defined (ACE_WIN32) && !defined (ACE_HAS_WINCE)
+#if defined (ACE_USES_WCHAR) && defined (ACE_WIN32) && !defined (ACE_HAS_WINCE)
   return creation_flags_ | CREATE_UNICODE_ENVIRONMENT;
 #else
   return creation_flags_;
-#endif /* UNICODE */
+#endif /* ACE_USES_WCHAR */
 }
 
 ACE_INLINE void
@@ -234,14 +234,14 @@ ACE_Process_Options::get_stderr (void) const
   return stderr_;
 }
 
-ACE_INLINE int
+ACE_INLINE bool
 ACE_Process_Options::inherit_environment (void) const
 {
   return inherit_environment_;
 }
 
 ACE_INLINE void
-ACE_Process_Options::inherit_environment (int nv)
+ACE_Process_Options::inherit_environment (bool nv)
 {
   inherit_environment_ = nv;
 }

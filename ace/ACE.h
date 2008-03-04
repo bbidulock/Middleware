@@ -28,26 +28,13 @@
 # pragma once
 #endif /* ACE_LACKS_PRAGMA_ONCE */
 
+#include "ace/OS_NS_math.h"
 #include "ace/Flag_Manip.h"
 #include "ace/Handle_Ops.h"
 #include "ace/Lib_Find.h"
 #include "ace/Init_ACE.h"
 #include "ace/Sock_Connect.h"
 #include "ace/Default_Constants.h"
-
-#if defined (CYGWIN32) || defined (ACE_HAS_RTEMS)
-// Include math.h. math.h defines a macro log2 that conflicts with ACE::log2()
-// which seems to only cause a problem on cygwin and rtems.  Insuring that math.h is
-// included first solves it since we define acelog2 as log2, then
-// undefines log2.
-# include "ace/os_include/os_math.h"
-#endif
-
-// When log2 is defined as macro redefine it as acelog2
-#if defined (log2)
-# define acelog2 log2
-# undef log2
-#endif /* log2 */
 
 #if defined (ACE_EXPORT_MACRO)
 #  undef ACE_EXPORT_MACRO
@@ -503,7 +490,7 @@ namespace ACE
    * needs to be fixed).
    */
   extern ACE_Export pid_t fork (
-    const ACE_TCHAR *program_name = ACE_LIB_TEXT ("<unknown>"),
+    const ACE_TCHAR *program_name = ACE_TEXT ("<unknown>"),
     int avoid_zombies = 0);
 
   /**
@@ -513,9 +500,9 @@ namespace ACE
    * closed.
    */
   extern ACE_Export int daemonize (
-    const ACE_TCHAR pathname[] = ACE_LIB_TEXT ("/"),
-    int close_all_handles = ACE_DEFAULT_CLOSE_ALL_HANDLES,
-    const ACE_TCHAR program_name[] = ACE_LIB_TEXT ("<unknown>"));
+    const ACE_TCHAR pathname[] = ACE_TEXT ("/"),
+    bool close_all_handles = ACE_DEFAULT_CLOSE_ALL_HANDLES,
+    const ACE_TCHAR program_name[] = ACE_TEXT ("<unknown>"));
 
   // = Miscellaneous functions.
   /// Rounds the request to a multiple of the page size.
@@ -832,10 +819,6 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #if defined (__ACE_INLINE__)
 #include "ace/ACE.inl"
 #endif /* __ACE_INLINE__ */
-
-#if defined (acelog2)
-# define log2 acelog2
-#endif /* acelog2 */
 
 #include /**/ "ace/post.h"
 

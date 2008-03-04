@@ -62,7 +62,7 @@ class ACE_NonBlocking_Connect_Handler : public ACE_Event_Handler
 {
 public:
 
-  // Constructor.
+  /// Constructor.
   ACE_NonBlocking_Connect_Handler (ACE_Connector_Base<SVC_HANDLER> &connector,
                                    SVC_HANDLER *,
                                    long timer_id);
@@ -84,14 +84,12 @@ public:
   /// Get SVC_HANDLER.
   SVC_HANDLER *svc_handler (void);
 
-  // = Get/set handle.
   /// Get handle.
   ACE_HANDLE handle (void);
 
   /// Set handle.
   void handle (ACE_HANDLE);
 
-  // = Set/get timer id.
   /// Get timer id.
   long timer_id (void);
 
@@ -110,11 +108,9 @@ public:
 
   /// This method is called if a connection times out before
   /// completing.
-  virtual int handle_timeout (const ACE_Time_Value &tv,
-                              const void *arg);
+  virtual int handle_timeout (const ACE_Time_Value &tv, const void *arg);
 
-  /// Should Reactor resume us if we have been suspended before the
-  /// upcall?
+  /// Should Reactor resume us if we have been suspended before the upcall?
   virtual int resume_handler (void);
 
   /// Dump the state of an object.
@@ -156,33 +152,27 @@ class ACE_Connector : public ACE_Connector_Base<SVC_HANDLER>, public ACE_Service
 public:
 
   // Useful STL-style traits.
-  typedef ACE_TYPENAME SVC_HANDLER::addr_type    addr_type;
+  typedef typename SVC_HANDLER::addr_type        addr_type;
   typedef ACE_PEER_CONNECTOR                     connector_type;
   typedef SVC_HANDLER                            handler_type;
-  typedef ACE_TYPENAME SVC_HANDLER::stream_type  stream_type;
-
-  // typedef ACE_TYPENAME ACE_PEER_CONNECTOR_ADDR PEER_ADDR;
-#if defined (ACE_HAS_TYPENAME_KEYWORD)
-  typedef ACE_PEER_CONNECTOR_ADDR ACE_PEER_ADDR_TYPEDEF;
-#endif /* ACE_HAS_TYPENAME_KEYWORD */
-
-  typedef ACE_TYPENAME _ACE_PEER_CONNECTOR::PEER_ADDR
-  ACE_TYPENAME_ACE_PEER_CONNECTOR_PEER_ADDR;
+  typedef typename SVC_HANDLER::stream_type      stream_type;
+  typedef typename ACE_PEER_CONNECTOR::PEER_ADDR peer_addr_type;
+  typedef ACE_PEER_CONNECTOR_ADDR                ACE_PEER_ADDR_TYPEDEF;
 
   /**
-   * Initialize a connector.  @a flags indicates how <SVC_HANDLER>'s
+   * Initialize a connector.  @a flags indicates how SVC_HANDLER's
    * should be initialized prior to being activated.  Right now, the
    * only flag that is processed is ACE_NONBLOCK, which enabled
-   * non-blocking I/O on the <SVC_HANDLER> when it is opened.
+   * non-blocking I/O on the SVC_HANDLER when it is opened.
    */
   ACE_Connector (ACE_Reactor *r = ACE_Reactor::instance (),
                  int flags = 0);
 
   /**
-   * Initialize a connector.  @a flags indicates how <SVC_HANDLER>'s
+   * Initialize a connector.  @a flags indicates how SVC_HANDLER's
    * should be initialized prior to being activated.  Right now, the
    * only flag that is processed is ACE_NONBLOCK, which enabled
-   * non-blocking I/O on the <SVC_HANDLER> when it is opened.
+   * non-blocking I/O on the SVC_HANDLER when it is opened.
    */
   virtual int open (ACE_Reactor *r = ACE_Reactor::instance (),
                     int flags = 0);
@@ -207,7 +197,7 @@ public:
                        const ACE_PEER_CONNECTOR_ADDR &remote_addr,
                        const ACE_Synch_Options &synch_options = ACE_Synch_Options::defaults,
                        const ACE_PEER_CONNECTOR_ADDR &local_addr
-                       = (ACE_TYPENAME_ACE_PEER_CONNECTOR_PEER_ADDR &) ACE_PEER_CONNECTOR_ADDR_ANY,
+                       = (peer_addr_type &) ACE_PEER_CONNECTOR_ADDR_ANY,
                        int reuse_addr = 0,
                        int flags = O_RDWR,
                        int perms = 0);
@@ -227,7 +217,7 @@ public:
                        const ACE_PEER_CONNECTOR_ADDR &remote_addr,
                        const ACE_Synch_Options &synch_options = ACE_Synch_Options::defaults,
                        const ACE_PEER_CONNECTOR_ADDR &local_addr
-                       = (ACE_TYPENAME_ACE_PEER_CONNECTOR_PEER_ADDR &) ACE_PEER_CONNECTOR_ADDR_ANY,
+                       = (peer_addr_type &) ACE_PEER_CONNECTOR_ADDR_ANY,
                        int reuse_addr = 0,
                        int flags = O_RDWR,
                        int perms = 0);
@@ -235,8 +225,8 @@ public:
   /**
    * Initiate connection of @a n @a svc_handlers to peers at
    * @a remote_addrs using @a synch_options.  Returns -1 if failure
-   * occurs and 0 otherwise.  If <failed_svc_handlers> is non-NULL, a
-   * 1 is placed in the corresponding index of <failed_svc_handler>
+   * occurs and 0 otherwise.  If @a failed_svc_handlers is non-NULL, a
+   * 1 is placed in the corresponding index of @a failed_svc_handlers
    * for each <svc_handlers[i]> that failed to connect, else a 0 is
    * placed in that index.
    */
@@ -287,7 +277,7 @@ protected:
 
   /**
    * Bridge method for creating a SVC_HANDLER.  The default is to
-   * create a new SVC_HANDLER only if <sh> == 0, else <sh> is
+   * create a new SVC_HANDLER only if @a sh == 0, else @a sh is
    * unchanged.  However, subclasses can override this policy to
    * perform SVC_HANDLER creation in any way that they like (such as
    * creating subclass instances of SVC_HANDLER, using a singleton,
@@ -297,8 +287,8 @@ protected:
   virtual int make_svc_handler (SVC_HANDLER *&sh);
 
   /**
-   * Bridge method for connecting the <svc_handler> to the
-   * <remote_addr>.  The default behavior delegates to the
+   * Bridge method for connecting the @a svc_handler to the
+   * @a remote_addr.  The default behavior delegates to the
    * <PEER_CONNECTOR::connect>.
    */
   virtual int connect_svc_handler (SVC_HANDLER *&svc_handler,
@@ -318,7 +308,7 @@ protected:
                                    int perms);
 
   /**
-   * Bridge method for activating a <svc_handler> with the appropriate
+   * Bridge method for activating a @a svc_handler with the appropriate
    * concurrency strategy.  The default behavior of this method is to
    * activate the SVC_HANDLER by calling its <open> method (which
    * allows the SVC_HANDLER to define its own concurrency strategy).
@@ -333,7 +323,7 @@ protected:
   int nonblocking_connect (SVC_HANDLER *,
                            const ACE_Synch_Options &);
 
-  /// Implementation the <connect> methods.
+  /// Implementation of the connect methods.
   virtual int connect_i (SVC_HANDLER *&svc_handler,
                          SVC_HANDLER **sh_copy,
                          const ACE_PEER_CONNECTOR_ADDR &remote_addr,
@@ -352,11 +342,11 @@ protected:
   /// by application developer to do anything meaningful.
   virtual int init (int argc, ACE_TCHAR *argv[]);
 
-  /// Calls <handle_close> to shutdown the Connector gracefully.
+  /// Calls handle_close() to shutdown the Connector gracefully.
   virtual int fini (void);
 
-  /// Default version returns address info in <buf>.
-  virtual int info (ACE_TCHAR **, size_t) const;
+  /// Default version returns address info in @a buf.
+  virtual int info (ACE_TCHAR **strp, size_t length) const;
 
   // = Service management hooks.
   /// Default version does no work and returns -1.  Must be overloaded
@@ -372,10 +362,10 @@ private:
   ACE_PEER_CONNECTOR connector_;
 
   /**
-   * Flags that indicate how <SVC_HANDLER>'s should be initialized
+   * Flags that indicate how SVC_HANDLER's should be initialized
    * prior to being activated.  Right now, the only flag that is
    * processed is ACE_NONBLOCK, which enabled non-blocking I/O on
-   * the <SVC_HANDLER> when it is opened.
+   * the SVC_HANDLER when it is opened.
    */
   int flags_;
 
@@ -431,7 +421,7 @@ public:
    * Initialize a connector.  @a flags indicates how <SVC_HANDLER>'s
    * should be initialized prior to being activated.  Right now, the
    * only flag that is processed is ACE_NONBLOCK, which enabled
-   * non-blocking I/O on the <SVC_HANDLER> when it is opened.
+   * non-blocking I/O on the SVC_HANDLER when it is opened.
    */
   ACE_Strategy_Connector (ACE_Reactor *r = ACE_Reactor::instance (),
                           ACE_Creation_Strategy<SVC_HANDLER> * = 0,
@@ -440,20 +430,20 @@ public:
                           int flags = 0);
 
   /**
-   * Initialize a connector.  @a flags indicates how <SVC_HANDLER>'s
+   * Initialize a connector.  @a flags indicates how SVC_HANDLER's
    * should be initialized prior to being activated.  Right now, the
    * only flag that is processed is ACE_NONBLOCK, which enabled
-   * non-blocking I/O on the <SVC_HANDLER> when it is opened.
+   * non-blocking I/O on the SVC_HANDLER when it is opened.
    * Default strategies would be created and used.
    */
   virtual int open (ACE_Reactor *r,
                     int flags);
 
   /**
-   * Initialize a connector.  @a flags indicates how <SVC_HANDLER>'s
+   * Initialize a connector.  @a flags indicates how SVC_HANDLER's
    * should be initialized prior to being activated.  Right now, the
    * only flag that is processed is ACE_NONBLOCK, which enabled
-   * non-blocking I/O on the <SVC_HANDLER> when it is opened.
+   * non-blocking I/O on the SVC_HANDLER when it is opened.
    */
   virtual int open (ACE_Reactor *r = ACE_Reactor::instance (),
                     ACE_Creation_Strategy<SVC_HANDLER> * = 0,
@@ -474,17 +464,17 @@ public:
 
 protected:
   // = The following three methods define the <Connector>'s strategies
-  // for creating, connecting, and activating <SVC_HANDLER>'s,
+  // for creating, connecting, and activating SVC_HANDLER's,
   // respectively.
 
   /**
-   * Bridge method for creating a <SVC_HANDLER>.  The strategy for
-   * creating a <SVC_HANDLER> are configured into the Connector via
+   * Bridge method for creating a SVC_HANDLER.  The strategy for
+   * creating a SVC_HANDLER are configured into the Connector via
    * it's <creation_strategy_>.  The default is to create a new
-   * <SVC_HANDLER> only if <sh> == 0, else <sh> is unchanged.
+   * SVC_HANDLER only if @a sh == 0, else @a sh is unchanged.
    * However, subclasses can override this policy to perform
-   * <SVC_HANDLER> creation in any way that they like (such as
-   * creating subclass instances of <SVC_HANDLER>, using a singleton,
+   * SVC_HANDLER creation in any way that they like (such as
+   * creating subclass instances of SVC_HANDLER, using a singleton,
    * dynamically linking the handler, etc.).  Returns -1 if failure,
    * else 0.
    */
@@ -492,7 +482,7 @@ protected:
 
   /**
    * Bridge method for connecting the new connection into the
-   * <SVC_HANDLER>.  The default behavior delegates to the
+   * SVC_HANDLER.  The default behavior delegates to the
    * <PEER_CONNECTOR::connect> in the <Connect_Strategy>.
    */
   virtual int connect_svc_handler (SVC_HANDLER *&sh,
@@ -505,13 +495,13 @@ protected:
 
   /**
    * Bridge method for connecting the new connection into the
-   * <SVC_HANDLER>.  The default behavior delegates to the
+   * SVC_HANDLER.  The default behavior delegates to the
    * <PEER_CONNECTOR::connect> in the <Connect_Strategy>.
-   * <sh_copy> is used to obtain a copy of the <sh> pointer, but that
+   * @a sh_copy is used to obtain a copy of the @a sh pointer, but that
    * can be kept in the stack; the motivation is a bit too long to
-   * include here, but basically we want to modify <sh> safely, using
+   * include here, but basically we want to modify @a sh safely, using
    * the internal locks in the Connect_Strategy, while saving a TSS
-   * copy in <sh_copy>, usually located in the stack.
+   * copy in @a sh_copy, usually located in the stack.
    */
   virtual int connect_svc_handler (SVC_HANDLER *&sh,
                                    SVC_HANDLER *&sh_copy,
@@ -523,39 +513,39 @@ protected:
                                    int perms);
 
   /**
-   * Bridge method for activating a <SVC_HANDLER> with the appropriate
+   * Bridge method for activating a SVC_HANDLER with the appropriate
    * concurrency strategy.  The default behavior of this method is to
-   * activate the <SVC_HANDLER> by calling its <open> method (which
-   * allows the <SVC_HANDLER> to define its own concurrency strategy).
+   * activate the SVC_HANDLER by calling its <open> method (which
+   * allows the SVC_HANDLER to define its own concurrency strategy).
    * However, subclasses can override this strategy to do more
    * sophisticated concurrency activations (such as creating the
-   * <SVC_HANDLER> as an "active object" via multi-threading or
+   * SVC_HANDLER as an "active object" via multi-threading or
    * multi-processing).
    */
   virtual int activate_svc_handler (SVC_HANDLER *svc_handler);
 
   // = Strategy objects.
 
-  /// Creation strategy for an <Connector>.
+  /// Creation strategy for an Connector.
   CREATION_STRATEGY *creation_strategy_;
 
-  /// 1 if <Connector> created the creation strategy and thus should
-  /// delete it, else 0.
-  int delete_creation_strategy_;
+  /// true if Connector created the creation strategy and thus should
+  /// delete it, else false.
+  bool delete_creation_strategy_;
 
-  /// Connect strategy for a <Connector>.
+  /// Connect strategy for a Connector.
   CONNECT_STRATEGY *connect_strategy_;
 
-  /// 1 if <Connector> created the connect strategy and thus should
-  /// delete it, else 0.
-  int delete_connect_strategy_;
+  /// true if Connector created the connect strategy and thus should
+  /// delete it, else false.
+  bool delete_connect_strategy_;
 
   /// Concurrency strategy for an <Connector>.
   CONCURRENCY_STRATEGY *concurrency_strategy_;
 
-  /// 1 if <Connector> created the concurrency strategy and thus should
-  /// delete it, else 0.
-  int delete_concurrency_strategy_;
+  /// true if Connector created the concurrency strategy and thus should
+  /// delete it, else false.
+  bool delete_concurrency_strategy_;
 };
 
 ACE_END_VERSIONED_NAMESPACE_DECL

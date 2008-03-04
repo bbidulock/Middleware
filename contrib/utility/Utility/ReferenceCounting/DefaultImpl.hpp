@@ -28,35 +28,36 @@ namespace Utility
     {
     public:
       class InconsistentState_ {};
+
       typedef
       ExH::Compound<InconsistentState_, Exception>
       InconsistentState;
 
     public:
-      DefaultImpl () throw (SystemException);
+      DefaultImpl ();
 
       virtual
       ~DefaultImpl () throw ();
 
     public:
       virtual void
-      add_ref () const throw (Exception, SystemException);
+      add_ref () const;
 
       virtual void
       remove_ref () const throw ();
 
       virtual count_t
-      refcount_value () const throw (Exception, SystemException);
+      refcount_value () const;
 
     protected:
       virtual void
-      add_ref_i () const throw (Exception, SystemException);
+      add_ref_i () const;
 
       virtual bool
-      remove_ref_i () const throw (Exception, SystemException);
+      remove_ref_i () const;
 
       virtual count_t
-      refcount_value_i () const throw (Exception, SystemException);
+      refcount_value_i () const;
 
       typename SynchPolicy::Mutex&
       lock_i () const throw ();

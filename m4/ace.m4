@@ -266,6 +266,21 @@ AC_DEFUN([ACE_CONFIGURATION_OPTIONS],
    AC_DEFINE([ACE_HAS_POSITION_INDEPENDENT_POINTERS])
   ])
 
+ AC_ARG_ENABLE([posix-sem-timeout-emulation],
+  AS_HELP_STRING(--enable-posix-sem-timeout-emulation,enable POSIX semaphore timeout emulation [[[no]]]),
+  [
+   case "${enableval}" in
+    yes)
+      AC_DEFINE([ACE_DISABLE_POSIX_SEM_TIMEOUT_EMULATION])
+      ;;
+    no)
+      ;;
+    *)
+      AC_MSG_ERROR([bad value ${enableval} for --enable-posix-sem-timeout-emulation])
+      ;;
+   esac
+  ],)
+
  AC_ARG_ENABLE([probe],
   AS_HELP_STRING(--enable-probe,enable ACE_Timeprobes [[[no]]]),
   [
@@ -490,6 +505,9 @@ AC_DEFUN([ACE_CONFIGURATION_OPTIONS],
  # placeholder for WxWindows/wxWidgets support
  AM_CONDITIONAL([BUILD_WXWINDOWS], false)
 
+ ACE_PATH_ZLIB
+ ACE_PATH_ZZIP
+
  AC_ARG_ENABLE([gperf],
   AS_HELP_STRING(--enable-gperf,compile the gperf program [[[yes]]]),
   [
@@ -515,7 +533,7 @@ AC_DEFUN([ACE_CONFIGURATION_OPTIONS],
      AC_MSG_WARN([gperf program already exists])
      AC_MSG_WARN([existing gperf may be overwritten during installation])
     ],[])
- fi 
+ fi
  AM_CONDITIONAL([COMPILE_GPERF], [test X$ace_user_enable_gperf = Xyes])
 
  ACE_ENABLE_QOS
@@ -858,38 +876,6 @@ dnl    fi
   ],
   [
    ace_user_enable_repo=no
-  ])
-
- AC_ARG_ENABLE([rtti],
-  AS_HELP_STRING(--enable-rtti,enable run-time type identification [[[yes]]]),
-  [
-   case "${enableval}" in
-    yes)
-      if test "$GXX" = no; then
-        case "$host" in
-          *solaris*)
-               ace_user_enable_rtti=yes
-               ;;
-          *aix*)
-               ace_user_enable_rtti=yes
-               ;;
-          *)
-               ;;
-        esac
-      else
-        AC_MSG_WARN([We do not know if rtti needs enabling for this compiler.])
-      fi
-      ;;
-    no)
-      ace_user_enable_rtti=no
-      ;;
-    *)
-      AC_MSG_ERROR([bad value ${enableval} for --enable-rtti])
-      ;;
-   esac
-  ],
-  [
-   ace_user_enable_rtti=yes
   ])
 
  AC_ARG_ENABLE([stdcpplib],
@@ -1311,6 +1297,115 @@ if test "$no_x" != yes; then
 fi
 
 AM_CONDITIONAL([BUILD_X11], [test X$no_x != Xyes])
+])
+
+
+# ACE_PATH_ZLIB
+#---------------------------------------------------------------------------
+# Find zlib Libraries, flags, etc.
+AC_DEFUN([ACE_PATH_ZLIB],
+[
+ACE_ZLIB_CPPFLAGS=""
+ACE_ZLIB_LDFLAGS=""
+
+dnl TODO: default to false, at least until we add a check to see if
+dnl the zlib library is usable.
+AC_ARG_WITH([zlib],
+  AS_HELP_STRING([--with-zlib@<:@=DIR@:>@],
+		 [root directory of zlib installation]),
+  [
+  ace_with_zlib="${withval}"
+  if test "${ace_with_zlib}" != yes; then
+       ace_zlib_include="${ace_with_zlib}/include"
+       ace_zlib_libdir="${ace_with_zlib}/lib"
+  fi
+  ],[ace_with_zlib=no])
+
+dnl TODO: let's wait and see before adding options to specify header
+dnl and library location separately.
+dnl
+dnl AC_ARG_WITH([zlib_include],
+dnl   AS_HELP_STRING([--with-zlib-include=DIR],
+dnl 		 [specify exact include dir for zlib headers]),
+dnl   [ace_zlib_include="$withval"])
+dnl 
+dnl AC_ARG_WITH([zlib_libdir],
+dnl   AS_HELP_STRING([--with-zlib-libdir=DIR],
+dnl 		 [specify exact include dir for zlib libraries]),
+dnl   [ace_zlib_libdir="$withval"])
+
+if test "${ace_zlib_include}"; then
+  ACE_ZLIB_CPPFLAGS="-I$ace_zlib_include"
+fi
+
+if test "${ace_zlib_libdir}"; then
+  ACE_ZLIB_LDFLAGS="-L$ace_zlib_libdir"
+fi
+
+ACE_ZLIB_CPPFLAGS="${ACE_ZLIB_CPPFLAGS} -DZLIB"
+
+if test "${ace_with_zlib}" != no; then
+  ACE_ZLIB_LIBS="-lz"
+  AC_SUBST(ACE_ZLIB_CPPFLAGS)
+  AC_SUBST(ACE_ZLIB_LDFLAGS)
+  AC_SUBST(ACE_ZLIB_LIBS)
+fi
+AM_CONDITIONAL([BUILD_ZLIB], test "${ace_with_zlib}" != no)
+])
+
+
+# ACE_PATH_ZZIP
+#---------------------------------------------------------------------------
+# Find zziplib Libraries, flags, etc.
+AC_DEFUN([ACE_PATH_ZZIP],
+[AC_REQUIRE([ACE_PATH_ZLIB])
+
+ACE_ZZIP_CPPFLAGS=""
+ACE_ZZIP_LDFLAGS=""
+
+dnl TODO: default to false, at least until we add a check to see if
+dnl the zlib library is usable.
+AC_ARG_WITH([zzip],
+  AS_HELP_STRING([--with-zzip@<:@=DIR@:>@],
+		 [root directory of zzip installation]),
+  [
+  ace_with_zzip="${withval}"
+  if test "${ace_with_zzip}" != yes; then
+       ace_zzip_include="${ace_with_zzip}/include"
+       ace_zzip_libdir="${ace_with_zzip}/lib"
+  fi
+  ],[ace_with_zzip=no])
+
+dnl TODO: let's wait and see before adding options to specify header
+dnl and library location separately.
+dnl
+dnl AC_ARG_WITH([zzip_include],
+dnl   AS_HELP_STRING([--with-zzip-include=DIR],
+dnl 		 [specify exact include dir for zzip headers]),
+dnl   [ace_zzip_include="$withval"])
+dnl 
+dnl AC_ARG_WITH([zzip_libdir],
+dnl   AS_HELP_STRING([--with-zzip-libdir=DIR],
+dnl 		 [specify exact include dir for zzip libraries]),
+dnl   [ace_zzip_libdir="$withval"])
+
+if test "${ace_zzip_include}"; then
+  ACE_ZZIP_CPPFLAGS="-I$ace_zzip_include"
+fi
+
+if test "${ace_zzip_libdir}"; then
+  ACE_ZZIP_LDFLAGS="-L$ace_zzip_libdir"
+fi
+
+ACE_ZZIP_CPPFLAGS="${ACE_ZZIP_CPPFLAGS} -DUSE_ZZIP"
+
+if test "${ace_with_zzip}" != no; then
+  ACE_ZZIP_LIBS="-lzzip"
+  AC_SUBST(ACE_ZZIP_CPPFLAGS)
+  AC_SUBST(ACE_ZZIP_LDFLAGS)
+  AC_SUBST(ACE_ZZIP_LIBS)
+fi
+AM_CONDITIONAL([BUILD_ZZIP], test "${ace_with_zzip}" != no)
 ])
 
 

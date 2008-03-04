@@ -119,11 +119,9 @@ INCDIR_NAME = <%relwd%>
 <%endif%>
 <%foreach(custom_types)%>
 
-#
 # <%custom_type%> rules
-#
 
-<%if(cutom_type->libpath)%>
+<%if(custom_type->libpath)%>
 PATH := $(PATH);<%custom_type->libpath%>
 
 <%endif%>
@@ -170,9 +168,7 @@ realclean: customclean_<%custom_type%>_<%forcount(custom_type->input_files)%>
 <%endfor%>
 <%endfor%>
 
-#
 # Override defaults in outputdir.bor
-#
 <%if(INSTALL_THIS_TARGET)%>
 INSTALL_THIS_TARGET = 1
 

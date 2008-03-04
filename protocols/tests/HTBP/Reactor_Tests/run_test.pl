@@ -11,16 +11,35 @@ use Sys::Hostname;
 
 $status = 0;
 
-$SV = new PerlACE::Process ("server");
-
 $host = hostname();
+$port = PerlACE::random_port();
+$synchbase = "ready";
+$synchfile = PerlACE::LocalFile ("$synchbase");
+
+if (PerlACE::is_vxworks_test()) {
+    $host =  $ENV{'ACE_RUN_VX_TGTHOST'};
+    $SV = new PerlACE::ProcessVX ("server", "-p $port -o $synchbase");
+}
+else {
+    $SV = new PerlACE::Process ("server", "-p $port -o $synchfile");
+}
+
+unlink $synchfile;
+$SV->Spawn ();
+
+if (PerlACE::waitforfile_timed ($synchfile,
+                                $PerlACE::wait_interval_for_process_creation) == -1) {
+    print STDERR "ERROR: cannot find file <$synchfile>\n";
+    $SV->Kill (); $SV->TimedWait (1);
+    exit 1;
+}
+
+unlink $synchfile;
 
 # The client code should later be modified to get the hostname
 # using ACE_OS::hostname so the same script can be run on all
 # hosts without havng to reset the host where it has to be run.
-$CL = new PerlACE::Process ("client", $host);
-
-$SV->Spawn ();
+$CL = new PerlACE::Process ("client", "-h $host -p $port");
 
 $client = $CL->SpawnWaitKill (300);
 

@@ -46,7 +46,7 @@ ACE_Log_Msg_NT_Event_Log::open (const ACE_TCHAR *logger_key)
   // program name.
   ACE_TCHAR reg_key [MAXPATHLEN];
   ACE_OS::strcpy (reg_key,
-                  ACE_LIB_TEXT ("SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\"));
+                  ACE_TEXT ("SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\"));
   size_t reg_key_length = ACE_OS::strlen(reg_key);
   ACE_OS::strncat (reg_key,
                    event_source_name,
@@ -61,13 +61,13 @@ ACE_Log_Msg_NT_Event_Log::open (const ACE_TCHAR *logger_key)
                          &hkey);
   DWORD flags = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE;
   ACE_TEXT_RegSetValueEx (hkey,
-                          ACE_LIB_TEXT ("TypesSupported"),
+                          ACE_TEXT ("TypesSupported"),
                           0,
                           REG_DWORD,
                           (LPBYTE) &flags,
                           sizeof (DWORD));
   ACE_TEXT_RegSetValueEx (hkey,
-                          ACE_LIB_TEXT ("EventMessageFile"),
+                          ACE_TEXT ("EventMessageFile"),
                           0,
                           REG_SZ,
                           (LPBYTE) msg_file,
@@ -99,17 +99,19 @@ ACE_Log_Msg_NT_Event_Log::close (void)
     return -1;
 }
 
-int
+ssize_t
 ACE_Log_Msg_NT_Event_Log::log (ACE_Log_Record &log_record)
 {
   // Make a copy of the log text and replace any newlines with
-  // CR-LF. Newline characters on their own do not appear correctly
-  // in the event viewer. We allow for a doubling in the size of
-  // the msg data for the worst case of all newlines.
+  // CR-LF. Newline characters on their own do not appear correctly in
+  // the event viewer. We allow for a doubling in the size of the msg
+  // data for the worst case of all newlines.
   const ACE_TCHAR* src_msg_data = log_record.msg_data ();
   ACE_TCHAR msg_data [ACE_Log_Record::MAXLOGMSGLEN * 2];
 
-  for (long i = 0, j = 0; i < log_record.length (); ++i)
+  for (size_t i = 0, j = 0;
+       i < log_record.msg_data_len ();
+       ++i)
     {
       if (src_msg_data[i] == '\n')
         {

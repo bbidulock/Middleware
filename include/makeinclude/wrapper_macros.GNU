@@ -45,8 +45,6 @@
 #  quantify         Quantify all executables.  quantify must be in user's PATH!
 #  repo             Use GNU template repository (g++ with repo patches and
 #                   egcs only).
-#  rtti             Enable run-time type identification.  On some platforms,
-#                   it is enabled by default, so this is ignored.
 #  shared_libs      Build shared libraries. Ignored if static_libs_only is set.
 #  static_libs      Build static libraries. Ignored if shared_libs_only is set.
 #  shared_libs_only Only build shared libraries.  Ignored if no SHLIBs are
@@ -54,9 +52,15 @@
 #  static_libs_only Only build static libraries.
 #  static_link      Link only static libs to executables, e.g., uses "-static"
 #                   flag with the GNU ld linker.
+#  symlinks         Make symbolic links (on appropriate platforms) in the lib
+#                   directory be either "absolute" or "relative".
 #  templates	    Type of template instantiation to perform. Can be one of
 #                   automatic, used. Defaults to automatic.
 #  threads          Build with thread support.
+#  trio             Indicate build with trio; adds PLATFORM_TRIO_CPPFLAGS
+#                   to CPPFLAGS, PLATFORM_TRIO_LDFLAGS to LDFLAGS, and
+#                   PLATFORM_TRIO_LIBS to LIBS. For more information on
+#                   trio, see http://sourceforge.net/projects/ctrio/
 #  xt               Build with Xt (X11 Toolkit) support.
 #  fl               Build with FlTk (Fast Light Toolkit) support.
 #  tk               Build with Tk (Tcl/Tk) support.
@@ -87,6 +91,9 @@
 #  wfmo             Build with wfmo support (Win32 only)
 #  winregistry      Build with windows registry support (Win32 only)
 #  winnt            Build WinNT-specific projects (Win32 only)
+#  link_groups      This indicates that statically linked executable library
+#                   names will be surrounded by -Wl,--start-group and
+#                   -Wl,--end-group for the GNU compiler only.
 #
 #  Usually, users do not need to be concerned with make targets.
 #  Just enter "make" on the command line to build.  A few notable
@@ -286,15 +293,16 @@ ifeq ($(threads),0)
 endif # threads
 
 ####
-#### Defaults are exceptions on (1), fast off (0), rtti on (1), threads on (1)
+#### Defaults are exceptions on (1), fast off (0), threads on (1)
 #### and versioned_so on (1).
 ####
 exceptions ?= 1
 fast ?= 0
-rtti ?= 1
 versioned_so ?= 1
 use_dep_libs ?= 1
 threads ?= 1
+symlinks ?= relative
+link_groups ?= 0
 
 SOVERSION ?=
 SONAME ?=
@@ -372,8 +380,6 @@ VAR             =
 # Let users override the default VDIR directories
 VDIR          ?= .obj/
 VSHDIR        ?= .shobj/
-
-ACELIB ?= -lACE
 
 # NOTE: VLDLIBS is defined below, in case it is overridden for static-
 #       or shared-only builds.
@@ -458,6 +464,18 @@ ifeq ($(threads),0)
   override threads =
 endif # threads
 
+trio ?=
+ifeq ($(trio),0)
+  override trio =
+endif # trio
+
+ifdef trio
+  CPPFLAGS += -DACE_HAS_TRIO $(PLATFORM_TRIO_CPPFLAGS)
+  LDFLAGS += $(PLATFORM_TRIO_LDFLAGS)
+  LIBS += -ltrio $(PLATFORM_TRIO_LIBS)
+  ACE_MAKE_OPTIONS += trio
+endif # trio
+
 # ace_for_tao subsetting is disabled by default.
 ace_for_tao ?=
 ifeq ($(ace_for_tao),0)
@@ -532,6 +550,19 @@ ifneq ($(gtk_reactor),)
   ACE_MAKE_OPTIONS += gtk_reactor
 endif # gtk_reactor
 
+ifeq ($(fox_reactor),0)
+  override fox_reactor =
+endif # fox_reactor
+
+ifneq ($(fox_reactor),)
+  override ace_with_x11=1
+  override ace_with_gl=1
+  CPPFLAGS += -DACE_HAS_FOX $(PLATFORM_FOX_CPPFLAGS)
+  LIBS += $(PLATFORM_FOX_LIBS)
+  LDFLAGS += $(PLATFORM_FOX_LDFLAGS)
+  ACE_MAKE_OPTIONS += fox_reactor
+endif # fox_reactor
+
 QTDIR ?=
 ifneq ($(QTDIR),)
   MOC = ${QTDIR}/bin/moc
@@ -541,7 +572,7 @@ endif
 
 rapi ?=
 ifeq ($(rapi),0)
-     override rapi =
+   override rapi =
 endif #rapi
 
 ifneq ($(rapi),)
@@ -558,9 +589,9 @@ endif #rapi
 
 # if any sctp implementation is present then add
 ifneq ($(sctp),)
- CPPFLAGS += -DACE_HAS_SCTP $(PLATFORM_SCTP_CPPFLAGS)
- LDFLAGS  += $(PLATFORM_SCTP_LDFLAGS)
- LIBS     += $(PLATFORM_SCTP_LIBS)
+  CPPFLAGS += -DACE_HAS_SCTP $(PLATFORM_SCTP_CPPFLAGS)
+  LDFLAGS  += $(PLATFORM_SCTP_LDFLAGS)
+  LIBS     += $(PLATFORM_SCTP_LIBS)
   ACE_MAKE_OPTIONS += sctp
 endif
 
@@ -573,20 +604,26 @@ ifneq ($(gl),)
   ACE_MAKE_OPTIONS += gl
 endif # gl
 
-ssl ?=
+ssl ?= 0
 ifeq ($(ssl),0)
   override ssl =
 else
-  ifneq ($(SSL_ROOT),)
-    # Don't do a thing..
-  else
-    CPPFLAGS += $(PLATFORM_SSL_CPPFLAGS)
-    LDFLAGS  += $(PLATFORM_SSL_LDFLAGS)
-    LIBS     += $(PLATFORM_SSL_LIBS)
-    ACE_MAKE_OPTIONS += ssl
+  ifneq ($(SSL_ROOT), /usr)
+    ifneq ($(SSL_ROOT),)
+      PLATFORM_SSL_CPPFLAGS += -I$(SSL_ROOT)/include
+      PLATFORM_SSL_LDFLAGS  += -L$(SSL_ROOT)/lib
+    endif
   endif
+  PLATFORM_SSL_LIBS ?= -lssl -lcrypto
+  ACE_MAKE_OPTIONS  += ssl
 endif
+
+## These are related to MPC.  When 'requires' is used in a project
+## it controls whether or not the project is generated.  There is also
+## a second level of control in platform macros and thus requires
+## some features to be set here as well.
 ec_typed_events ?= 1
+zlib ?= 1
 
 ifeq ($(exceptions),0)
     #### Disable the default exception handling of g++ >= 2.8.0.
@@ -683,7 +720,7 @@ else # ! shared_libs
   endif # static_libs
 endif # shared_libs
 
-VLDLIBS = $(LDLIBS) $(ACELIB) $(LIBS)
+VLDLIBS = $(LDLIBS) $(LIBS)
 
 probe ?=
 ifeq ($(probe),0)
@@ -759,6 +796,7 @@ pipes ?= 0
 # platform_macros.GNU file.
 ifeq ($(pipes),1)
    CFLAGS += -pipe
+   CCFLAGS += -pipe
 endif # pipes
 
 # RMCast is turned on by default

@@ -1,6 +1,9 @@
 #include "ace/Name_Request_Reply.h"
+#include "ace/Basic_Types.h"
+#include "ace/CDR_Base.h"
 #include "ace/Log_Msg.h"
 #include "ace/Time_Value.h"
+#include "ace/Truncate.h"
 #include "ace/OS_NS_string.h"
 #include "ace/os_include/arpa/os_inet.h"
 
@@ -185,8 +188,8 @@ ACE_Time_Value
 ACE_Name_Request::timeout (void) const
 {
   ACE_TRACE ("ACE_Name_Request::timeout");
-  return ACE_Time_Value (this->transfer_.sec_timeout_,
-                         this->transfer_.usec_timeout_);
+  time_t sec = ACE_Utils::truncate_cast<time_t> (this->transfer_.sec_timeout_);
+  return ACE_Time_Value (sec, this->transfer_.usec_timeout_);
 }
 
 void
@@ -269,17 +272,20 @@ ACE_Name_Request::encode (void *&buf)
 
   for (size_t i = 0; i < nv_data_len; i++)
     this->transfer_.data_[i] =
-      htons (this->transfer_.data_[i]);
+      ACE_HTONS (this->transfer_.data_[i]);
 
   buf = (void *) &this->transfer_;
-  this->transfer_.block_forever_ = htonl (this->transfer_.block_forever_);
-  this->transfer_.usec_timeout_  = htonl (this->transfer_.usec_timeout_);
-  this->transfer_.sec_timeout_ = htonl (this->transfer_.sec_timeout_);
-  this->transfer_.length_ = htonl (this->transfer_.length_);
-  this->transfer_.msg_type_ = htonl (this->transfer_.msg_type_);
-  this->transfer_.name_len_ = htonl (this->transfer_.name_len_);
-  this->transfer_.value_len_ = htonl (this->transfer_.value_len_);
-  this->transfer_.type_len_ = htonl (this->transfer_.type_len_);
+  this->transfer_.block_forever_ = ACE_HTONL (this->transfer_.block_forever_);
+  this->transfer_.usec_timeout_  = ACE_HTONL (this->transfer_.usec_timeout_);
+#if defined (ACE_LITTLE_ENDIAN)
+  ACE_UINT64 secs = this->transfer_.sec_timeout_;
+  ACE_CDR::swap_8 ((const char *)&secs, (char *)&this->transfer_.sec_timeout_);
+#endif
+  this->transfer_.length_ = ACE_HTONL (this->transfer_.length_);
+  this->transfer_.msg_type_ = ACE_HTONL (this->transfer_.msg_type_);
+  this->transfer_.name_len_ = ACE_HTONL (this->transfer_.name_len_);
+  this->transfer_.value_len_ = ACE_HTONL (this->transfer_.value_len_);
+  this->transfer_.type_len_ = ACE_HTONL (this->transfer_.type_len_);
 
   return len;
 }
@@ -292,14 +298,17 @@ ACE_Name_Request::decode (void)
 {
   ACE_TRACE ("ACE_Name_Request::decode");
   // Decode the fixed-sized portion first.
-  this->transfer_.block_forever_ = ntohl (this->transfer_.block_forever_);
-  this->transfer_.usec_timeout_  = ntohl (this->transfer_.usec_timeout_);
-  this->transfer_.sec_timeout_ = ntohl (this->transfer_.sec_timeout_);
-  this->transfer_.length_ = ntohl (this->transfer_.length_);
-  this->transfer_.msg_type_ = ntohl (this->transfer_.msg_type_);
-  this->transfer_.name_len_ = ntohl (this->transfer_.name_len_);
-  this->transfer_.value_len_ = ntohl (this->transfer_.value_len_);
-  this->transfer_.type_len_ = ntohl (this->transfer_.type_len_);
+  this->transfer_.block_forever_ = ACE_NTOHL (this->transfer_.block_forever_);
+  this->transfer_.usec_timeout_  = ACE_NTOHL (this->transfer_.usec_timeout_);
+#if defined (ACE_LITTLE_ENDIAN)
+  ACE_UINT64 secs = this->transfer_.sec_timeout_;
+  ACE_CDR::swap_8 ((const char *)&secs, (char *)&this->transfer_.sec_timeout_);
+#endif
+  this->transfer_.length_ = ACE_NTOHL (this->transfer_.length_);
+  this->transfer_.msg_type_ = ACE_NTOHL (this->transfer_.msg_type_);
+  this->transfer_.name_len_ = ACE_NTOHL (this->transfer_.name_len_);
+  this->transfer_.value_len_ = ACE_NTOHL (this->transfer_.value_len_);
+  this->transfer_.type_len_ = ACE_NTOHL (this->transfer_.type_len_);
 
   size_t nv_data_len =
     (this->transfer_.name_len_ + this->transfer_.value_len_)
@@ -307,7 +316,7 @@ ACE_Name_Request::decode (void)
 
   for (size_t i = 0; i < nv_data_len; i++)
     this->transfer_.data_[i] =
-      ntohs (this->transfer_.data_[i]);
+      ACE_NTOHS (this->transfer_.data_[i]);
 
   this->name_ = this->transfer_.data_;
   this->value_ = &this->name_[this->transfer_.name_len_ / sizeof (ACE_WCHAR_T)];
@@ -326,82 +335,82 @@ ACE_Name_Request::dump (void) const
 #if defined (ACE_HAS_DUMP)
   ACE_TRACE ("ACE_Name_Request::dump");
   ACE_DEBUG ((LM_DEBUG,
-              ACE_LIB_TEXT ("*******\nlength = %d\n"),
+              ACE_TEXT ("*******\nlength = %d\n"),
               this->length ()));
   ACE_DEBUG ((LM_DEBUG,
-              ACE_LIB_TEXT ("message-type = ")));
+              ACE_TEXT ("message-type = ")));
 
   switch (this->msg_type ())
     {
     case ACE_Name_Request::BIND:
       ACE_DEBUG ((LM_DEBUG,
-                  ACE_LIB_TEXT ("BIND\n")));
+                  ACE_TEXT ("BIND\n")));
       break;
     case ACE_Name_Request::REBIND:
       ACE_DEBUG ((LM_DEBUG,
-                  ACE_LIB_TEXT ("REBIND\n")));
+                  ACE_TEXT ("REBIND\n")));
       break;
     case ACE_Name_Request::RESOLVE:
       ACE_DEBUG ((LM_DEBUG,
-                  ACE_LIB_TEXT ("RESOLVE\n")));
+                  ACE_TEXT ("RESOLVE\n")));
       break;
     case ACE_Name_Request::UNBIND:
       ACE_DEBUG ((LM_DEBUG,
-                  ACE_LIB_TEXT ("UNBIND\n")));
+                  ACE_TEXT ("UNBIND\n")));
       break;
     case ACE_Name_Request::LIST_NAMES:
       ACE_DEBUG ((LM_DEBUG,
-                  ACE_LIB_TEXT ("LIST_NAMES\n")));
+                  ACE_TEXT ("LIST_NAMES\n")));
       break;
     case ACE_Name_Request::LIST_VALUES:
       ACE_DEBUG ((LM_DEBUG,
-                  ACE_LIB_TEXT ("LIST_VALUES\n")));
+                  ACE_TEXT ("LIST_VALUES\n")));
       break;
     case ACE_Name_Request::LIST_TYPES:
       ACE_DEBUG ((LM_DEBUG,
-                  ACE_LIB_TEXT ("LIST_TYPES\n")));
+                  ACE_TEXT ("LIST_TYPES\n")));
       break;
     case ACE_Name_Request::LIST_NAME_ENTRIES:
       ACE_DEBUG ((LM_DEBUG,
-                  ACE_LIB_TEXT ("LIST_NAME_ENTRIES\n")));
+                  ACE_TEXT ("LIST_NAME_ENTRIES\n")));
       break;
     case ACE_Name_Request::LIST_VALUE_ENTRIES:
       ACE_DEBUG ((LM_DEBUG,
-                  ACE_LIB_TEXT ("LIST_VALUE_ENTRIES\n")));
+                  ACE_TEXT ("LIST_VALUE_ENTRIES\n")));
       break;
     case ACE_Name_Request::LIST_TYPE_ENTRIES:
       ACE_DEBUG ((LM_DEBUG,
-                  ACE_LIB_TEXT ("LIST_TYPE_ENTRIES\n")));
+                  ACE_TEXT ("LIST_TYPE_ENTRIES\n")));
       break;
     default:
       ACE_DEBUG ((LM_DEBUG,
-                  ACE_LIB_TEXT ("<unknown type> = %d\n"),
+                  ACE_TEXT ("<unknown type> = %d\n"),
                   this->msg_type ()));
       break;
     }
 
   if (this->block_forever ())
     ACE_DEBUG ((LM_DEBUG,
-                ACE_LIB_TEXT ("blocking forever\n")));
+                ACE_TEXT ("blocking forever\n")));
   else
     {
 #if !defined (ACE_NLOGGING)
       ACE_Time_Value tv = this->timeout ();
 #endif /* ! ACE_NLOGGING */
       ACE_DEBUG ((LM_DEBUG,
-                  ACE_LIB_TEXT ("waiting for %d secs and %d usecs\n"),
+                  ACE_TEXT ("waiting for %d secs and %d usecs\n"),
                   tv.sec (),
                   tv.usec ()));
     }
   ACE_DEBUG ((LM_DEBUG,
-              ACE_LIB_TEXT ("*******\nname_len = %d\n"),
+              ACE_TEXT ("*******\nname_len = %d\n"),
               this->name_len ()));
   ACE_DEBUG ((LM_DEBUG,
-              ACE_LIB_TEXT ("*******\nvalue_len = %d\n"),
+              ACE_TEXT ("*******\nvalue_len = %d\n"),
               this->value_len ()));
 
   ACE_DEBUG ((LM_DEBUG,
-              ACE_LIB_TEXT ("+++++++\n")));
+              ACE_TEXT ("+++++++\n")));
 #endif /* ACE_HAS_DUMP */
 }
 
@@ -513,9 +522,9 @@ ACE_Name_Reply::encode (void *&buf)
   ACE_TRACE ("ACE_Name_Reply::encode");
   int len = this->length (); // Get length *before* marshaling.
 
-  this->transfer_.length_ = htonl (this->transfer_.length_);
-  this->transfer_.type_ = htonl (this->transfer_.type_);
-  this->transfer_.errno_ = htonl (this->transfer_.errno_);
+  this->transfer_.length_ = ACE_HTONL (this->transfer_.length_);
+  this->transfer_.type_ = ACE_HTONL (this->transfer_.type_);
+  this->transfer_.errno_ = ACE_HTONL (this->transfer_.errno_);
   buf = (void *) &this->transfer_;
   return len;
 }
@@ -527,9 +536,9 @@ int
 ACE_Name_Reply::decode (void)
 {
   ACE_TRACE ("ACE_Name_Reply::decode");
-  this->transfer_.length_ = ntohl (this->transfer_.length_);
-  this->transfer_.type_ = ntohl (this->transfer_.type_);
-  this->transfer_.errno_ = ntohl (this->transfer_.errno_);
+  this->transfer_.length_ = ACE_NTOHL (this->transfer_.length_);
+  this->transfer_.type_ = ACE_NTOHL (this->transfer_.type_);
+  this->transfer_.errno_ = ACE_NTOHL (this->transfer_.errno_);
   return 0;
 }
 
@@ -541,24 +550,24 @@ ACE_Name_Reply::dump (void) const
 #if defined (ACE_HAS_DUMP)
   ACE_TRACE ("ACE_Name_Reply::dump");
   ACE_DEBUG ((LM_DEBUG,
-              ACE_LIB_TEXT ("*******\nlength = %d\nerrnum = %d"),
+              ACE_TEXT ("*******\nlength = %d\nerrnum = %d"),
               this->length (),
               this->errnum ()));
   ACE_DEBUG ((LM_DEBUG,
-              ACE_LIB_TEXT ("type = ")));
+              ACE_TEXT ("type = ")));
   switch (this->msg_type ())
     {
     case 0:
       ACE_DEBUG ((LM_DEBUG,
-                  ACE_LIB_TEXT ("SUCCESS\n")));
+                  ACE_TEXT ("SUCCESS\n")));
       break;
     case -1:
       ACE_DEBUG ((LM_DEBUG,
-                  ACE_LIB_TEXT ("FAILURE\n")));
+                  ACE_TEXT ("FAILURE\n")));
       break;
     default:
       ACE_DEBUG ((LM_DEBUG,
-                  ACE_LIB_TEXT ("<unknown type> = %d\n"),
+                  ACE_TEXT ("<unknown type> = %d\n"),
                   this->msg_type ()));
       break;
     }

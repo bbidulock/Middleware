@@ -79,8 +79,10 @@ Synchronisers::start_synchronization (void)
 
   if (debug)
     {
+      //FUZZ: disable check_for_lack_ACE_OS
       ACE_DEBUG ((LM_DEBUG,
                   "(%P|%t) Ready to wait () on event.. \n"));
+      //FUZZ: enable check_for_lack_ACE_OS
     }
 
   // Wait blisfully till we are woken up
@@ -577,7 +579,7 @@ ACE_TMAIN (int argc, ACE_TCHAR *argv[])
 #else /*ACE_HAS_THREADS*/
 
 int
-main (int, char *[])
+ACE_TMAIN(int, ACE_TCHAR *[])
 {
   ACE_DEBUG ((LM_DEBUG,
               "(%P|%t) Not supported in single threaded builds \n"));

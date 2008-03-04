@@ -6,7 +6,9 @@
 #	Common targets
 #----------------------------------------------------------------------------
 
-all:              all.nested all.local
+.PHONY: __prebuild__
+
+all:              __prebuild__ all.nested all.local
 debug:	          debug.nested debug.local
 profile:          profile.nested profile.local
 install:          install.nested install.local
@@ -19,3 +21,4 @@ clobber:          clobber.nested clobber.local
 depend:	          depend.nested depend.local
 rcs_info:         rcs_info.nested rcs_info.local
 idl_stubs:        idl_stubs.nested idl_stubs.local
+svnignore:	  svnignore.nested svnignore.local

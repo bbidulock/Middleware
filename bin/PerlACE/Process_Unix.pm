@@ -40,6 +40,7 @@ sub new
 
     $self->{RUNNING} = 0;
     $self->{IGNOREEXESUBDIR} = 0;
+    $self->{IGNOREHOSTROOT} = 0;
     $self->{PROCESS} = undef;
     $self->{EXECUTABLE} = shift;
     $self->{ARGUMENTS} = shift;
@@ -85,6 +86,12 @@ sub Executable
     }
 
     my $executable = $self->{EXECUTABLE};
+
+    if ($self->{IGNOREHOSTROOT} == 0) {
+      if (PerlACE::is_vxworks_test()) {
+          $executable = PerlACE::VX_HostFile ($executable);
+      }
+    }
 
     if ($self->{IGNOREEXESUBDIR}) {
         return $executable;
@@ -186,6 +193,17 @@ sub IgnoreExeSubDir
     return $self->{IGNOREEXESUBDIR};
 }
 
+sub IgnoreHostRoot
+{
+    my $self = shift;
+
+    if (@_ != 0) {
+        $self->{IGNOREHOSTROOT} = shift;
+    }
+
+    return $self->{IGNOREHOSTROOT};
+}
+
 sub RemoteInformation
 {
   my($self)   = shift;
@@ -284,11 +302,15 @@ sub Spawn ()
         }
         elsif (defined $self->{PROCESS}) {
             #child here
+            my @cmdlist = $self->parse_command_line($cmdline);
             if (defined $ENV{'ACE_TEST_VERBOSE'}) {
-              print "$cmdline\n";
+                print "INFO: $cmdline\n";
+                foreach my $arg (@cmdlist) {
+                    print "INFO: argument - '$arg'\n";
+                }
             }
-            exec $cmdline;
-            die "ERROR: exec failed for <" . $cmdline . ">";
+            exec @cmdlist;
+            die "ERROR: exec failed for <" . $cmdline . ">\n";
         }
         elsif ($! =~ /No more process/) {
             #EAGAIN, supposedly recoverable fork error
@@ -308,6 +330,10 @@ sub WaitKill ($)
 {
     my $self = shift;
     my $timeout = shift;
+
+    if ($self->{RUNNING} == 0) {
+        return 0;
+    }
 
     my $status = $self->TimedWait ($timeout);
 
@@ -396,7 +422,42 @@ sub check_return_value ($)
 
     print STDERR "signal $rc : ", $signame[$rc], "\n";
 
-    return 0;
+    return 255;
+}
+
+# for internal use
+sub parse_command_line ($)
+{
+    my $self = shift;
+    my $cmdline = shift;
+    $cmdline =~ s/^\s+//;
+
+    my @cmdlist = ();
+    while ($cmdline ne '') {
+        if ($cmdline =~ /^\"([^\"\\]*(?:\\.[^\"\\]*)*)\"(.*)/) {
+            my $unquoted = $1;
+            $cmdline = $2;
+            $unquoted =~ s/\\\"/\"/g;
+            push @cmdlist, $unquoted;
+        }
+        elsif ($cmdline =~ /^\'([^\'\\]*(?:\\.[^\'\\]*)*)\'(.*)/) {
+            my $unquoted = $1;
+            $cmdline = $2;
+            $unquoted =~ s/\\\'/\'/g;
+            push @cmdlist, $unquoted;
+        }
+        elsif ($cmdline =~ /^([^\s]*)(.*)/) {
+            push @cmdlist, $1;
+            $cmdline = $2;
+        }
+        else {
+            # this must be some kind of error
+            push @cmdlist, $cmdline;
+        }
+        $cmdline =~ s/^\s+//;
+    }
+
+    return @cmdlist;
 }
 
 sub Kill ($)
@@ -406,9 +467,17 @@ sub Kill ($)
 
     if ($self->{RUNNING} && !defined $ENV{'ACE_TEST_WINDOW'}) {
         kill ('KILL', $self->{PROCESS});
-        waitpid ($self->{PROCESS}, 0);
-        if (! $ignore_return_value) {
-            $self->check_return_value ($?);
+        for(my $i = 0; $i < 10; $i++) {
+          my $pid = waitpid ($self->{PROCESS}, WNOHANG);
+          if ($pid > 0) {
+            if (! $ignore_return_value) {
+              $self->check_return_value ($?);
+            }
+            last;
+          }
+          else {
+            select(undef, undef, undef, .5);
+          }
         }
     }
 
@@ -421,8 +490,11 @@ sub Wait ($)
 {
     my $self = shift;
     my $timeout = shift;
+    if (!defined $self->{PROCESS}) {
+      return 0;
+    }
     if (!defined $timeout || $timeout < 0) {
-    waitpid ($self->{PROCESS}, 0);
+      return waitpid ($self->{PROCESS}, 0);
     } else {
       return TimedWait($self, $timeout);
     }
@@ -433,6 +505,10 @@ sub TimedWait ($)
 {
     my $self = shift;
     my $timeout = shift;
+
+    if (!defined $self->{PROCESS}) {
+        return 0;
+    }
 
     $timeout *= $PerlACE::Process::WAIT_DELAY_FACTOR;
 

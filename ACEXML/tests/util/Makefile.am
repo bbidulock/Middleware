@@ -16,6 +16,7 @@ ACE_ROOT = $(top_srcdir)
 
 if BUILD_ACEXML
 if !BUILD_ACE_FOR_TAO
+
 noinst_PROGRAMS = test
 
 test_CPPFLAGS = \
@@ -23,13 +24,39 @@ test_CPPFLAGS = \
   -I$(ACE_BUILDDIR) \
   -I$(ACE_ROOT)/ACEXML/common
 
+if BUILD_ZLIB
+if BUILD_ZZIP
+test_CPPFLAGS += \
+  $(ACE_ZZIP_CPPFLAGS) \
+  $(ACE_ZLIB_CPPFLAGS)
+endif BUILD_ZZIP
+endif BUILD_ZLIB
+
 test_SOURCES = \
   test.cpp
+
+test_LDFLAGS =
+
+if BUILD_ZLIB
+if BUILD_ZZIP
+test_LDFLAGS += \
+  $(ACE_ZZIP_LDFLAGS) \
+  $(ACE_ZLIB_LDFLAGS)
+endif BUILD_ZZIP
+endif BUILD_ZLIB
 
 test_LDADD = \
   $(ACE_BUILDDIR)/ACEXML/parser/parser/libACEXML_Parser.la \
   $(ACE_BUILDDIR)/ACEXML/common/libACEXML.la \
   $(ACE_BUILDDIR)/ace/libACE.la
+
+if BUILD_ZLIB
+if BUILD_ZZIP
+test_LDADD += \
+  $(ACE_ZZIP_LIBS) \
+  $(ACE_ZLIB_LIBS)
+endif BUILD_ZZIP
+endif BUILD_ZLIB
 
 endif !BUILD_ACE_FOR_TAO
 endif BUILD_ACEXML

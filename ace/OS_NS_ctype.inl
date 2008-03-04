@@ -13,7 +13,13 @@ ACE_INLINE int
 ACE_OS::ace_isalnum (ACE_TCHAR c)
 {
 #if defined (ACE_USES_WCHAR)
+# if defined (_MSC_VER) && (_MSC_VER >= 1300)
+  // For MSVC 7.x, we need to prevent "illegal" character getting into
+  // isalnum, otherwise, it will crash the program.
+  return c > 0 && c < 256 && iswalnum (c);
+# else
   return iswalnum (c);
+# endif /* _MSC_VER && _MSC_VER >= 1300 */
 #else /* ACE_USES_WCHAR */
   return isalnum ((unsigned char) c);
 #endif /* ACE_USES_WCHAR */
@@ -125,13 +131,20 @@ ACE_OS::ace_tolower (int c)
   return tolower (c);
 }
 
-#if defined (ACE_HAS_WCHAR) && !defined (ACE_LACKS_TOWLOWER)
+#if defined (ACE_HAS_WCHAR)
 ACE_INLINE wint_t
 ACE_OS::ace_towlower (wint_t c)
 {
+#if defined (ACE_LACKS_TOWLOWER)
+  if (c < 256)
+    return tolower (static_cast<int> (c));
+  else
+    return c;
+#else
   return towlower (c);
+#endif /* ACE_LACKS_TOWLOWER */
 }
-#endif /* ACE_HAS_WCHAR && !ACE_LACKS_TOWLOWER */
+#endif /* ACE_HAS_WCHAR */
 
 ACE_INLINE int
 ACE_OS::ace_toupper (int c)

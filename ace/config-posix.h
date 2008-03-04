@@ -22,16 +22,18 @@
 # endif /* ACE_HAS_AIO_CALLS */
 #endif /* _POSIX_ASYNCHRONOUS_IO */
 
-#if defined(_POSIX_SEMAPHORES) && (_POSIX_SEMAPHORES-0 != -1 )
-# if !defined(ACE_HAS_POSIX_SEM)
-#  define ACE_HAS_POSIX_SEM
+#if !defined (ACE_MT_SAFE) || (ACE_MT_SAFE != 0)
+# if defined(_POSIX_SEMAPHORES) && (_POSIX_SEMAPHORES-0 != -1 )
+#  if !defined(ACE_HAS_POSIX_SEM)
+#   define ACE_HAS_POSIX_SEM
+#  endif /* ACE_HAS_POSIX_SEM */
+#  if defined(ACE_HAS_POSIX_SEM)
+#   if !defined (ACE_HAS_POSIX_SEM_TIMEOUT) && defined (_POSIX_TIMEOUTS)
+#     define ACE_HAS_POSIX_SEM_TIMEOUT
+#   endif /* ACE_HAS_POSIX_SEM_TIMEOUT && _POSIX_TIMEOUTS */
+#  endif /* ACE_HAS_POSIX_SEM */
 # endif /* ACE_HAS_POSIX_SEM */
-# if defined(ACE_HAS_POSIX_SEM)
-#  if !defined (ACE_HAS_POSIX_SEM_TIMEOUT) && defined (_POSIX_TIMEOUTS)
-#    define ACE_HAS_POSIX_SEM_TIMEOUT
-#  endif /* ACE_HAS_POSIX_SEM_TIMEOUT && _POSIX_TIMEOUTS */
-# endif /* ACE_HAS_POSIX_SEM */
-#endif /* ACE_HAS_POSIX_SEM */
+#endif /* !ACE_MT_SAFE */
 
 #if defined(_POSIX_SHARED_MEMORY_OBJECTS) && (_POSIX_SHARED_MEMORY_OBJECTS-0 != -1 )
 # if !defined(ACE_HAS_SHM_OPEN)
@@ -49,17 +51,14 @@
 #   undef ACE_HAS_THREADS
 # else
 #   if defined(_POSIX_THREADS) && (_POSIX_THREADS-0 != -1 )
-#   if !defined(ACE_HAS_THREADS)
-#     define ACE_HAS_THREADS
-#   endif /* ACE_HAS_THREADS */
+#     if !defined(ACE_HAS_THREADS)
+#       define ACE_HAS_THREADS
+#     endif /* ACE_HAS_THREADS */
 
-#   if !defined(ACE_HAS_PTHREADS)
-#     define ACE_HAS_PTHREADS
-#   endif /* ACE_HAS_PTHREADS */
+#     if !defined(ACE_HAS_PTHREADS)
+#       define ACE_HAS_PTHREADS
+#     endif /* ACE_HAS_PTHREADS */
 
-#   if !defined(ACE_HAS_PTHREADS_STD)
-#     define ACE_HAS_PTHREADS_STD
-#   endif /* ACE_HAS_PTHREADS_STD */
 #   endif /* _POSIX_THREADS */
 # endif /* ACE_HAS_THREADS */
 #endif /* !ACE_MT_SAFE */

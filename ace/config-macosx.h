@@ -14,9 +14,7 @@
 # include "ace/config-g++-common.h"
 #endif /* __GNUG__ */
 
-#undef ACE_HAS_EXPLICIT_TEMPLATE_INSTANTIATION
-
-#define ACE_SIZE_T_FORMAT_SPECIFIER ACE_LIB_TEXT ("%lu")
+#define ACE_SIZE_T_FORMAT_SPECIFIER ACE_TEXT ("%lu")
 
 #if defined (ACE_HAS_PENTIUM)
 # undef ACE_HAS_PENTIUM
@@ -30,8 +28,6 @@
 #define ACE_HAS_POSIX_SEM
 
 //#define ACE_HAS_SVR4_TLI
-
-#define ACE_HAS_MEMCHR
 
 #define ACE_LACKS_STROPTS_H
 #define ACE_LACKS_WCHAR_H
@@ -149,7 +145,6 @@
 # define ACE_HAS_THREADS
 // And they're even POSIX pthreads
 # define ACE_HAS_PTHREADS
-# define ACE_HAS_PTHREADS_STD
 # define ACE_HAS_THREAD_SPECIFIC_STORAGE
 # define ACE_LACKS_THREAD_PROCESS_SCOPING
 #endif  /* ACE_MT_SAFE == 1 */
@@ -182,8 +177,8 @@
 // as of Dec 2002, if you use fink you will need to uncomment the next line
 //#define ACE_NEEDS_DL_UNDERSCORE
 #define ACE_HAS_SVR4_DYNAMIC_LINKING
-#define ACE_LD_SEARCH_PATH ACE_LIB_TEXT ("DYLD_LIBRARY_PATH")
-#define ACE_DLL_SUFFIX ACE_LIB_TEXT (".dylib")
+#define ACE_LD_SEARCH_PATH ACE_TEXT ("DYLD_LIBRARY_PATH")
+#define ACE_DLL_SUFFIX ACE_TEXT (".dylib")
 #define ACE_LACKS_DLCLOSE
 
 // gperf seems to need this

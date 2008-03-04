@@ -14,6 +14,7 @@
 // ============================================================================
 
 #include "test_config.h"
+#include "ace/OS_NS_math.h"
 #include "ace/OS_NS_string.h"
 #include "ace/OS_NS_strings.h"
 #include "ace/OS_NS_stdlib.h"
@@ -25,6 +26,12 @@
 #include "ace/OS_NS_errno.h"
 
 ACE_RCSID(tests, OS_Test, "$Id$")
+
+#undef THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
+#define THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL(X) \
+  ((X)                                                          \
+   ? static_cast<void>(0)                                       \
+   : ACE_VERSIONED_NAMESPACE_NAME::__ace_assert(__FILE__, __LINE__, ACE_TEXT_CHAR_TO_TCHAR (#X)))
 
 // Test ACE_OS::access() to be sure a file's existence is correctly noted.
 int
@@ -92,7 +99,7 @@ rename_test (void)
     }
   ACE_OS::fclose (f);
 
-#if defined (ACE_WIN32) && defined (ACE_HAS_WINNT4) && ACE_HAS_WINNT4 == 0
+#if defined (ACE_WIN32) && defined (ACE_LACKS_WIN32_MOVEFILEEX)
   // Can't rename if new_file exists already.
   ACE_OS::unlink (new_file);
 #endif
@@ -174,11 +181,11 @@ string_emulation_test (void)
 
     const char *memchr1 = "abcdefghijklmnopqrstuvwxyz";
 
-    ACE_ASSERT (ACE_OS::memchr (static_cast<const void *> (NULL),
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::memchr (static_cast<const void *> (0),
                                 'a',
-                                0) == NULL);
-    ACE_ASSERT (ACE_OS::memchr (memchr1, 'a', sizeof (memchr1)) != NULL);
-    ACE_ASSERT (ACE_OS::memchr (memchr1, '1', sizeof (memchr1)) == NULL);
+                                0) == 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::memchr (memchr1, 'a', sizeof (memchr1)) != 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::memchr (memchr1, '1', sizeof (memchr1)) == 0);
 
     // ========================================================================
     // Test strchr
@@ -186,9 +193,9 @@ string_emulation_test (void)
 
     const char *strchr1 = "abcdefghijkabcdefghijk";
 
-    ACE_ASSERT (*ACE_OS::strchr (strchr1, 'h') == 'h');
-    ACE_ASSERT (ACE_OS::strchr (strchr1, 'h') == strchr1 + 7);
-    ACE_ASSERT (ACE_OS::strchr (strchr1, '1') == NULL);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (*ACE_OS::strchr (strchr1, 'h') == 'h');
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strchr (strchr1, 'h') == strchr1 + 7);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strchr (strchr1, '1') == 0);
 
     // ========================================================================
     // Test strrchr
@@ -196,9 +203,9 @@ string_emulation_test (void)
 
     const char *strrchr1 = "abcdefghijkabcdefghijk";
 
-    ACE_ASSERT (*ACE_OS::strrchr (strrchr1, 'h') == 'h');
-    ACE_ASSERT (ACE_OS::strrchr (strrchr1, 'h') == strrchr1 + 18);
-    ACE_ASSERT (ACE_OS::strrchr (strrchr1, '1') == NULL);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (*ACE_OS::strrchr (strrchr1, 'h') == 'h');
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strrchr (strrchr1, 'h') == strrchr1 + 18);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strrchr (strrchr1, '1') == 0);
 
     // ========================================================================
     // Test strcspn
@@ -206,8 +213,8 @@ string_emulation_test (void)
 
     const char *strcspn1 = "abcdefghijkabcdefghijk";
 
-    ACE_ASSERT (ACE_OS::strcspn (strcspn1, "d") == 3);
-    ACE_ASSERT (ACE_OS::strcspn (strcspn1, "abcdefghijk") == 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcspn (strcspn1, "d") == 3);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcspn (strcspn1, "abcdefghijk") == 0);
 
     // ========================================================================
     // Test strcasecmp
@@ -219,11 +226,11 @@ string_emulation_test (void)
     const char *strcasecmp4 = "STRINGF";   // Different case
     const char *strcasecmp5 = "stringe";   // The last letter is lower
 
-    ACE_ASSERT (ACE_OS::strcasecmp (strcasecmp1, strcasecmp1) == 0);
-    ACE_ASSERT (ACE_OS::strcasecmp (strcasecmp1, strcasecmp2) < 0);
-    ACE_ASSERT (ACE_OS::strcasecmp (strcasecmp1, strcasecmp3) < 0);
-    ACE_ASSERT (ACE_OS::strcasecmp (strcasecmp1, strcasecmp4) == 0);
-    ACE_ASSERT (ACE_OS::strcasecmp (strcasecmp1, strcasecmp5) > 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcasecmp (strcasecmp1, strcasecmp1) == 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcasecmp (strcasecmp1, strcasecmp2) < 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcasecmp (strcasecmp1, strcasecmp3) < 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcasecmp (strcasecmp1, strcasecmp4) == 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcasecmp (strcasecmp1, strcasecmp5) > 0);
 
     // ========================================================================
     // Test strtok_r
@@ -232,23 +239,23 @@ string_emulation_test (void)
     char strtok_r1[] = "A string of tokens";
     char *strtok_r2;
 
-    ACE_ASSERT (ACE_OS::strcmp (ACE_OS::strtok_r (strtok_r1,
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (ACE_OS::strtok_r (strtok_r1,
                                                   " ",
                                                   &strtok_r2),
                                 "A") == 0);
-    ACE_ASSERT (ACE_OS::strcmp (ACE_OS::strtok_r (0,
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (ACE_OS::strtok_r (0,
                                                   " ",
                                                   &strtok_r2),
                                 "string") == 0);
-    ACE_ASSERT (ACE_OS::strcmp (ACE_OS::strtok_r (0,
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (ACE_OS::strtok_r (0,
                                                   " ",
                                                   &strtok_r2),
                                 "of") == 0);
-    ACE_ASSERT (ACE_OS::strcmp (ACE_OS::strtok_r (0,
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (ACE_OS::strtok_r (0,
                                                   " ",
                                                   &strtok_r2),
                                 "tokens") == 0);
-    ACE_ASSERT (ACE_OS::strtok_r (0, " ", &strtok_r2) == 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strtok_r (0, " ", &strtok_r2) == 0);
 
     // ========================================================================
     // Test itoa
@@ -256,55 +263,59 @@ string_emulation_test (void)
 
     char itoa1[33];
 
-    ACE_ASSERT (ACE_OS::strcmp (ACE_OS::itoa (42, itoa1, 2),
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (ACE_OS::itoa (42, itoa1, 2),
                                 "101010") == 0);
 
-    ACE_ASSERT (ACE_OS::strcmp (ACE_OS::itoa (42, itoa1, 3),
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (ACE_OS::itoa (42, itoa1, 3),
                                 "1120") == 0);
 
-    ACE_ASSERT (ACE_OS::strcmp (ACE_OS::itoa (42, itoa1, 16),
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (ACE_OS::itoa (42, itoa1, 16),
                                 "2a") == 0);
 
-    ACE_ASSERT (ACE_OS::strcmp (ACE_OS::itoa (8, itoa1, 10),
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (ACE_OS::itoa (8, itoa1, 10),
                                 "8") == 0);
 
-    ACE_ASSERT (ACE_OS::strcmp (ACE_OS::itoa (-8, itoa1, 10),
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (ACE_OS::itoa (-8, itoa1, 10),
                                 "-8") == 0);
 
-    ACE_ASSERT (ACE_OS::strcmp (ACE_OS::itoa (20345, itoa1, 10),
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (ACE_OS::itoa (20345, itoa1, 10),
                                 "20345") == 0);
 
-    ACE_ASSERT (ACE_OS::strcmp (ACE_OS::itoa (-20345, itoa1, 10),
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (ACE_OS::itoa (-20345, itoa1, 10),
                                 "-20345") == 0);
 
-    ACE_ASSERT (ACE_OS::strcmp (ACE_OS::itoa (4566733, itoa1, 10),
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (ACE_OS::itoa (4566733, itoa1, 10),
                                 "4566733") == 0);
 
-    ACE_ASSERT (ACE_OS::strcmp (ACE_OS::itoa (-4566733, itoa1, 10),
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (ACE_OS::itoa (-4566733, itoa1, 10),
                                 "-4566733") == 0);
   }
 
 #if defined (ACE_HAS_WCHAR)
   {
+    //FUZZ: disable check_for_lack_ACE_OS
     // ========================================================================
     // Test itoa (wchar_t version)
     ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("Testing itoa (wchar_t version)\n")));
+    //FUZZ: enable check_for_lack_ACE_OS
 
     wchar_t itow1[33];
 
-    ACE_ASSERT (ACE_OS::strcmp (ACE_OS::itoa (42, itow1, 2),
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (ACE_OS::itoa (42, itow1, 2),
                                 ACE_TEXT_WIDE ("101010")) == 0);
 
-    ACE_ASSERT (ACE_OS::strcmp (ACE_OS::itoa (42, itow1, 3),
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (ACE_OS::itoa (42, itow1, 3),
                                 ACE_TEXT_WIDE ("1120")) == 0);
 
-    ACE_ASSERT (ACE_OS::strcmp (ACE_OS::itoa (42, itow1, 16),
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (ACE_OS::itoa (42, itow1, 16),
                                 ACE_TEXT_WIDE ("2a")) == 0);
 
 
+    //FUZZ: disable check_for_lack_ACE_OS
     // ========================================================================
     // Test strcmp (wchar_t version)
     ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("Testing strcmp (wchar_t version)\n")));
+    //FUZZ: enable check_for_lack_ACE_OS
 
     const wchar_t *strcmp1 = ACE_TEXT_WIDE ("stringf");
     const wchar_t *strcmp2 = ACE_TEXT_WIDE ("stringfe");
@@ -312,124 +323,144 @@ string_emulation_test (void)
     const wchar_t *strcmp4 = ACE_TEXT_WIDE ("STRINGF");
     const wchar_t *strcmp5 = ACE_TEXT_WIDE ("stringe");
 
-    ACE_ASSERT (ACE_OS::strcmp (strcmp1, strcmp1) == 0);
-    ACE_ASSERT (ACE_OS::strcmp (strcmp1, strcmp2) < 0);
-    ACE_ASSERT (ACE_OS::strcmp (strcmp1, strcmp3) < 0);
-    ACE_ASSERT (ACE_OS::strcmp (strcmp1, strcmp4) != 0);
-    ACE_ASSERT (ACE_OS::strcmp (strcmp1, strcmp5) > 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (strcmp1, strcmp1) == 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (strcmp1, strcmp2) < 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (strcmp1, strcmp3) < 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (strcmp1, strcmp4) != 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (strcmp1, strcmp5) > 0);
 
+    //FUZZ: disable check_for_lack_ACE_OS
     // ========================================================================
     // Test strcpy (wchar_t version)
     ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("Testing strcpy (wchar_t version)\n")));
+    //FUZZ: enable check_for_lack_ACE_OS
 
     const wchar_t *strcpy1 = ACE_TEXT_WIDE ("abcdefghijklmnopqrstuvwxyz");
     wchar_t strcpy2[27];
 
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strcmp (ACE_OS::strcpy (strcpy2, strcpy1),
                        strcpy1) == 0);
-    ACE_ASSERT (ACE_OS::strcmp (strcpy2, strcpy1) == 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (strcpy2, strcpy1) == 0);
 
+    //FUZZ: disable check_for_lack_ACE_OS
     // ========================================================================
     // Test strcat (wchar_t version)
     ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("Testing strcat (wchar_t version)\n")));
+    //FUZZ: enable check_for_lack_ACE_OS
 
     const wchar_t *strcat1 = ACE_TEXT_WIDE ("abcdefghijklmnopqrstuvwxyz");
     wchar_t strcat2[27] = ACE_TEXT_WIDE ("abcdefghijkl");
     const wchar_t *strcat3 = ACE_TEXT_WIDE ("mnopqrstuvwxyz");
 
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strcmp (ACE_OS::strcat (strcat2, strcat3),
                        strcat1) == 0);
-    ACE_ASSERT (ACE_OS::strcmp (strcat2, strcat1) == 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (strcat2, strcat1) == 0);
 
+    //FUZZ: disable check_for_lack_ACE_OS
     // ========================================================================
     // Test strncat (wchar_t version)
     ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("Testing strncat (wchar_t version)\n")));
+    //FUZZ: enable check_for_lack_ACE_OS
 
     const wchar_t *strncat1 = ACE_TEXT_WIDE ("abcdefghijklmnopqrstuvwxyz");
     wchar_t strncat2[27] = ACE_TEXT_WIDE ("abcdefghijkl");
     const wchar_t *strncat3 = ACE_TEXT_WIDE ("mnopqrstuvwxyzabc");
 
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strcmp (ACE_OS::strncat (strncat2, strncat3, 14),
                        strncat1) == 0);
-    ACE_ASSERT (ACE_OS::strcmp (strncat2, strncat1) == 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (strncat2, strncat1) == 0);
 
+    //FUZZ: disable check_for_lack_ACE_OS
     // ========================================================================
     // Test strspn (wchar_t version)
     ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("Testing strspn (wchar_t version)\n")));
+    //FUZZ: enable check_for_lack_ACE_OS
 
     const wchar_t *strspn1 = ACE_TEXT_WIDE ("abcdefghijkabcdefghijk");
 
-    ACE_ASSERT (ACE_OS::strspn (strspn1,
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strspn (strspn1,
                                 ACE_TEXT_WIDE ("abcdf")) == 4);
-    ACE_ASSERT (ACE_OS::strspn (strspn1,
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strspn (strspn1,
                                 ACE_TEXT_WIDE ("mno")) == 0);
 
+    //FUZZ: disable check_for_lack_ACE_OS
     // ========================================================================
     // Test strchr (wchar_t version)
     ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("Testing strchr (wchar_t version)\n")));
+    //FUZZ: enable check_for_lack_ACE_OS
 
     const wchar_t *strchr1 = ACE_TEXT_WIDE ("abcdefghijkabcdefghijk");
 
-    ACE_ASSERT (*ACE_OS::strchr (strchr1, ACE_TEXT_WIDE ('h'))
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (*ACE_OS::strchr (strchr1, ACE_TEXT_WIDE ('h'))
                 == ACE_TEXT_WIDE ('h'));
-    ACE_ASSERT (ACE_OS::strchr (strchr1, ACE_TEXT_WIDE ('h'))
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strchr (strchr1, ACE_TEXT_WIDE ('h'))
                 == strchr1 + 7);
-    ACE_ASSERT (ACE_OS::strchr (strchr1, ACE_TEXT_WIDE ('1')) == NULL);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strchr (strchr1, ACE_TEXT_WIDE ('1')) == 0);
 
+    //FUZZ: disable check_for_lack_ACE_OS
     // ========================================================================
     // Test strstr (wchar_t version)
     ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("Testing strstr (wchar_t version)\n")));
+    //FUZZ: enable check_for_lack_ACE_OS
 
     const wchar_t *strstr1 = ACE_TEXT_WIDE ("abcdefghijkabcdefghijk");
 
-    ACE_ASSERT (ACE_OS::strncmp (
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strncmp (
                   ACE_OS::strstr (strstr1, ACE_TEXT_WIDE ("def")),
                   ACE_TEXT_WIDE ("def"),
                   3)
                   == 0);
-    ACE_ASSERT (ACE_OS::strstr (strstr1,
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strstr (strstr1,
                                 ACE_TEXT_WIDE ("mno")) == 0);
 
+    //FUZZ: disable check_for_lack_ACE_OS
     // ========================================================================
     // Test strlen (wchar_t version)
     ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("Testing strlen (wchar_t version)\n")));
+    //FUZZ: enable check_for_lack_ACE_OS
 
     const wchar_t *strlen1 = ACE_TEXT_WIDE ("");
     const wchar_t *strlen2 = ACE_TEXT_WIDE ("12345");
 
-    ACE_ASSERT (ACE_OS::strlen (strlen1) == 0);
-    ACE_ASSERT (ACE_OS::strlen (strlen2) == 5);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strlen (strlen1) == 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strlen (strlen2) == 5);
 
+    //FUZZ: disable check_for_lack_ACE_OS
     // ========================================================================
     // Test strpbrk (wchar_t version)
     ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("Testing strpbrk (wchar_t version)\n")));
+    //FUZZ: enable check_for_lack_ACE_OS
 
     const wchar_t *strpbrk1 = ACE_TEXT_WIDE ("abcdefghijkabcdefghijk");
 
-    ACE_ASSERT (ACE_OS::strpbrk (strpbrk1,  ACE_TEXT_WIDE ("ijkb"))
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strpbrk (strpbrk1,  ACE_TEXT_WIDE ("ijkb"))
                   == strpbrk1 + 1);
-    ACE_ASSERT (ACE_OS::strpbrk (strpbrk1,
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strpbrk (strpbrk1,
                                         ACE_TEXT_WIDE ("mno")) == 0);
 
+    //FUZZ: disable check_for_lack_ACE_OS
     // ========================================================================
     // Test strrchr (wchar_t version)
     ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("Testing strrchr (wchar_t version)\n")));
+    //FUZZ: enable check_for_lack_ACE_OS
 
     const wchar_t *strrchr1 = ACE_TEXT_WIDE ("abcdefghijkabcdefghijk");
 
-    ACE_ASSERT (*ACE_OS::strrchr (strrchr1, ACE_TEXT_WIDE ('h'))
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (*ACE_OS::strrchr (strrchr1, ACE_TEXT_WIDE ('h'))
                   == ACE_TEXT_WIDE ('h'));
-    ACE_ASSERT (ACE_OS::strrchr (strrchr1, ACE_TEXT_WIDE ('h'))
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strrchr (strrchr1, ACE_TEXT_WIDE ('h'))
                   == strrchr1 + 18);
-    ACE_ASSERT (ACE_OS::strrchr (strrchr1, ACE_TEXT_WIDE ('1'))
-                  == NULL);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strrchr (strrchr1, ACE_TEXT_WIDE ('1'))
+                  == 0);
 
+    //FUZZ: disable check_for_lack_ACE_OS
     // ========================================================================
     // Test strcasecmp (wchar_t version)
     ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("Testing strcasecmp (wchar_t version)\n")));
+    //FUZZ: enable check_for_lack_ACE_OS
 
     const wchar_t *strcasecmp1 = ACE_TEXT_WIDE ("stringf");
     const wchar_t *strcasecmp2 = ACE_TEXT_WIDE ("stringfe");
@@ -437,15 +468,17 @@ string_emulation_test (void)
     const wchar_t *strcasecmp4 = ACE_TEXT_WIDE ("STRINGF");
     const wchar_t *strcasecmp5 = ACE_TEXT_WIDE ("stringe");
 
-    ACE_ASSERT (ACE_OS::strcasecmp (strcasecmp1, strcasecmp1) == 0);
-    ACE_ASSERT (ACE_OS::strcasecmp (strcasecmp1, strcasecmp2) < 0);
-    ACE_ASSERT (ACE_OS::strcasecmp (strcasecmp1, strcasecmp3) < 0);
-    ACE_ASSERT (ACE_OS::strcasecmp (strcasecmp1, strcasecmp4) == 0);
-    ACE_ASSERT (ACE_OS::strcasecmp (strcasecmp1, strcasecmp5) > 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcasecmp (strcasecmp1, strcasecmp1) == 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcasecmp (strcasecmp1, strcasecmp2) < 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcasecmp (strcasecmp1, strcasecmp3) < 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcasecmp (strcasecmp1, strcasecmp4) == 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcasecmp (strcasecmp1, strcasecmp5) > 0);
 
+    //FUZZ: disable check_for_lack_ACE_OS
     // ========================================================================
     // Test strncasecmp (wchar_t version)
     ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("Testing strncasecmp (wchar_t version)\n")));
+    //FUZZ: enable check_for_lack_ACE_OS
 
     const wchar_t *strncasecmp1 = ACE_TEXT_WIDE ("stringf");
     const wchar_t *strncasecmp2 = ACE_TEXT_WIDE ("stringfe");
@@ -453,20 +486,22 @@ string_emulation_test (void)
     const wchar_t *strncasecmp4 = ACE_TEXT_WIDE ("STRINGF");
     const wchar_t *strncasecmp5 = ACE_TEXT_WIDE ("stringe");
 
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strncasecmp (strncasecmp1, strncasecmp2, 7) == 0);
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strncasecmp (strncasecmp1, strncasecmp2, 8) < 0);
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strncasecmp (strncasecmp1, strncasecmp3, 7) < 0);
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strncasecmp (strncasecmp1, strncasecmp4, 7) == 0);
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strncasecmp (strncasecmp1, strncasecmp5, 7) > 0);
 
+    //FUZZ: disable check_for_lack_ACE_OS
     // ========================================================================
     // Test strncmp (wchar_t version)
     ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("Testing strncmp (wchar_t version)\n")));
+    //FUZZ: enable check_for_lack_ACE_OS
 
     const wchar_t *strncmp1 = ACE_TEXT_WIDE ("stringf");
     const wchar_t *strncmp2 = ACE_TEXT_WIDE ("stringfe");
@@ -474,20 +509,22 @@ string_emulation_test (void)
     const wchar_t *strncmp4 = ACE_TEXT_WIDE ("STRINGF");
     const wchar_t *strncmp5 = ACE_TEXT_WIDE ("stringe");
 
-    ACE_ASSERT (ACE_OS::strncmp (strncmp1, strncmp2, 7) == 0);
-    ACE_ASSERT (ACE_OS::strncmp (strncmp1, strncmp2, 8) < 0);
-    ACE_ASSERT (ACE_OS::strncmp (strncmp1, strncmp3, 7) < 0);
-    ACE_ASSERT (ACE_OS::strncmp (strncmp1, strncmp4, 7) != 0);
-    ACE_ASSERT (ACE_OS::strncmp (strncmp1, strncmp5, 7) > 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strncmp (strncmp1, strncmp2, 7) == 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strncmp (strncmp1, strncmp2, 8) < 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strncmp (strncmp1, strncmp3, 7) < 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strncmp (strncmp1, strncmp4, 7) != 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strncmp (strncmp1, strncmp5, 7) > 0);
 
+    //FUZZ: disable check_for_lack_ACE_OS
     // ========================================================================
     // Test strncpy (wchar_t version)
     ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("Testing strncpy (wchar_t version)\n")));
+    //FUZZ: enable check_for_lack_ACE_OS
 
     wchar_t strncpy1[] = ACE_TEXT_WIDE ("abcdefghijklmnopqrstuvwxyzabc");
     wchar_t strncpy2[27];
 
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strncmp (ACE_OS::strncpy (strncpy2,
                                          strncpy1,
                                          26),
@@ -496,26 +533,29 @@ string_emulation_test (void)
 
     strncpy1[26] = 0;
     strncpy2[26] = 0;
-    ACE_ASSERT (ACE_OS::strcmp (strncpy2, strncpy1) == 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (strncpy2, strncpy1) == 0);
 
+    //FUZZ: disable check_for_lack_ACE_OS
     // ========================================================================
     // Test strtok (wchar_t version)
     ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("Testing strtok (wchar_t version)\n")));
+    //FUZZ: enable check_for_lack_ACE_OS
+
     wchar_t strtok_r1[] = ACE_TEXT_WIDE ("A string of tokens");
 
-    ACE_ASSERT (ACE_OS::strcmp (ACE_OS::strtok (strtok_r1,
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (ACE_OS::strtok (strtok_r1,
                                                 ACE_TEXT_WIDE (" ")),
                                 ACE_TEXT_WIDE ("A")) == 0);
-    ACE_ASSERT (ACE_OS::strcmp (ACE_OS::strtok (0,
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (ACE_OS::strtok (0,
                                                 ACE_TEXT_WIDE (" ")),
                                 ACE_TEXT_WIDE ("string") ) == 0);
-    ACE_ASSERT (ACE_OS::strcmp (ACE_OS::strtok (0,
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (ACE_OS::strtok (0,
                                                 ACE_TEXT_WIDE (" ")),
                                 ACE_TEXT_WIDE ("of") ) == 0);
-    ACE_ASSERT (ACE_OS::strcmp (ACE_OS::strtok (0,
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (ACE_OS::strtok (0,
                                                 ACE_TEXT_WIDE (" ")),
                                 ACE_TEXT_WIDE ("tokens") ) == 0);
-    ACE_ASSERT (ACE_OS::strtok (0, ACE_TEXT_WIDE (" ")) == 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strtok (0, ACE_TEXT_WIDE (" ")) == 0);
 
 
   }
@@ -540,31 +580,35 @@ snprintf_test (void)
   if (retval != 3)
     {
       ACE_ERROR ((LM_ERROR,
-		  ACE_TEXT ("[1] ACE_OS::snprintf() returns %d, should be 3\n"),
+                  ACE_TEXT ("[1] ACE_OS::snprintf() returns %d, should be 3\n"),
                   retval));
       ++error_count;
     }
 
   ACE_OS::memset(buf, 0xab, 2*BUFFER_SIZE);
   retval = ACE_OS::snprintf (buf, BUFFER_SIZE, "%d", 1234);
+
+  // HP-UX has broken vsnprintf
+#if !defined (HPUX)
   if (retval != 4)
     {
       ACE_ERROR ((LM_ERROR,
-		  ACE_TEXT ("[2] ACE_OS::snprintf() returns %d, should be 4\n"),
+                  ACE_TEXT ("[2] ACE_OS::snprintf() returns %d, should be 4\n"),
                   retval));
       ++error_count;
     }
+#endif /* !HPUX */
 
   if (buf[3] != 0)
     {
       ACE_ERROR ((LM_ERROR,
-		  ACE_TEXT ("[3] ACE_OS::snprintf() doesn't terminate string correctly\n")));
+                  ACE_TEXT ("[3] ACE_OS::snprintf() doesn't terminate string correctly\n")));
       ++error_count;
     }
   else if (ACE_OS::strcmp(buf, "123") != 0)
     {
       ACE_ERROR ((LM_ERROR,
-		  ACE_TEXT ("[4] ACE_OS::snprintf() incorrect output\n")));
+                  ACE_TEXT ("[4] ACE_OS::snprintf() incorrect output\n")));
       ++error_count;
     }
 
@@ -573,20 +617,20 @@ snprintf_test (void)
   if (retval != 5)
     {
       ACE_ERROR ((LM_ERROR,
-		  ACE_TEXT ("[5] ACE_OS::snprintf() returns %d, should be 5\n"),
+                  ACE_TEXT ("[5] ACE_OS::snprintf() returns %d, should be 5\n"),
                   retval));
       ++error_count;
     }
   else if (buf[3] != 0)
     {
       ACE_ERROR ((LM_ERROR,
-		  ACE_TEXT ("[6] ACE_OS::snprintf() doesn't terminate string correctly\n")));
+                  ACE_TEXT ("[6] ACE_OS::snprintf() doesn't terminate string correctly\n")));
       ++error_count;
     }
   else if (ACE_OS::strcmp(buf, "123") != 0)
     {
       ACE_ERROR ((LM_ERROR,
-		  ACE_TEXT ("[6] ACE_OS::snprintf() incorrect output\n")));
+                  ACE_TEXT ("[6] ACE_OS::snprintf() incorrect output\n")));
       ++error_count;
     }
 
@@ -663,22 +707,24 @@ int
 string_strsncpy_test (void)
 {
   {
+    //FUZZ: disable check_for_lack_ACE_OS
     // Test strsncpy (char version)
     ACE_DEBUG ((LM_DEBUG,
                 ACE_TEXT ("Testing strsncpy (char version)\n")));
+    //FUZZ: enable check_for_lack_ACE_OS
 
     char strsncpy1[] =  "abcdefghijklmnopqrstuvwxyzabc";
     char strsncpy2[36];
 
     // strsncpy() where the max. length doesn't matter
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strcmp (ACE_OS::strsncpy (strsncpy2,
                                          strsncpy1,
                                          36),
                        strsncpy1) == 0);
 
     // strsncpy() where the max length does matter
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strncmp (ACE_OS::strsncpy (strsncpy2,
                                           strsncpy1,
                                           26),
@@ -686,10 +732,10 @@ string_strsncpy_test (void)
                         25) == 0);
 
     // strsncpy1 and strsncpy2 are different size --> not equal
-    ACE_ASSERT (ACE_OS::strcmp (strsncpy2, strsncpy1) != 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (strsncpy2, strsncpy1) != 0);
 
     // max. length == 2 --> 1 char available
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strncmp (ACE_OS::strsncpy (strsncpy2,
                                           strsncpy1,
                                           2),
@@ -697,13 +743,13 @@ string_strsncpy_test (void)
                         1) == 0);
 
     // max length == 1 --> empty string
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strlen (ACE_OS::strsncpy (strsncpy2,
                                          strsncpy1,
                                          1)) == 0);
 
     // just preparation for the next assert
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strcmp (ACE_OS::strsncpy (strsncpy2,
                                          strsncpy1,
                                          36),
@@ -711,42 +757,44 @@ string_strsncpy_test (void)
 
     // A tricky one, if the max. length == 0 --> do nothing
     // so the strsncpy2 shouldn't change
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strcmp (ACE_OS::strsncpy (strsncpy2,
                                          "test",
                                          0),
                        strsncpy1) == 0);
 
     // If src == dst --> truncate dst if needed!
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strncmp (ACE_OS::strsncpy (strsncpy2,
                                           strsncpy2,
                                           10),
                         strsncpy1,
                         9) == 0);
     // size should be 9 (+ '\0' char)
-    ACE_ASSERT(ACE_OS::strlen(strsncpy2) == 9);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL(ACE_OS::strlen(strsncpy2) == 9);
 
   }
 
 #if defined (ACE_HAS_WCHAR)
   {
+    //FUZZ: disable check_for_lack_ACE_OS
     // Test strsncpy (wchar_t version)
      ACE_DEBUG ((LM_DEBUG,
                 ACE_TEXT ("Testing strsncpy (wchar_t version)\n")));
+     //FUZZ: enable check_for_lack_ACE_OS
 
     wchar_t strsncpy1[] = ACE_TEXT_WIDE ("abcdefghijklmnopqrstuvwxyzabc");
     wchar_t strsncpy2[36];
 
     // strsncpy() where the max. length doesn't matter
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strcmp (ACE_OS::strsncpy (strsncpy2,
                                          strsncpy1,
                                          36),
                        strsncpy1) == 0);
 
     // strsncpy() where the max length does matter
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strncmp (ACE_OS::strsncpy (strsncpy2,
                                           strsncpy1,
                                           26),
@@ -754,10 +802,10 @@ string_strsncpy_test (void)
                         25) == 0);
 
     // strsncpy1 and strsncpy2 are different size --> not equal
-    ACE_ASSERT (ACE_OS::strcmp (strsncpy2, strsncpy1) != 0);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL (ACE_OS::strcmp (strsncpy2, strsncpy1) != 0);
 
     // max. length == 2 --> 1 char available
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strncmp (ACE_OS::strsncpy (strsncpy2,
                                           strsncpy1,
                                           2),
@@ -765,13 +813,13 @@ string_strsncpy_test (void)
                         1) == 0);
 
     // max length == 1 --> empty string
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strlen (ACE_OS::strsncpy (strsncpy2,
                                          strsncpy1,
                                          1)) == 0);
 
     // just preparation for the next assert
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strcmp (ACE_OS::strsncpy (strsncpy2,
                                          strsncpy1,
                                          36),
@@ -779,7 +827,7 @@ string_strsncpy_test (void)
 
     // A tricky one, if the max. length == 0 --> do nothing
     // so the strsncpy2 shouldn't change
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strcmp (ACE_OS::strsncpy (strsncpy2,
                                          ACE_TEXT_WIDE
                                          ("test"),
@@ -787,14 +835,14 @@ string_strsncpy_test (void)
                        strsncpy1) == 0);
 
     // If src == dst --> truncate dst if needed!
-    ACE_ASSERT
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL
       (ACE_OS::strncmp (ACE_OS::strsncpy (strsncpy2,
                                           strsncpy2,
                                           10),
                         strsncpy1,
                         9) == 0);
     // size should be 9 (+ '\0' char)
-    ACE_ASSERT(ACE_OS::strlen(strsncpy2) == 9);
+    THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL(ACE_OS::strlen(strsncpy2) == 9);
   }
 #endif /* ACE_HAS_WCHAR */
 
@@ -891,6 +939,52 @@ cpu_info_test (void)
 }
 
 int
+pagesize_test (void)
+{
+  ACE_DEBUG ((LM_DEBUG,
+              ACE_TEXT ("Testing getpagesize method\n")));
+
+  long const pagesize = ACE_OS::getpagesize ();
+  if (pagesize <= 0)
+    {
+      ACE_ERROR ((LM_ERROR, ACE_TEXT ("Error, pagesize should return a value bigger ")
+                            ACE_TEXT ("then zero, it returned %d\n"), pagesize));
+      return 1;
+    }
+  else
+    {
+      ACE_DEBUG ((LM_DEBUG,
+                  ACE_TEXT ("Pagesize returned %d\n"),
+                  pagesize));
+    }
+  return 0;
+}
+
+int
+log2_test (void)
+{
+  ACE_DEBUG ((LM_DEBUG,
+              ACE_TEXT ("Testing log2 method\n")));
+
+  double values[] = {1.0, 2.0, 4.0, 8.0, 1048576.0};
+  int results[] = {0, 1, 2, 3, 20};
+  int result = 0;
+  int error_count = 0;
+
+  for (size_t i = 0 ; i < sizeof (values) / sizeof (double) ; i++)
+    {
+      result = static_cast<int> (ACE_OS::log2 (values [i]) + 0.5);
+      if (result != results [i])
+        {
+          ACE_ERROR ((LM_ERROR, ACE_TEXT ("Log2 error: input %.1F, output %d, expected %d\n"), values [i], result, results [i]));
+          error_count++;
+        }
+    }
+
+  return error_count;
+}
+
+int
 run_main (int, ACE_TCHAR *[])
 {
   ACE_START_TEST (ACE_TEXT ("OS_Test"));
@@ -907,10 +1001,10 @@ run_main (int, ACE_TCHAR *[])
   if ((result = string_emulation_test ()) != 0)
     status = result;
 
-#if !defined (ACE_LACKS_VSNPRINTF)
+#if !defined (ACE_LACKS_VSNPRINTF) || defined (ACE_HAS_TRIO)
   if ((result = snprintf_test ()) != 0)
     status = result;
-#endif /* !ACE_LACKS_VSNPRINTF */
+#endif /* !ACE_LACKS_VSNPRINTF || ACE_HAS_TRIO */
 
   if ((result = ctime_r_test ()) != 0)
     status = result;
@@ -921,6 +1015,13 @@ run_main (int, ACE_TCHAR *[])
   if ((result = cpu_info_test ()) != 0)
       status = result;
 
+  if ((result = pagesize_test ()) != 0)
+      status = result;
+
+  if ((result = log2_test ()) != 0)
+      status = result;
+
   ACE_END_TEST;
   return status;
 }
+#undef THIS_IS_NOT_AN_ASSERT_IT_IS_A_NON_DEBUG_TEST_AS_WELL

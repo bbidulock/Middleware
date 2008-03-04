@@ -64,6 +64,13 @@ extern "C"
     };
 # endif /* ACE_LACKS_SOCKADDR */
 
+# if defined (ACE_LACKS_LINGER)
+    struct  linger {
+          int     l_onoff;                /* option on/off */
+          int     l_linger;               /* linger time */
+    };
+# endif /* ACE_LACKS_LINGER */
+
 #if defined (ACE_WIN32)
    struct msghdr
    {
@@ -105,6 +112,10 @@ extern "C"
 #if !defined (AF_LOCAL)
 #  define AF_LOCAL 1
 #endif /* AF_LOCAL */
+
+#if !defined (AF_UNIX)
+#  define AF_UNIX AF_LOCAL
+#endif /* AF_UNIX */
 
 #if !defined (AF_INET)
 #  define AF_INET 2
@@ -153,6 +164,10 @@ extern "C"
 #  define SOCK_DGRAM 2
 #endif /* SOCK_DGRAM */
 
+#if !defined (SOCK_SEQPACKET)
+#  define SOCK_SEQPACKET 5
+#endif /* SOCK_SEQPACKET */
+
 #if !defined (SOL_SOCKET)
 #  define SOL_SOCKET 0xffff
 #endif /* SOL_SOCKET */
@@ -161,6 +176,10 @@ extern "C"
 #  define SO_REUSEADDR 0x0004
 #endif /* SO_REUSEADDR */
 
+#if !defined (SO_LINGER)
+#  define SO_LINGER 0x0080
+#endif /* SO_LINGER */
+
 #if !defined (SO_SNDBUF)
 #  define SO_SNDBUF 0x1001
 #endif /* SO_SNDBUF */
@@ -168,6 +187,18 @@ extern "C"
 #if !defined (SO_RCVBUF)
 #  define SO_RCVBUF 0x1002
 #endif /* SO_RCVBUF */
+
+#if !defined (SO_BROADCAST)
+#  define SO_BROADCAST 0x0020
+#endif /* SO_BROADCAST */
+
+#if !defined (SO_ERROR)
+#  define SO_ERROR 0x1007
+#endif /* SO_ERROR */
+
+#if !defined (SCM_RIGHTS)
+#  define SCM_RIGHTS 0x01
+#endif /* SCM_RIGHTS */
 
 #if defined (ACE_HAS_IPV6)
 #  if defined (ACE_USES_IPV4_IPV6_MIGRATION)
@@ -181,6 +212,10 @@ extern "C"
 #  define ACE_ADDRESS_FAMILY_INET AF_INET
 #  define ACE_PROTOCOL_FAMILY_INET PF_INET
 #endif /* ACE_HAS_IPV6 */
+
+#if !defined (ACE_HAS_SOCK_BUF_SIZE_MAX_VALUE)
+#define ACE_HAS_SOCK_BUF_SIZE_MAX_VALUE SSIZE_MAX
+#endif /* ACE_HAS_SOCK_BUF_SIZE_MAX_VALUE */
 
 #if defined (ACE_HAS_SOCKLEN_T)
 #  if defined (__hpux)
@@ -250,7 +285,7 @@ extern "C"
                           struct timespec *timeout);
 
   ssize_t sendmsg_timedwait (ACE_HANDLE handle,
-			     const struct msghdr *msg,
+                             const struct msghdr *msg,
                              int flags,
                              struct timespec *timeout);
 

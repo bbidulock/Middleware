@@ -1,7 +1,6 @@
 // $Id$
 
 #include "ace/Malloc_Base.h"
-#include "ace/Service_Config.h"
 #include "ace/Read_Buffer.h"
 #include "ace/Thread_Manager.h"
 
@@ -106,7 +105,7 @@ Dump_Restore::handle_input (ACE_HANDLE)
         break;
       if (this->infile_)
         ACE_OS::fclose (this->infile_);
-      this->infile_ = fopen(filename_,"r");
+      this->infile_ = ACE_OS::fopen(filename_, ACE_TEXT("r"));
       break;
     case 'B' :
     case 'b' :

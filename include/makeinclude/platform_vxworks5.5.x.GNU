@@ -17,30 +17,36 @@ VXWORKS = 1
 CROSS-COMPILE = 1
 
 ifneq (,$(HOST_ROOT))
-  TAO_IDL := $(HOST_ROOT)/bin/tao_idl.exe
-  TAO_IDL_DEP := $(TAO_IDL)
   TAO_IDLFLAGS += -g $(HOST_ROOT)/bin/gperf
+ifeq ("$(WIND_HOST_TYPE)","x86-win32")
+  TAO_IDL = $(HOST_ROOT)/bin/tao_idl.exe
+  TAO_IDL3_TO_IDL2 = $(HOST_ROOT)/bin/tao_idl3_to_idl2.exe
+  CIDLC = $(HOST_ROOT)/TAO/CIAO/bin/cidlc.exe
+else
+  TAO_IDL = $(HOST_ROOT)/bin/tao_idl
+  TAO_IDL3_TO_IDL2 = $(HOST_ROOT)/bin/tao_idl3_to_idl2
+  CIDLC = $(HOST_ROOT)/TAO/CIAO/bin/cidlc
 endif
-
-ifeq ("$(OS)", "Windows_NT")
-ifneq ($(MAKE_MODE), unix)
-vxworks_ntbuild = 1
-MKDIR_NTSTYLE = 1
-endif
+TAO_IDL_DEP = $(TAO_IDL)
+TAO_IDL3_TO_IDL2_DEP = $(TAO_IDL3_TO_IDL2)
+CIDLC_DEP = $(CIDLC)
 endif
 
 debug ?= 1
 optimize ?= 1
-rtti ?= 1
 threads ?= 1
 exceptions ?= 1
+xerces ?= 0
+versioned_so ?= 0
 
 ifeq ($(static_libs),1)
   shared_libs = 0
 else
   static_libs = 0
 endif
-versioned_so ?= 0
+ifeq ($(static_libs_only),1)
+  shared_libs = 0
+endif
 
 # VxWorks doesn't have rwho
 rwho = 0
@@ -55,11 +61,11 @@ ifeq (,$(WIND_HOST_TYPE))
 	@ERROR: you must set your WIND_HOST_TYPE environment variable
 endif # WIND_HOST_TYPE
 
-ifeq ($(DIAB_HOST_TYPE),)
-ifeq ("$(OS)", "Windows_NT")
-  DIAB_HOST_TYPE = WIN32
-else
-  DIAB_HOST_TYPE = UNIX
+ifeq ("$(WIND_HOST_TYPE)","x86-win32")
+ifneq ($(MAKE_MODE), unix)
+vxworks_ntbuild = 1
+MKDIR_NTSTYLE = 1
+lacks_touch = 1
 endif
 endif
 
@@ -97,6 +103,7 @@ endif
 
 ifeq ($(findstring PPC, $(CPU)), PPC)
   CCFLAGS += -mlongcall
+  CFLAGS += -mlongcall
 endif
 
 ifeq ($(shared_libs),1)
@@ -129,7 +136,7 @@ else
 endif
 
 ifneq ($(VX_LIB_BUILD),1)
-  VXWORKSLINK = true
+  VXWORKSLINK = 1
   ifeq ($(VX_APP_BUILD),1)
     ## set variables for VxWorks linktarget identification
     PRJ_FILE = $(basename $(notdir $(BIN_UNCHECKED))).vxworks
@@ -152,7 +159,7 @@ include $(TARGET_DIR)/tool/$(TOOL_FAMILY)/make.$(CPU)$(TOOL)
 ## make sure we don't use that stupid, crippled vxrm.bat script.
 override RM=rm -f
 
-ifeq ("$(VXWORKSLINK)","true")
+ifeq ($(VXWORKSLINK), 1)
   # prevent possible clash with static LIB rules
   # in VxWorks make includes and rules.lib.GNU
   override ARCHIVE =
@@ -209,7 +216,7 @@ include $(ACE_ROOT)/include/makeinclude/platform_g++_common.GNU
 
 ifeq ("$(templates)","automatic")
 	ifdef repo
-		ifeq ("$(VXWORKSLINK)","true")
+                ifeq ($(VXWORKSLINK),1)
   		ifeq ($(VX_APP_BUILD),1)
 				ifneq ($(SHARED_LIBS),1)
       	LD_PARTIAL += -frepo
@@ -249,15 +256,6 @@ endif
 endif
 endif
 
-ifeq (0,$(rtti))
-C++FLAGS += -DACE_LACKS_RTTI
-ifeq ("$(TOOL)","gnu")
-  C++FLAGS += -fno-rtti
-else
-  C++FLAGS += -Xrtti-off
-endif
-endif # rtti
-
 ifneq ($(findstring $(VX_CPU_FAMILY),ppc arm),)
 ifeq ("$(TOOL)","diab")
   C++FLAGS += -Xchar-signed
@@ -280,7 +278,7 @@ CCFLAGS         += $(C++FLAGS)
 
 PIC              =
 
-ifeq ("$(VXWORKSLINK)","true")
+ifeq ($(VXWORKSLINK),1)
 
   ifdef repo
     ifeq ($(SHARED_LIBS),1)

@@ -54,11 +54,6 @@
 // Compiler supports the ssize_t typedef.
 #  define ACE_HAS_SSIZE_T
 
-// When using the preprocessor, Ignore info msg; invalid #pragma
-#  if defined (__IBMCPP__) && (__IBMCPP__ < 400)  // IBM C++ 3.6
-#    define ACE_CC_PREPROCESSOR_ARGS "-E -qflag=w:w"
-#  endif /* (__IBMCPP__) && (__IBMCPP__ < 400) */
-
    // Keep an eye on this as the compiler and standards converge...
 #  define ACE_LACKS_LINEBUFFERED_STREAMBUF
 #  define ACE_LACKS_PRAGMA_ONCE
@@ -71,9 +66,8 @@
 #  endif
 
    // These are for Visual Age C++ only
-#  if defined (__IBMCPP__) && (__IBMCPP__ >= 400)
+#  if defined (__IBMCPP__) && (__IBMCPP__ >= 600)
 #    define ACE_EXPLICIT_TEMPLATE_DESTRUCTOR_TAKES_ARGS
-#    define ACE_HAS_TYPENAME_KEYWORD
      // When using -qtempinc, we don't need to see template implementation
      // source (though we do need a pragma to find the correct source file).
      // However, without -qtempinc (either -qnotempinc or -qtemplateregistry)
@@ -90,14 +84,15 @@
 
 #    undef WIFEXITED
 #    undef WEXITSTATUS
-
-#    if (__IBMCPP__ >= 500)  /* Visual Age C++ 5 */
-#      define ACE_HAS_STANDARD_CPP_LIBRARY 1
-#      define ACE_USES_STD_NAMESPACE_FOR_STDCPP_LIB 1
-#    endif /* __IBMCPP__ >= 500 */
+#    define ACE_HAS_STANDARD_CPP_LIBRARY 1
+#    define ACE_USES_STD_NAMESPACE_FOR_STDCPP_LIB 1
 
 #    if (__IBMCPP__ >= 600) /* Visual Age 6 and XL C/C++ 7 and up */
 #      define ACE_HAS_TEMPLATE_TYPEDEFS
+#      define ACE_HAS_CUSTOM_EXPORT_MACROS
+#      define ACE_Proper_Export_Flag
+#      define ACE_Proper_Import_Flag
+#      define ACE_IMPORT_SINGLETON_DECLARE(SINGLETON_TYPE, CLASS, LOCK) extern template class SINGLETON_TYPE < CLASS, LOCK >;
 #    endif /* __IBMCPP__ >= 600 */
 #  endif /* __IBMCPP__ */
 
@@ -137,16 +132,17 @@
 // Pick up all the detectable settings.
 #include "ace/config-posix.h"
 
-#if defined (ACE_HAS_POSIX_SEM_TIMEOUT)
-# undef ACE_HAS_POSIX_SEM_TIMEOUT
-#endif /* ACE_HAS_POSIX_SEM_TIMEOUT */
+// Regardless of what config-posix.h may indicate, AIX 5.3 is the first
+// to support sem_timedwait(). Prior to that, use the emulation.
+#if defined (ACE_HAS_POSIX_SEM_TIMEOUT) && \
+  (defined (ACE_AIX_VERS) && (ACE_AIX_VERS < 503))
+#  undef ACE_HAS_POSIX_SEM_TIMEOUT
+#endif /* ACE_HAS_POSIX_SEM_TIMEOUT && ACE_AIX_VERS < 503 */
 
-// AIX shared libs look strangely like archive libs until you look inside
-// them.
 #if defined (ACE_DLL_SUFFIX)
 #  undef ACE_DLL_SUFFIX
 #endif
-#define ACE_DLL_SUFFIX ".a"
+#define ACE_DLL_SUFFIX ".so"
 
 #define ACE_DEFAULT_BASE_ADDR ((char *) 0x80000000)
 
@@ -285,7 +281,6 @@
 #  endif
 
 #  define ACE_HAS_PTHREADS
-#  define ACE_HAS_PTHREADS_STD
 #  define ACE_HAS_PTHREADS_UNIX98_EXT
 #  define ACE_HAS_PTHREAD_CONTINUE_NP
 #  define ACE_HAS_PTHREAD_SUSPEND_NP
@@ -327,10 +322,11 @@
 // AIX 5.1 has netinet/tcp.h
 #undef ACE_LACKS_NETINET_TCP_H
 
+#define ACE_HAS_3_PARAM_READDIR_R
 #define ACE_HAS_POSIX_GETPWNAM_R
 #define ACE_HAS_SCANDIR
-# define ACE_SCANDIR_CMP_USES_VOIDPTR
-# define ACE_SCANDIR_SEL_LACKS_CONST
+#define ACE_SCANDIR_CMP_USES_VOIDPTR
+#define ACE_SCANDIR_SEL_LACKS_CONST
 #define ACE_HAS_SIGSUSPEND
 #define ACE_HAS_TIMEZONE  /* Call tzset() to set timezone */
 

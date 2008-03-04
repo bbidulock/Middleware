@@ -23,6 +23,7 @@
 #endif /* ACE_LACKS_PRAGMA_ONCE */
 
 #include "ace/OS_Errno.h"
+#include "ace/Basic_Types.h"
 #include "ace/os_include/os_stddef.h"
 
 // Allow an installation to replace the lowest-level allocation
@@ -115,9 +116,9 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #    if (HPUX_VERS >= 1100)
 #      if ((__HP_aCC < 32500 && !defined (RWSTD_NO_NAMESPACE)) || \
            defined (ACE_USES_STD_NAMESPACE_FOR_STDCPP_LIB))
-#        define ACE_bad_alloc std::bad_alloc
-#        define ACE_nothrow   std::nothrow
-#        define ACE_nothrow_t std::nothrow_t
+#        define ACE_bad_alloc ::std::bad_alloc
+#        define ACE_nothrow   ::std::nothrow
+#        define ACE_nothrow_t ::std::nothrow_t
 #      else
 #        define ACE_bad_alloc bad_alloc
 #        define ACE_nothrow   nothrow
@@ -125,9 +126,9 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #      endif /* __HP_aCC */
 #    elif ((__HP_aCC <  12500 && !defined (RWSTD_NO_NAMESPACE)) || \
            defined (ACE_USES_STD_NAMESPACE_FOR_STDCPP_LIB))
-#      define ACE_bad_alloc std::bad_alloc
-#      define ACE_nothrow   std::nothrow
-#      define ACE_nothrow_t std::nothrow_t
+#      define ACE_bad_alloc ::std::bad_alloc
+#      define ACE_nothrow   ::std::nothrow
+#      define ACE_nothrow_t ::std::nothrow_t
 #    else
 #      define ACE_bad_alloc bad_alloc
 #      define ACE_nothrow   nothrow
@@ -143,11 +144,11 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #        define ACE_throw_bad_alloc throw ACE_bad_alloc ("no more memory")
 #      else
 #        include /**/ <new>
-#        define ACE_bad_alloc std::bad_alloc
+#        define ACE_bad_alloc ::std::bad_alloc
 #        if defined (ACE_HAS_NEW_NOTHROW)
 #          if defined (ACE_USES_STD_NAMESPACE_FOR_STDCPP_LIB)
-#            define ACE_nothrow   std::nothrow
-#            define ACE_nothrow_t std::nothrow_t
+#            define ACE_nothrow   ::std::nothrow
+#            define ACE_nothrow_t ::std::nothrow_t
 #          else
 #            define ACE_nothrow   nothrow
 #            define ACE_nothrow_t nothrow_t
@@ -158,10 +159,10 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #  elif defined (ACE_USES_STD_NAMESPACE_FOR_STDCPP_LIB)
 #    include /**/ <new>
 #    if !defined (ACE_bad_alloc)
-#      define ACE_bad_alloc std::bad_alloc
+#      define ACE_bad_alloc ::std::bad_alloc
 #    endif
-#    define ACE_nothrow   std::nothrow
-#    define ACE_nothrow_t std::nothrow_t
+#    define ACE_nothrow   ::std::nothrow
+#    define ACE_nothrow_t ::std::nothrow_t
      // MFC changes the behavior of operator new at all MSVC versions from 6 up.
 #    if defined (ACE_HAS_MFC) && (ACE_HAS_MFC == 1)
 #      define ACE_throw_bad_alloc AfxThrowMemoryException ()
@@ -236,6 +237,7 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_NEW_THROWS_EXCEPTIONS */
 
+ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 //@{
 /**
  * @name Efficiently compute aligned pointers to powers of 2 boundaries.
@@ -276,13 +278,59 @@ ACE_END_VERSIONED_NAMESPACE_DECL
  * @param ptr the base pointer
  * @param alignment the required alignment
  */
-#define ACE_align_binary(ptr, alignment) \
-    ((ptr + ((ptrdiff_t)((alignment)-1))) & (~((ptrdiff_t)((alignment)-1))))
+#if defined (ACE_OPENVMS) && (!defined (__INITIAL_POINTER_SIZE) || (__INITIAL_POINTER_SIZE < 64))
+inline unsigned int
+ACE_align_binary (unsigned int ptr, unsigned int alignment)
+{
+  unsigned int const tmp = alignment - 1;
+  return (ptr + tmp) & (~tmp);
+}
+#else
+inline uintptr_t
+ACE_align_binary (uintptr_t ptr, uintptr_t alignment)
+{
+  uintptr_t const tmp = alignment - 1;
+  return (ptr + tmp) & (~tmp);
+}
+#endif
+
+#if defined (ACE_OPENVMS) && (!defined (__INITIAL_POINTER_SIZE) || (__INITIAL_POINTER_SIZE < 64))
+/// Return the next address aligned to a required boundary
+inline char *
+ACE_ptr_align_binary (char const * ptr, unsigned int alignment)
+{
+  return
+    reinterpret_cast<char *> (
+      ACE_align_binary (reinterpret_cast<unsigned int> (ptr), alignment));
+}
 
 /// Return the next address aligned to a required boundary
-#define ACE_ptr_align_binary(ptr, alignment) \
-        ((char *) ACE_align_binary (((ptrdiff_t) (ptr)), (alignment)))
+inline char *
+ACE_ptr_align_binary (unsigned char const * ptr, unsigned int alignment)
+{
+  return
+    ACE_ptr_align_binary (reinterpret_cast<char const *> (ptr), alignment);
+}
+#else
+/// Return the next address aligned to a required boundary
+inline char *
+ACE_ptr_align_binary (char const * ptr, uintptr_t alignment)
+{
+  return
+    reinterpret_cast<char *> (
+      ACE_align_binary (reinterpret_cast<uintptr_t> (ptr), alignment));
+}
+
+/// Return the next address aligned to a required boundary
+inline char *
+ACE_ptr_align_binary (unsigned char const * ptr, uintptr_t alignment)
+{
+  return
+    ACE_ptr_align_binary (reinterpret_cast<char const *> (ptr), alignment);
+}
+#endif  /* ACE_OPENVMS && __INITIAL_POINTER_SIZE < 64 */
 //@}
+ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include "ace/OS_NS_stdlib.h"
 

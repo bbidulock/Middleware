@@ -19,7 +19,7 @@
 # pragma once
 #endif /* ACE_LACKS_PRAGMA_ONCE */
 
-#if defined (ACE_HAS_AIO_CALLS) && !defined(__Lynx__) && !defined (__FreeBSD__)
+#if defined (ACE_HAS_AIO_CALLS)
 
 #include "ace/Synch_Traits.h"
 #include "ace/Thread_Semaphore.h"
@@ -27,9 +27,6 @@
 
 #include "ace/POSIX_Proactor.h"
 
-#if defined(AIX) || defined(sun) || defined(__APPLE__) || defined (ACE_VXWORKS)
-typedef union sigval sigval_t;
-#endif
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -54,12 +51,12 @@ public:
 
   // This only public so the "extern C" completion function can see it
   // when needed.
-  static void aio_completion_func (sigval_t cb_data);
+  static void aio_completion_func (sigval cb_data);
 
 protected:
 
   /**
-   * Dispatch a single set of events.  If <wait_time> elapses before
+   * Dispatch a single set of events.  If @a wait_time elapses before
    * any events occur, return 0.  Return 1 on success i.e., when a
    * completion is dispatched, non-zero (-1) on errors and errno is
    * set accordingly.
@@ -68,7 +65,7 @@ protected:
 
   /**
    * Block indefinitely until at least one event is dispatched.
-   * Dispatch a single set of events.  If <wait_time> elapses before
+   * Dispatch a single set of events.  If @a wait_time elapses before
    * any events occur, return 0.  Return 1 on success i.e., when a
    * completion is dispatched, non-zero (-1) on errors and errno is
    * set accordingly.
@@ -83,18 +80,18 @@ protected:
   virtual int notify_completion (int sig_num);
 
   /**
-   * Dispatch a single set of events.  If <milli_seconds> elapses
+   * Dispatch a single set of events.  If @a milli_seconds elapses
    * before any events occur, return 0. Return 1 if a completion is
    * dispatched. Return -1 on errors.
    */
   int handle_events_i (u_long milli_seconds);
 
-  /// semaphore variable to notify
+  /// Semaphore variable to notify
   /// used to wait the first AIO start
   ACE_SYNCH_SEMAPHORE sema_;
 };
 
 ACE_END_VERSIONED_NAMESPACE_DECL
 
-#endif /* ACE_HAS_AIO_CALLS && !__Lynx__ && !__FreeBSD__  */
+#endif /* ACE_HAS_AIO_CALLS */
 #endif /* ACE_POSIX_CB_PROACTOR_H*/

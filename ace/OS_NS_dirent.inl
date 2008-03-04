@@ -4,6 +4,10 @@
 
 #include "ace/OS_Memory.h"
 
+#if defined (ACE_LACKS_ALPHASORT)
+# include "ace/OS_NS_string.h"
+#endif /* ACE_LACKS_ALPHASORT */
+
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
 namespace ACE_OS
@@ -47,18 +51,17 @@ opendir (const ACE_TCHAR *filename)
 #endif /* ACE_HAS_DIRENT */
 }
 
-ACE_INLINE
-struct ACE_DIRENT *
+ACE_INLINE struct ACE_DIRENT *
 readdir (ACE_DIR *d)
 {
 #if defined (ACE_HAS_DIRENT)
-#    if defined (ACE_WIN32) && defined (ACE_LACKS_READDIR)
-  return ACE_OS::readdir_emulation (d);
+#  if defined (ACE_WIN32) && defined (ACE_LACKS_READDIR)
+     return ACE_OS::readdir_emulation (d);
 #  elif defined (ACE_HAS_WREADDIR) && defined (ACE_USES_WCHAR)
-  return ::wreaddir (d);
-#    else /* ACE_WIN32 && ACE_LACKS_READDIR */
-  return ::readdir (d);
-#    endif /* ACE_WIN32 && ACE_LACKS_READDIR */
+     return ::wreaddir (d);
+#  else /* ACE_WIN32 && ACE_LACKS_READDIR */
+     return ::readdir (d);
+#  endif /* ACE_WIN32 && ACE_LACKS_READDIR */
 #else
   ACE_UNUSED_ARG (d);
   ACE_NOTSUP_RETURN (0);
@@ -67,8 +70,8 @@ readdir (ACE_DIR *d)
 
 ACE_INLINE int
 readdir_r (ACE_DIR *dirp,
-                   struct ACE_DIRENT *entry,
-                   struct ACE_DIRENT **result)
+           struct ACE_DIRENT *entry,
+           struct ACE_DIRENT **result)
 {
 #if !defined (ACE_HAS_REENTRANT_FUNCTIONS)
   ACE_UNUSED_ARG (entry);
@@ -78,29 +81,14 @@ readdir_r (ACE_DIR *dirp,
     return 0; // Keep iterating
   else
     return 1; // Oops, some type of error!
-#elif defined (ACE_HAS_DIRENT)  &&  !defined (ACE_LACKS_READDIR_R)
-#  if (defined (sun) && (defined (_POSIX_PTHREAD_SEMANTICS) || \
-                        (_FILE_OFFSET_BITS == 64) || \
-                        (_POSIX_C_SOURCE - 0 >= 199506L))) || \
-      (!defined (sun) && (defined (ACE_HAS_PTHREADS_STD) || \
-                         defined (ACE_HAS_PTHREADS_DRAFT7) || \
-                         defined (_POSIX_SOURCE) || \
-                         defined (__FreeBSD__) || \
-                         defined (HPUX_11)))
-#    if defined (__GNUG__) && defined (DIGITAL_UNIX)
-  return readdir_r (dirp, entry, result);
-#    else
-  return ::readdir_r (dirp, entry, result);
-#    endif /* defined (__GNUG__) && defined (DIGITAL_UNIX) */
-#  else  /* ! POSIX.1c - this is draft 4 or draft 6 */
-#    if defined(__GNUC__) && defined (_AIX)
-        return ::readdir_r (dirp, entry, result);
-#    else
-    // <result> had better not be 0!
-    *result = ::readdir_r (dirp, entry);
-    return 0;
-#    endif /* AIX */
-#  endif /* ! POSIX.1c */
+#elif defined (ACE_HAS_DIRENT) && !defined (ACE_LACKS_READDIR_R)
+#  if defined (ACE_HAS_3_PARAM_READDIR_R)
+       return ::readdir_r (dirp, entry, result);
+#  else
+       // <result> had better not be 0!
+       *result = ::readdir_r (dirp, entry);
+       return 0;
+#  endif /* sun */
 #else  /* ! ACE_HAS_DIRENT  ||  ACE_LACKS_READDIR_R */
   ACE_UNUSED_ARG (dirp);
   ACE_UNUSED_ARG (entry);
@@ -114,21 +102,13 @@ ACE_INLINE void
 rewinddir (ACE_DIR *d)
 {
 #if defined (ACE_HAS_DIRENT)
-# if defined (ACE_LACKS_SEEKDIR)
-#  if defined (ACE_LACKS_REWINDDIR)
+#  if defined (ACE_HAS_WREWINDDIR) && defined (ACE_USES_WCHAR)
+  ::wrewinddir (d);
+#  elif !defined (ACE_LACKS_REWINDDIR)
+  ace_rewinddir_helper (d);
+#  else
   ACE_UNUSED_ARG (d);
-#  elif defined (ACE_HAS_WREWINDDIR) && defined (ACE_USES_WCHAR)
-   ::wrewinddir (d);
-#  else /* ! defined (ACE_LACKS_REWINDDIR) */
-   ::rewinddir (d);
-#  endif /* ! defined (ACE_LACKS_REWINDDIR) */
-# else  /* ! ACE_LACKS_SEEKDIR */
-    // We need to implement <rewinddir> using <seekdir> since it's often
-    // defined as a macro...
-   ::seekdir (d, long (0));
-# endif /* ! ACE_LACKS_SEEKDIR */
-#else
-  ACE_UNUSED_ARG (d);
+#  endif /* !defined (ACE_LACKS_REWINDDIR) */
 #endif /* ACE_HAS_DIRENT */
 }
 
@@ -158,10 +138,29 @@ scandir (const ACE_TCHAR *dirname,
 #endif /* ACE_HAS_SCANDIR */
 }
 
+ACE_INLINE int
+alphasort (const void *a, const void *b)
+{
+#if defined (ACE_LACKS_ALPHASORT)
+  return ACE_OS::strcmp ((*static_cast<const struct ACE_DIRENT * const *>(a))->d_name,
+                          (*static_cast<const struct ACE_DIRENT * const *>(b))->d_name);
+#else
+#  if defined (ACE_SCANDIR_CMP_USES_VOIDPTR)
+  return ::alphasort (const_cast<void *>(a),
+                      const_cast<void *>(b));
+#  elif defined (ACE_SCANDIR_CMP_USES_CONST_VOIDPTR)
+  return ::alphasort (a, b);
+#  else
+  return ::alphasort ((const struct ACE_DIRENT **)a,
+                      (const struct ACE_DIRENT **)b);
+#  endif
+#endif
+}
+
 ACE_INLINE void
 seekdir (ACE_DIR *d, long loc)
 {
-#if defined (ACE_HAS_DIRENT)  &&  !defined (ACE_LACKS_SEEKDIR)
+#if defined (ACE_HAS_DIRENT) && !defined (ACE_LACKS_SEEKDIR)
   ::seekdir (d, loc);
 #else  /* ! ACE_HAS_DIRENT  ||  ACE_LACKS_SEEKDIR */
   ACE_UNUSED_ARG (d);
@@ -172,7 +171,7 @@ seekdir (ACE_DIR *d, long loc)
 ACE_INLINE long
 telldir (ACE_DIR *d)
 {
-#if defined (ACE_HAS_DIRENT)  &&  !defined (ACE_LACKS_TELLDIR)
+#if defined (ACE_HAS_DIRENT) && !defined (ACE_LACKS_TELLDIR)
   return ::telldir (d);
 #else  /* ! ACE_HAS_DIRENT  ||  ACE_LACKS_TELLDIR */
   ACE_UNUSED_ARG (d);

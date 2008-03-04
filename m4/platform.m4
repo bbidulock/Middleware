@@ -1,12 +1,12 @@
 dnl -------------------------------------------------------------------------
 dnl       $Id$
-dnl 
+dnl
 dnl       platform.m4
 dnl
 dnl       ACE M4 include file which contains ACE specific M4 macros
 dnl       that set/determine which known platform specific C++ macros
 dnl       to define.
-dnl 
+dnl
 dnl -------------------------------------------------------------------------
 
 dnl  Copyright (C) 1998, 1999, 2000, 2002, 2003  Ossama Othman
@@ -15,7 +15,7 @@ dnl  All Rights Reserved
 dnl
 dnl This library is free software; you can redistribute it and/or
 dnl modify it under the current ACE distribution terms.
-dnl 
+dnl
 dnl This library is distributed in the hope that it will be useful,
 dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
 dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -92,22 +92,6 @@ dnl  */
   *cray-unicos*)
     ACE_CPPFLAGS="$ACE_CPPFLAGS -D_UNICOS"
     ;;
-  *dgux4.11*)
-    AC_DEFINE([ACE_DGUX])
-    AC_DEFINE([IP_ADD_MEMBERSHIP], [0x13])
-    AC_DEFINE([IP_DROP_MEMBERSHIP], [0x14])
-    ACE_CPPFLAGS="$ACE_CPPFLAGS -D_POSIX_SOURCE -D_DGUX_SOURCE"
-    ;;
-  *dgux4*)
-    AC_DEFINE([ACE_DGUX])
-    AC_DEFINE([IP_ADD_MEMBERSHIP], [0x13])
-    AC_DEFINE([IP_DROP_MEMBERSHIP], [0x14])
-    ACE_CPPFLAGS="$ACE_CPPFLAGS -D_POSIX4A_DRAFT10_SOURCE -D_POSIX4_DRAFT_SOURCE"
-    ;;
-  *fsu*)
-dnl FIXME: "FSU" isn't a platform!  We need to move this somewhere.
-    AC_DEFINE([PTHREAD_STACK_MIN], [(1024*10)])
-    ;;
   *hpux9*)
     AC_DEFINE([HPUX])
     ;;
@@ -167,6 +151,11 @@ dnl FIXME: "FSU" isn't a platform!  We need to move this somewhere.
     AC_DEFINE([ACE_DEFAULT_BASE_ADDR], [((char *) 0x80000000)])
     AC_DEFINE([ACE_HAS_BIG_FD_SET]) dnl FIXME: We need a test for this!
     AC_DEFINE([ACE_TIMER_SKEW], [(1000 * 10)])
+    dnl Does this box have NPTL?
+    NPTL=`getconf GNU_LIBPTHREAD_VERSION | $AWK '{print [$][1]}' -`
+    if test "$NPTL" != NPTL; then
+      ACE_CPPFLAGS="$ACE_CPPFLAGS -DACE_LACKS_LINUX_NPTL"
+    fi
     ;;
   *lynxos*)
     ACE_CPPFLAGS="$ACE_CPPFLAGS -D_POSIX_THREADS_CALLS"
@@ -176,12 +165,6 @@ dnl FIXME: "FSU" isn't a platform!  We need to move this somewhere.
     AC_DEFINE([ACE_USE_RCSID], [0])
     AC_DEFINE([ACE_HAS_LYNXOS_SIGNALS])
     AC_DEFINE([ACE_TIMER_SKEW], [(1000 * 10)])
-    ;;
-  *m88k*)
-    AC_DEFINE([m88k])
-    AC_DEFINE([__m88k__])
-    AC_DEFINE([IP_ADD_MEMBERSHIP], [0x13])
-    AC_DEFINE([IP_DROP_MEMBERSHIP], [0x14])
     ;;
   *mvs*)
     ACE_CPPFLAGS="$ACE_CPPFLAGS -D_ALL_SOURCE"
@@ -226,21 +209,6 @@ dnl Check for _POSIX_C_SOURCE macro
     AC_DEFINE([ACE_DEFAULT_BASE_ADDR], [((char *) 0x80000000)])
     AC_DEFINE([ACE_NEEDS_HUGE_THREAD_STACKSIZE], [(1024 * 1024)])
     AC_DEFINE([ACE_TIMER_SKEW], [(1000 * 10)])
-    ;;
-  *psos*)
-    AC_DEFINE([ACE_PSOS])
-    AC_DEFINE([ACE_PSOSIM])
-    AC_DEFINE([ACE_PSOSTBD])
-    dnl need ACE_HAS_TSS_EMULATION for ACE_DEFAULT_THREAD_KEYS!
-    AC_EGREP_CPP([ACE_TSS_EMULATION],
-      [
-#if defined (ACE_HAS_TSS_EMULATION)
-         ACE_TSS_EMULATION
-#endif
-      ], [AC_DEFINE([ACE_DEFAULT_THREAD_KEYS], [256])],[])
-    AC_DEFINE([ACE_MAIN], [extern "C" void root])
-    AC_DEFINE([ACE_MALLOC_ALIGN], [8])
-    AC_DEFINE([ACE_USE_RCSID], [0])
     ;;
   *sco4.2*)
     AC_DEFINE([SCO])
@@ -345,7 +313,7 @@ dnl    AC_DEFINE(ACE_USE_SELECT_REACTOR_FOR_REACTOR_IMPL)
 esac
 
 ACE_FUNC_IOCTL_ARGTYPES
-
+ACE_CHECK_HAS_NONCONST_FD_ISSET
 ACE_CHECK_FORMAT_SPECIFIERS
 ACE_CHECK_LACKS_PERFECT_MULTICAST_FILTERING
 
@@ -356,12 +324,12 @@ dnl End ACE_SET_PLATFORM_MACROS
 
 # ACE_CHECK_FORMAT_SPECIFIERS
 #
-# Override default *printf format specifiers for size_t, ssize_t, ACE_INT64, 
+# Override default *printf format specifiers for size_t, ssize_t, ACE_INT64,
 # and ACE_UINT64
 #
 # FIXME: Is it possible to write a portable feature test, or is checking
 #        the the target OS / target CPU the best we can do?
-# 
+#
 #---------------------------------------------------------------------------
 AC_DEFUN([ACE_CHECK_FORMAT_SPECIFIERS],
 [dnl
@@ -370,9 +338,9 @@ AH_TEMPLATE([ACE_SIZE_T_FORMAT_SPECIFIER],
 AH_TEMPLATE([ACE_SSIZE_T_FORMAT_SPECIFIER],
 [Define to the *printf format specifier  (e.g. "%d") for ssize_t])dnl
 AH_TEMPLATE([ACE_INT64_FORMAT_SPECIFIER],
-[Define to the *printf format specifier (e.g. "%lld") for the 64 bit signed integer type])dnl
+[Define to the *printf format specifier (e.g. "%lld") for ACE_INT64])dnl
 AH_TEMPLATE([ACE_UINT64_FORMAT_SPECIFIER],
-[Define to the *printf format specifier (e.g. "%llu") for the 64 bit signed integer type])dnl
+[Define to the *printf format specifier (e.g. "%llu") for ACE_UINT64])dnl
 
 case "$host_os" in
 darwin*)
@@ -384,6 +352,7 @@ linux*)
     alpha|ia64|x86_64)
       AC_DEFINE([ACE_SIZE_T_FORMAT_SPECIFIER], ["%lu"])
       AC_DEFINE([ACE_SSIZE_T_FORMAT_SPECIFIER], ["%ld"])
+      AC_DEFINE([ACE_UINT64_FORMAT_SPECIFIER], ["%lu"])
       ;;
     *)
       ;;
@@ -412,7 +381,7 @@ esac])
 #
 # FIXME: Is it possible to write a portable feature test, or is checking
 #        the the target OS the best we can do?
-# 
+#
 #---------------------------------------------------------------------------
 AC_DEFUN([ACE_CHECK_LACKS_PERFECT_MULTICAST_FILTERING],
 [AC_CACHE_CHECK([whether platform lacks perfect multicast filtering],
@@ -423,11 +392,11 @@ AC_DEFUN([ACE_CHECK_LACKS_PERFECT_MULTICAST_FILTERING],
   *)
     ace_cv_lacks_perfect_multicast_filtering=no ;;
   esac])
-    
+
 if test $ace_cv_lacks_perfect_multicast_filtering = yes; then
   AC_DEFINE([ACE_LACKS_PERFECT_MULTICAST_FILTERING], 1,
-[Define to 1 if platform lacks IGMPv3 "perfect" filtering of multicast 
-datagrams at the socket level.  If defined, ACE_SOCK_Dgram_Mcast will bind 
+[Define to 1 if platform lacks IGMPv3 "perfect" filtering of multicast
+datagrams at the socket level.  If defined, ACE_SOCK_Dgram_Mcast will bind
 the first joined multicast group to the socket, and all future joins on that
 socket will fail with an error.])
 fi
@@ -440,10 +409,10 @@ fi
 # define the types in ACE_IOCTL_TYPE_ARG2.
 #
 # FIXME: Should we support ioctl's third argument as well...?
-# 
+#
 # FIXME: Is it possible to write a portable feature test, or is checking
 #        the the target OS the best we can do?
-# 
+#
 #---------------------------------------------------------------------------
 AC_DEFUN([ACE_FUNC_IOCTL_ARGTYPES],
 [AC_CACHE_CHECK([types of arguments for ioctl()],
@@ -458,7 +427,7 @@ AC_DEFUN([ACE_FUNC_IOCTL_ARGTYPES],
 AC_DEFINE_UNQUOTED(ACE_IOCTL_TYPE_ARG2, $ace_cv_func_ioctl_arg2,
 	           [Define to the type of arg 2 for `ioctl'.])
 ])
- 
+
 
 # ACE_VAR_TIMEZONE
 #
@@ -480,4 +449,25 @@ if test "$ace_cv_var_timezone" = yes; then
   AC_DEFINE([ACE_HAS_TIMEZONE], 1,
 	    [Define to 1 if platform has global timezone variable])
 fi
+])
+
+
+# ACE_HAS_NONCONST_FD_ISSET
+#
+# Checks if system has a nonconst FD_ISSET macro.
+#
+#---------------------------------------------------------------------------
+AC_DEFUN([ACE_CHECK_HAS_NONCONST_FD_ISSET],
+[dnl
+    AC_COMPILE_IFELSE(
+        [AC_LANG_PROGRAM([#include <sys/time.h>],
+                [
+                //const fd_set* temp = new fd_set();
+                //FD_ISSET(0, const_cast< fd_set* >( temp ) );
+                const fd_set* temp = new fd_set();
+                FD_ISSET(0, temp );
+                ])
+        ],[],[AC_DEFINE([ACE_HAS_NONCONST_FD_ISSET], 1,
+                [Define to 1 if system has nonconst FD_ISSET() macro.])]
+    )
 ])

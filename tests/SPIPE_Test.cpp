@@ -32,9 +32,7 @@
 
 ACE_RCSID(tests, SPIPE_Test, "SPIPE_Test.cpp,v 4.36 2002/03/06 21:48:03 nanbor Exp")
 
-#if defined (ACE_HAS_STREAM_PIPES) \
-    || (defined (ACE_WIN32) && defined(ACE_HAS_WINNT4) \
-        && (ACE_HAS_WINNT4 !=0))
+#if defined (ACE_HAS_STREAM_PIPES) || defined (ACE_HAS_WIN32_NAMED_PIPES)
 # define TEST_HAS_STREAM_PIPES
 #endif
 
@@ -64,7 +62,7 @@ client (void *)
   if (cli_stream.close () == -1)
     ACE_ERROR ((LM_ERROR, ACE_TEXT ("%p\n"), ACE_TEXT ("close")));
 
-#if (defined (ACE_WIN32) && defined (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0))
+#if defined (ACE_HAS_WIN32_NAMED_PIPES)
 
   // Wait for server to get ready...
   ACE_OS::sleep (1);
@@ -134,7 +132,7 @@ server (void *)
   new_stream.close ();
   acceptor.close ();
 
-#if (defined (ACE_WIN32) && defined (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0))
+#if defined (ACE_HAS_WIN32_NAMED_PIPES)
   // Initialize an NT bytestream named pipe listener.
   if (acceptor.open (ACE_SPIPE_Addr (rendezvous),
                      1,
@@ -172,12 +170,12 @@ server (void *)
   if (new_stream.recv (buf, sizeof(buf)) != (ssize_t) ACE_OS::strlen (ACE_ALPHABET))
     ACE_ERROR ((LM_ERROR, ACE_TEXT ("%p\n%a"), ACE_TEXT ("recv"), 1));
   else
-    ACE_ASSERT(memcmp(ACE_ALPHABET, buf, ACE_OS::strlen (ACE_ALPHABET)) == 0);
+    ACE_ASSERT(ACE_OS::memcmp(ACE_ALPHABET, buf, ACE_OS::strlen (ACE_ALPHABET)) == 0);
 
   ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("End of connection. Closing handle\n")));
   new_stream.close ();
   acceptor.close ();
-#endif /* (defined (ACE_WIN32) && defined (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0)) */
+#endif /* defined (ACE_HAS_WIN32NAMED_PIPES) */
 
   return 0;
 }

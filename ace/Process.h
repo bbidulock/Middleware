@@ -66,8 +66,8 @@ public:
 protected:
   // = Default settings not part of public Interface.
   //
-  // @@todo These sizes should be taken from the appropriate
-  // POSIX/system header files and/or defined dynamically.
+  /// @todo These sizes should be taken from the appropriate
+  /// POSIX/system header files and/or defined dynamically.
   enum
   {
     MAX_COMMAND_LINE_OPTIONS = 128,
@@ -77,11 +77,11 @@ protected:
 
 public:
   /**
-   * If @a inherit_environment == 1, the new process will inherit the
+   * If @a inherit_environment == true, the new process will inherit the
    * environment of the current process.  @a command_line_buf_len is the
    * max strlen for command-line arguments.
    */
-  ACE_Process_Options (int inherit_environment = 1,
+  ACE_Process_Options (bool inherit_environment = true,
                        int command_line_buf_len = DEFAULT_COMMAND_LINE_BUF_LEN,
                        int env_buf_len = ENVIRONMENT_BUFFER,
                        int max_env_args = MAX_ENVIRONMENT_ARGS);
@@ -152,7 +152,6 @@ public:
   /// Same as above in argv format.  @a argv must be null terminated.
   int command_line (const ACE_TCHAR * const argv[]);
 
-  // = Set/get the pathname used to name the process.
   /**
    * Specify the full path or relative path, or just the executable
    * name for the process. If this is set, then @a name will be used to
@@ -169,10 +168,18 @@ public:
   /// Get the creation flags.
   u_long creation_flags (void) const;
 
-  /// Set the creation flags.
+  /**
+   * Set the creation flags to affect how a new process is spawned.
+   * The only ACE-defined flag is @c NO_EXEC which prevents the new process
+   * from executing a new program image; this is a simple POSIX fork().
+   * The @c NO_EXEC option has no affect on Windows; on other platforms where
+   * a POSIX fork is not possible, specifying @c NO_EXEC will cause
+   * ACE_Process::spawn() to fail.
+   *
+   * On Windows, the value of creation_flags is passed to the @c CreateProcess
+   * system call as the value of the @c dwCreationFlags parameter.
+   */
   void creation_flags (u_long);
-
-  // = <ACE_Process> uses these operations to retrieve option values.
 
   /// Current working directory.  Returns "" if nothing has been set.
   ACE_TCHAR *working_directory (void);
@@ -299,12 +306,12 @@ public:
   /**
    * Get the inherit_environment flag.
    */
-  int inherit_environment (void) const;
+  bool inherit_environment (void) const;
 
   /**
    * Set the inherit_environment flag.
    */
-  void inherit_environment (int nv);
+  void inherit_environment (bool nv);
 #endif /* ACE_WIN32 */
 protected:
 
@@ -315,7 +322,7 @@ protected:
 
   /// Whether the child process inherits the current process
   /// environment.
-  int inherit_environment_;
+  bool inherit_environment_;
 #endif /* !ACE_HAS_WINCE */
 
   /// Default 0.

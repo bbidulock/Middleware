@@ -82,9 +82,9 @@ namespace ACE_OS
 
 #if !(defined (ACE_HAS_WINCE) && (UNDER_CE < 500))
   /**
-   * QoS-enabled <accept>, which passes <qos_params> to <accept>.  If
+   * QoS-enabled <accept>, which passes @a qos_params to <accept>.  If
    * the OS platform doesn't support QoS-enabled <accept> then the
-   * <qos_params> are ignored and the BSD-style <accept> is called.
+   * @a qos_params are ignored and the BSD-style <accept> is called.
    */
   extern ACE_Export
   ACE_HANDLE accept (ACE_HANDLE handle,
@@ -98,7 +98,7 @@ namespace ACE_OS
             struct sockaddr *name,
             int namelen);
 
-  // takes care of windows specific requirement to call closesocket
+  /// Takes care of windows specific requirement to call closesocket
   ACE_NAMESPACE_INLINE_FUNCTION
   int closesocket (ACE_HANDLE s);
 
@@ -110,9 +110,9 @@ namespace ACE_OS
 
 #if !(defined (ACE_HAS_WINCE) && (UNDER_CE < 500))
   /**
-   * QoS-enabled <connect>, which passes <qos_params> to <connect>.
+   * QoS-enabled <connect>, which passes @a qos_params to <connect>.
    * If the OS platform doesn't support QoS-enabled <connect> then the
-   * <qos_params> are ignored and the BSD-style <connect> is called.
+   * @a qos_params are ignored and the BSD-style <connect> is called.
    */
   extern ACE_Export
   int connect (ACE_HANDLE handle,

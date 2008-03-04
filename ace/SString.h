@@ -99,7 +99,7 @@ public:
   ACE_USHORT16 *ushort_rep (void) const;
 };
 
-ACE_INLINE ACE_Export
+ACE_Export
 ACE_NS_WString operator + (const ACE_NS_WString &,
                            const ACE_NS_WString &);
 
@@ -385,7 +385,7 @@ public:
 
 protected:
   /// Returns 1 if <d> is a delimiter, 0 otherwise.  If <d> should be
-  /// replaced with <r>, <replace> is set to 1, otherwise 0.
+  /// replaced with @a r, <replace> is set to 1, otherwise 0.
   int is_delimiter (ACE_TCHAR d, int &replace, ACE_TCHAR &r);
 
   /**

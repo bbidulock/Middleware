@@ -4,13 +4,12 @@
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
-#if !defined(ACE_USE_ONE_SHOT_AT_THREAD_EXIT)
 ACE_INLINE
 ACE_At_Thread_Exit::ACE_At_Thread_Exit (void)
   : next_ (0),
     td_ (0),
     was_applied_ (0),
-    is_owner_ (1)
+    is_owner_ (true)
 {
 }
 
@@ -30,14 +29,14 @@ ACE_At_Thread_Exit::was_applied (int applied)
   return was_applied_;
 }
 
-ACE_INLINE int
+ACE_INLINE bool
 ACE_At_Thread_Exit::is_owner() const
 {
   return is_owner_;
 }
 
-ACE_INLINE int
-ACE_At_Thread_Exit::is_owner (int owner)
+ACE_INLINE bool
+ACE_At_Thread_Exit::is_owner (bool owner)
 {
   is_owner_ = owner;
   return is_owner_;
@@ -59,7 +58,6 @@ ACE_At_Thread_Exit_Func::ACE_At_Thread_Exit_Func (void *object,
     param_(param)
 {
 }
-#endif /* ! ACE_USE_ONE_SHOT_AT_THREAD_EXIT */
 
 ACE_INLINE
 ACE_Thread_Descriptor_Base::ACE_Thread_Descriptor_Base (void)
@@ -148,14 +146,12 @@ ACE_Thread_Descriptor::self (ACE_hthread_t &handle)
   handle = this->thr_handle_;
 }
 
-#if !defined(ACE_USE_ONE_SHOT_AT_THREAD_EXIT)
 ACE_INLINE void
 ACE_Thread_Descriptor::log_msg_cleanup (ACE_Log_Msg* log_msg)
 
 {
   log_msg_ = log_msg;
 }
-#endif /* !ACE_USE_ONE_SHOT_AT_THREAD_EXIT */
 
 // Set the <next_> pointer
 ACE_INLINE void
@@ -179,18 +175,12 @@ ACE_Thread_Descriptor::reset (ACE_Thread_Manager *tm)
 {
   ACE_TRACE ("ACE_Thread_Descriptor::reset");
   this->ACE_Thread_Descriptor_Base::reset ();
-#if defined(ACE_USE_ONE_SHOT_AT_THREAD_EXIT)
-  this->cleanup_info_.cleanup_hook_ = 0;
-  this->cleanup_info_.object_ = 0;
-  this->cleanup_info_.param_ = 0;
-#else /* !ACE_USE_ONE_SHOT_AT_THREAD_EXIT */
   this->at_exit_list_ = 0;
     // Start the at_exit hook list.
   this->tm_ = tm;
     // Setup the Thread_Manager.
   this->log_msg_ = 0;
   this->terminated_ = false;
-#endif /* !ACE_USE_ONE_SHOT_AT_THREAD_EXIT */
 }
 
 ACE_INLINE ACE_Thread_Descriptor *
@@ -250,7 +240,6 @@ ACE_Thread_Manager::open (size_t)
   return 0;
 }
 
-#if !defined(ACE_USE_ONE_SHOT_AT_THREAD_EXIT)
 ACE_INLINE int
 ACE_Thread_Manager::at_exit (ACE_At_Thread_Exit* at)
 {
@@ -270,7 +259,6 @@ ACE_Thread_Manager::at_exit (ACE_At_Thread_Exit& at)
   else
     return td->at_exit (at);
 }
-#endif /* !ACE_USE_ONE_SHOT_AT_THREAD_EXIT */
 
 ACE_INLINE int
 ACE_Thread_Manager::at_exit (void *object,
@@ -301,13 +289,13 @@ ACE_Thread_Manager::wait_on_exit (void)
 ACE_INLINE int
 ACE_Thread_Manager::register_as_terminated (ACE_Thread_Descriptor *td)
 {
-#if defined (ACE_VXWORKS)
+#if defined (ACE_HAS_VXTHREADS)
   ACE_UNUSED_ARG (td);
-#else  /* ! ACE_VXWORKS */
+#else  /* ! ACE_HAS_VXTHREADS */
   ACE_Thread_Descriptor_Base *tdb = 0;
   ACE_NEW_RETURN (tdb, ACE_Thread_Descriptor_Base (*td), -1);
   this->terminated_thr_list_.insert_tail (tdb);
-#endif /* ! ACE_VXWORKS */
+#endif /* !ACE_HAS_VXTHREADS */
   return 0;
 }
 

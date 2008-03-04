@@ -103,6 +103,19 @@ ACE_OS::bind (ACE_HANDLE handle, struct sockaddr *addr, int addrlen)
   ACE_UNUSED_ARG (addr);
   ACE_UNUSED_ARG (addrlen);
   ACE_NOTSUP_RETURN (-1);
+#elif defined (ACE_VXWORKS) && (ACE_VXWORKS <= 0x640)
+  // VxWorks clears the sin_port member after a succesfull bind when
+  // sin_addr != INADDR_ANY, so after the bind we do retrieve the
+  // original address so that user code can safely check the addr
+  // after the bind. See bugzilla 3107 for more details
+  int result;
+  ACE_SOCKCALL (::bind ((ACE_SOCKET) handle,
+                        addr,
+                        (ACE_SOCKET_LEN) addrlen), int, -1, result);
+  if (result == -1)
+    return -1;
+  else
+    return ACE_OS::getsockname (handle, addr, &addrlen);
 #else
   ACE_SOCKCALL_RETURN (::bind ((ACE_SOCKET) handle,
                                addr,
@@ -122,7 +135,9 @@ ACE_OS::closesocket (ACE_HANDLE handle)
 
   ACE_SOCKCALL_RETURN (::closesocket ((SOCKET) handle), int, -1);
 #else
+  //FUZZ: disable check_for_lack_ACE_OS
   ACE_OSCALL_RETURN (::close (handle), int, -1);
+  //FUZZ: enable check_for_lack_ACE_OS
 #endif /* ACE_WIN32 */
 }
 
@@ -792,9 +807,9 @@ ACE_OS::sendv (ACE_HANDLE handle,
       local_iov[i].iov_len  = buffers[i].iov_len;
 
       new_total = total + buffers[i].iov_len;
-      if ( new_total >= SSIZE_MAX )
+      if (new_total >= ACE_HAS_SOCK_BUF_SIZE_MAX_VALUE)
         {
-          local_iov[i].iov_len = SSIZE_MAX - total;
+          local_iov[i].iov_len = ACE_HAS_SOCK_BUF_SIZE_MAX_VALUE - total;
           n = i+1;
           break;
         }

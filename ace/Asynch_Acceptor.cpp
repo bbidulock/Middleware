@@ -12,7 +12,7 @@
 
 ACE_RCSID(ace, Asynch_Acceptor, "$Id$")
 
-#if (defined (ACE_WIN32) || defined (ACE_HAS_AIO_CALLS)) && !defined(ACE_HAS_WINCE)
+#if defined (ACE_HAS_WIN32_OVERLAPPED_IO) || defined (ACE_HAS_AIO_CALLS)
 // This only works on platforms that support async i/o.
 
 #include "ace/OS_Errno.h"
@@ -29,8 +29,8 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 template <class HANDLER>
 ACE_Asynch_Acceptor<HANDLER>::ACE_Asynch_Acceptor (void)
   : listen_handle_ (ACE_INVALID_HANDLE),
-    pass_addresses_ (0),
-    validate_new_connection_ (0),
+    pass_addresses_ (false),
+    validate_new_connection_ (false),
     reissue_accept_ (1),
     bytes_to_read_ (0)
 {
@@ -50,11 +50,11 @@ ACE_Asynch_Acceptor<HANDLER>::~ACE_Asynch_Acceptor (void)
 template <class HANDLER> int
 ACE_Asynch_Acceptor<HANDLER>::open (const ACE_INET_Addr &address,
                                     size_t bytes_to_read,
-                                    int pass_addresses,
+                                    bool pass_addresses,
                                     int backlog,
                                     int reuse_addr,
                                     ACE_Proactor *proactor,
-                                    int validate_new_connection,
+                                    bool validate_new_connection,
                                     int reissue_accept,
                                     int number_of_initial_accepts)
 {
@@ -71,8 +71,8 @@ ACE_Asynch_Acceptor<HANDLER>::open (const ACE_INET_Addr &address,
   this->listen_handle_ = ACE_OS::socket (address.get_type (), SOCK_STREAM, 0);
   if (this->listen_handle_ == ACE_INVALID_HANDLE)
     ACE_ERROR_RETURN ((LM_ERROR,
-                       ACE_LIB_TEXT ("%p\n"),
-                       ACE_LIB_TEXT ("ACE_OS::socket")),
+                       ACE_TEXT ("%p\n"),
+                       ACE_TEXT ("ACE_OS::socket")),
                       -1);
   // Initialize the ACE_Asynch_Accept
   if (this->asynch_accept_.open (*this,
@@ -82,8 +82,8 @@ ACE_Asynch_Acceptor<HANDLER>::open (const ACE_INET_Addr &address,
     {
       ACE_Errno_Guard g (errno);
       ACE_ERROR ((LM_ERROR,
-                  ACE_LIB_TEXT ("%p\n"),
-                  ACE_LIB_TEXT ("ACE_Asynch_Accept::open")));
+                  ACE_TEXT ("%p\n"),
+                  ACE_TEXT ("ACE_Asynch_Accept::open")));
       ACE_OS::closesocket (this->listen_handle_);
       this->listen_handle_ = ACE_INVALID_HANDLE;
       return -1;
@@ -101,8 +101,8 @@ ACE_Asynch_Acceptor<HANDLER>::open (const ACE_INET_Addr &address,
         {
           ACE_Errno_Guard g (errno);
           ACE_ERROR ((LM_ERROR,
-                      ACE_LIB_TEXT ("%p\n"),
-                      ACE_LIB_TEXT ("ACE_OS::setsockopt")));
+                      ACE_TEXT ("%p\n"),
+                      ACE_TEXT ("ACE_OS::setsockopt")));
           ACE_OS::closesocket (this->listen_handle_);
           this->listen_handle_ = ACE_INVALID_HANDLE;
           return -1;
@@ -119,8 +119,8 @@ ACE_Asynch_Acceptor<HANDLER>::open (const ACE_INET_Addr &address,
     {
       ACE_Errno_Guard g (errno);
       ACE_ERROR ((LM_ERROR,
-                  ACE_LIB_TEXT ("%p\n"),
-                  ACE_LIB_TEXT ("ACE::bind_port")));
+                  ACE_TEXT ("%p\n"),
+                  ACE_TEXT ("ACE::bind_port")));
       ACE_OS::closesocket (this->listen_handle_);
       this->listen_handle_ = ACE_INVALID_HANDLE;
       return -1;
@@ -133,8 +133,8 @@ ACE_Asynch_Acceptor<HANDLER>::open (const ACE_INET_Addr &address,
     {
       ACE_Errno_Guard g (errno);
       ACE_ERROR ((LM_ERROR,
-                  ACE_LIB_TEXT ("%p\n"),
-                  ACE_LIB_TEXT ("ACE_OS::bind")));
+                  ACE_TEXT ("%p\n"),
+                  ACE_TEXT ("ACE_OS::bind")));
       ACE_OS::closesocket (this->listen_handle_);
       this->listen_handle_ = ACE_INVALID_HANDLE;
       return -1;
@@ -145,8 +145,8 @@ ACE_Asynch_Acceptor<HANDLER>::open (const ACE_INET_Addr &address,
     {
       ACE_Errno_Guard g (errno);
       ACE_ERROR ((LM_ERROR,
-                  ACE_LIB_TEXT ("%p\n"),
-                  ACE_LIB_TEXT ("ACE_OS::listen")));
+                  ACE_TEXT ("%p\n"),
+                  ACE_TEXT ("ACE_OS::listen")));
       ACE_OS::closesocket (this->listen_handle_);
       this->listen_handle_ = ACE_INVALID_HANDLE;
       return -1;
@@ -163,8 +163,8 @@ ACE_Asynch_Acceptor<HANDLER>::open (const ACE_INET_Addr &address,
         {
           ACE_Errno_Guard g (errno);
           ACE_ERROR ((LM_ERROR,
-                      ACE_LIB_TEXT ("%p\n"),
-                      ACE_LIB_TEXT ("ACE_Asynch_Acceptor::accept")));
+                      ACE_TEXT ("%p\n"),
+                      ACE_TEXT ("ACE_Asynch_Acceptor::accept")));
           ACE_OS::closesocket (this->listen_handle_);
           this->listen_handle_ = ACE_INVALID_HANDLE;
           return -1;
@@ -188,8 +188,8 @@ ACE_Asynch_Acceptor<HANDLER>::set_handle (ACE_HANDLE listen_handle)
                                  0,
                                  this->proactor ()) == -1)
     ACE_ERROR_RETURN ((LM_ERROR,
-                       ACE_LIB_TEXT ("%p\n"),
-                       ACE_LIB_TEXT ("ACE_Asynch_Accept::open")),
+                       ACE_TEXT ("%p\n"),
+                       ACE_TEXT ("ACE_Asynch_Accept::open")),
                       -1);
   return 0;
 }
@@ -239,8 +239,6 @@ ACE_Asynch_Acceptor<HANDLER>::accept (size_t bytes_to_read, const void *act)
 template <class HANDLER> void
 ACE_Asynch_Acceptor<HANDLER>::handle_accept (const ACE_Asynch_Accept::Result &result)
 {
-#if (defined (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0)) || (defined (ACE_HAS_WINSOCK2) && (ACE_HAS_WINSOCK2 != 0)) || defined (ACE_HAS_AIO_CALLS)
-
   ACE_TRACE ("ACE_Asynch_Acceptor<>::handle_accept");
 
   // Variable for error tracking
@@ -252,7 +250,7 @@ ACE_Asynch_Acceptor<HANDLER>::handle_accept (const ACE_Asynch_Accept::Result &re
       error = 1;
     }
 
-#if !defined (ACE_HAS_AIO_CALLS)
+#if defined (ACE_WIN32)
   // In order to use accept handle with other Window Sockets 1.1
   // functions, we call the setsockopt function with the
   // SO_UPDATE_ACCEPT_CONTEXT option. This option initializes the
@@ -267,7 +265,7 @@ ACE_Asynch_Acceptor<HANDLER>::handle_accept (const ACE_Asynch_Accept::Result &re
     {
       error = 1;
     }
-#endif /* ACE_HAS_AIO_CALLS */
+#endif /* ACE_WIN32 */
 
   // Parse address.
   ACE_INET_Addr local_address;
@@ -282,8 +280,7 @@ ACE_Asynch_Acceptor<HANDLER>::handle_accept (const ACE_Asynch_Accept::Result &re
   // Validate remote address
   if (!error &&
       this->validate_new_connection_ &&
-      (this->validate_connection (result, remote_address, local_address) == -1
-       || this->validate_new_connection (remote_address) == -1))
+      (this->validate_connection (result, remote_address, local_address) == -1))
     {
       error = 1;
     }
@@ -342,7 +339,6 @@ ACE_Asynch_Acceptor<HANDLER>::handle_accept (const ACE_Asynch_Accept::Result &re
 #endif
       )
     this->accept (this->bytes_to_read_);
-#endif /* (defined (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0)) || (defined (ACE_HAS_WINSOCK2) && (ACE_HAS_WINSOCK2 != 0)) || defined (ACE_HAS_AIO_CALLS */
 }
 
 template <class HANDLER> int
@@ -356,13 +352,6 @@ ACE_Asynch_Acceptor<HANDLER>::validate_connection
 }
 
 template <class HANDLER> int
-ACE_Asynch_Acceptor<HANDLER>::validate_new_connection (const ACE_INET_Addr&)
-{
-  // Default implementation always validates the remote address.
-  return 0;
-}
-
-template <class HANDLER> int
 ACE_Asynch_Acceptor<HANDLER>::cancel (void)
 {
   ACE_TRACE ("ACE_Asynch_Acceptor<>::cancel");
@@ -370,14 +359,14 @@ ACE_Asynch_Acceptor<HANDLER>::cancel (void)
   // All I/O operations that are canceled will complete with the error
   // ERROR_OPERATION_ABORTED. All completion notifications for the I/O
   // operations will occur normally.
-#if (defined (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0)) \
-    && (    defined (_MSC_VER) || (defined (__BORLANDC__)))
+#if defined (ACE_HAS_WIN32_OVERLAPPED_IO) && \
+    (defined (_MSC_VER) || defined (__BORLANDC__))
   return (int) ::CancelIo (this->listen_handle_);
 #else
   // Supported now
   return this->asynch_accept_.cancel();
 
-#endif /* (defined (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0)) && ((defined (_MSC_VER)) || (defined (__BORLANDC__))) */
+#endif /* defined (ACE_HAS_WIN32_OVERLAPPED_IO) && (defined (_MSC_VER)) || defined (__BORLANDC__)) */
 }
 
 template <class HANDLER> void
@@ -396,7 +385,7 @@ ACE_Asynch_Acceptor<HANDLER>::parse_address (const
   str.get_local_addr (local_address);
   str.get_remote_addr (remote_address);
 
-#elif (defined (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0)) || (defined (ACE_HAS_WINSOCK2) && (ACE_HAS_WINSOCK2 != 0))
+#elif defined (ACE_HAS_WINSOCK2) && (ACE_HAS_WINSOCK2 != 0)
 
   ACE_Message_Block &message_block = result.message_block ();
 
@@ -427,7 +416,7 @@ ACE_Asynch_Acceptor<HANDLER>::parse_address (const
 #else
   // just in case
   errno = ENOTSUP;
-#endif /* (defined (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0)) || (defined (ACE_HAS_WINSOCK2) && (ACE_HAS_WINSOCK2 != 0)) */
+#endif /* defined (ACE_HAS_WINSOCK2) && (ACE_HAS_WINSOCK2 != 0) */
   return;
 }
 
@@ -467,26 +456,26 @@ ACE_Asynch_Acceptor<HANDLER>::address_size (void)
   return sizeof (sockaddr) + sizeof (sockaddr_in);
 }
 
-template <class HANDLER> int
+template <class HANDLER> bool
 ACE_Asynch_Acceptor<HANDLER>::pass_addresses (void) const
 {
   return this->pass_addresses_;
 }
 
 template <class HANDLER> void
-ACE_Asynch_Acceptor<HANDLER>::pass_addresses (int new_value)
+ACE_Asynch_Acceptor<HANDLER>::pass_addresses (bool new_value)
 {
   this->pass_addresses_ = new_value;
 }
 
-template <class HANDLER> int
+template <class HANDLER> bool
 ACE_Asynch_Acceptor<HANDLER>::validate_new_connection (void) const
 {
   return this->validate_new_connection_;
 }
 
 template <class HANDLER> void
-ACE_Asynch_Acceptor<HANDLER>::validate_new_connection (int new_value)
+ACE_Asynch_Acceptor<HANDLER>::validate_new_connection (bool new_value)
 {
   this->validate_new_connection_ = new_value;
 }

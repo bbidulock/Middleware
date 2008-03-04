@@ -85,9 +85,9 @@ ACE_SOCK_IO::recvv (iovec *io_vec,
       // don't want that value cast to unsigned and returned.
       ssize_t recv_len = this->recv (io_vec->iov_base, inlen);
       if (recv_len > 0)
-	// u_long is the Windows type; size_t is everyone else's. A u_long
-	// should go into a size_t anywhere without an issue.
-	io_vec->iov_len = static_cast<u_long> (recv_len);
+        // u_long is the Windows type; size_t is everyone else's. A u_long
+        // should go into a size_t anywhere without an issue.
+        io_vec->iov_len = static_cast<u_long> (recv_len);
       return recv_len;
     }
   else
@@ -110,7 +110,7 @@ ACE_SOCK_IO::send (size_t n, ...) const
   ACE_TRACE ("ACE_SOCK_IO::send");
 
   va_list argp;
-  int total_tuples = ACE_Utils::Truncate<size_t> (n / 2);
+  int total_tuples = ACE_Utils::truncate_cast<int> (n / 2);
   iovec *iovp = 0;
 #if defined (ACE_HAS_ALLOCA)
   iovp = (iovec *) alloca (total_tuples * sizeof (iovec));
@@ -150,7 +150,7 @@ ACE_SOCK_IO::recv (size_t n, ...) const
   ACE_TRACE ("ACE_SOCK_IO::recv");
 
   va_list argp;
-  int total_tuples = ACE_Utils::Truncate<size_t> (n / 2);
+  int total_tuples = ACE_Utils::truncate_cast<int> (n / 2);
   iovec *iovp;
 #if defined (ACE_HAS_ALLOCA)
   iovp = (iovec *) alloca (total_tuples * sizeof (iovec));

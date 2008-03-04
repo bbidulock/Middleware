@@ -33,7 +33,7 @@
 #pragma once
 #endif /* ACE_LACKS_PRAGMA_ONCE */
 
-#if (defined (ACE_WIN32) && !defined (ACE_HAS_WINCE)) || (defined (ACE_HAS_AIO_CALLS))
+#if defined (ACE_HAS_WIN32_OVERLAPPED_IO) || defined (ACE_HAS_AIO_CALLS)
 
 #include "ace/Synch_Traits.h"
 #if defined (ACE_HAS_THREADS)
@@ -49,8 +49,7 @@
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
-# if defined (ACE_WIN32) && ! defined (ACE_HAS_WINCE) \
-                         && ! defined (ACE_HAS_PHARLAP)
+# if defined (ACE_HAS_WIN32_OVERLAPPED_IO)
 typedef TRANSMIT_FILE_BUFFERS ACE_TRANSMIT_FILE_BUFFERS;
 typedef LPTRANSMIT_FILE_BUFFERS ACE_LPTRANSMIT_FILE_BUFFERS;
 typedef PTRANSMIT_FILE_BUFFERS ACE_PTRANSMIT_FILE_BUFFERS;
@@ -59,7 +58,7 @@ typedef PTRANSMIT_FILE_BUFFERS ACE_PTRANSMIT_FILE_BUFFERS;
 #   define ACE_STATUS_TIMEOUT STATUS_TIMEOUT
 #   define ACE_WAIT_FAILED WAIT_FAILED
 #   define ACE_WAIT_TIMEOUT WAIT_TIMEOUT
-# else /* ACE_WIN32 */
+# else /* ACE_HAS_WIN32_OVERLAPPED_IO */
 struct ACE_TRANSMIT_FILE_BUFFERS
 {
   void *Head;
@@ -76,7 +75,7 @@ typedef ACE_TRANSMIT_FILE_BUFFERS* ACE_LPTRANSMIT_FILE_BUFFERS;
 #   define ACE_STATUS_TIMEOUT LONG_MAX
 #   define ACE_WAIT_FAILED LONG_MAX
 #   define ACE_WAIT_TIMEOUT LONG_MAX
-# endif /* ACE_WIN32 */
+# endif /* ACE_HAS_WIN32_OVERLAPPED_IO */
 
 // Forward declarations
 class ACE_Proactor;
@@ -319,18 +318,28 @@ public:
             ACE_Proactor *proactor = 0);
 
   /**
-   * This starts off an asynchronous read.  Upto {bytes_to_read} will
-   * be read and stored in the {message_block}. {message_block}'s
-   * {wr_ptr} will be updated to reflect the added bytes if the read
-   * operation is successful completed. Priority of the
-   * operation is specified by {priority}. On POSIX4-Unix, this is
-   * supported. Works like {nice} in Unix. Negative values are not
-   * allowed. 0 means priority of the operation same as the process
-   * priority. 1 means priority of the operation is one less than
-   * process. And so forth. On Win32, {priority} is a no-op.
-   * {signal_number} is the POSIX4 real-time signal number to be used
-   * for the operation. {signal_number} ranges from ACE_SIGRTMIN to
-   * ACE_SIGRTMAX. This argument is a no-op on non-POSIX4 systems.
+   * Initiate an asynchronous read operation.
+   *
+   * @arg message_block      The ACE_Message_Block to receive the data.
+   *                         Received bytes will be placed in the block
+   *                         beginning at its current write pointer.
+   *                         If data is read, the message block's write
+   *                         pointer will be advanced by the number of
+   *                         bytes read.
+   * @arg num_bytes_to_read  The maximum number of bytes to read.
+   * @arg act                Asynchronous Completion Token; passed through to
+   *                         the Result object corresponding to this operation.
+   * @arg priority           Priority of the operation. On POSIX4-Unix,
+   *                         this is supported. Works like @c nice in Unix.
+   *                         Negative values are not allowed. 0 means
+   *                         priority of the operation same as the process
+   *                         priority. 1 means priority of the operation is
+   *                         one less than process priority, etc.
+   *                         @param is ignored on Windows.
+   * @arg signal_number      The POSIX4 real-time signal number to be used
+   *                         to signal completion of the operation. Values
+   *                         range from ACE_SIGRTMIN to ACE_SIGRTMAX.
+   *                         This argument is ignored on non-POSIX4 systems.
    */
   int read (ACE_Message_Block &message_block,
             size_t num_bytes_to_read,
@@ -338,7 +347,7 @@ public:
             int priority = 0,
             int signal_number = ACE_SIGRTMIN);
 
-#if (defined (ACE_WIN32) && !defined (ACE_HAS_WINCE) && (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0))
+#if defined (ACE_HAS_WIN32_OVERLAPPED_IO)
   /**
   * Same as above but with scatter support, through chaining of composite
   * message blocks using the continuation field.
@@ -348,7 +357,7 @@ public:
              const void *act = 0,
              int priority = 0,
              int signal_number = ACE_SIGRTMIN);
-#endif /* (defined (ACE_WIN32) && !defined (ACE_HAS_WINCE) && (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0)) */
+#endif /* defined (ACE_HAS_WIN32_OVERLAPPED_IO) */
 
   /// Return the underlying implementation class.
   //  (this should be protected...)
@@ -462,7 +471,7 @@ public:
              int priority = 0,
              int signal_number = ACE_SIGRTMIN);
 
-#if (defined (ACE_WIN32) && !defined (ACE_HAS_WINCE) && (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0))
+#if defined (ACE_HAS_WIN32_OVERLAPPED_IO)
   /**
   * Same as above but with gather support, through chaining of composite
   * message blocks using the continuation field.
@@ -472,7 +481,7 @@ public:
               const void *act = 0,
               int priority = 0,
               int signal_number = ACE_SIGRTMIN);
-#endif /* (defined (ACE_WIN32) && !defined (ACE_HAS_WINCE) && (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0)) */
+#endif /* defined (ACE_HAS_WIN32_OVERLAPPED_IO) */
 
   /// Return the underlying implementation class.
   /// @todo (this should be protected...)
@@ -1616,6 +1625,9 @@ protected:
 
   /// Refers to proxy for this handler.
   ACE_Refcounted_Auto_Ptr<Proxy, ACE_SYNCH_MUTEX> proxy_;
+
+  ACE_UNIMPLEMENTED_FUNC (ACE_Handler (const ACE_Handler &))
+  ACE_UNIMPLEMENTED_FUNC (ACE_Handler operator= (const ACE_Handler &))
 };
 
 // Forward declarations

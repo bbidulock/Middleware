@@ -164,9 +164,6 @@
 /* Platform supports POSIX Threads */
 #define ACE_HAS_PTHREADS 1
 
-/* Platform supports POSIX.1c-1995 threads */
-#define ACE_HAS_PTHREADS_STD 1
-
 /* pthread.h declares an enum with PTHREAD_PROCESS_PRIVATE and
    PTHREAD_PROCESS_SHARED values */
 #define ACE_HAS_PTHREAD_PROCESS_ENUM 1
@@ -345,11 +342,6 @@
 /* Staller -> make 0 */
 // #undef ACE_TEMPLATES_REQUIRE_SOURCE
 
-/* Compiler's template instantiation mechanism supports the use of explicit
-   C++ specializations for all used templates. This is also used for GNU G++
-   if you don't use the "repo" patches. */
-/* Staller -> make 0 */
-// #define ACE_HAS_EXPLICIT_TEMPLATE_INSTANTIATION 1
 /*********************************************************************/
 
 /* The OS/platform supports the poll() event demultiplexor */

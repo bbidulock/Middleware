@@ -3,6 +3,8 @@
 // copyright : Copyright (c) 2002-2003 Boris Kolpackov
 // license   : http://kolpackov.net/license.html
 
+/* FUZZ: disable check_for_improper_main_declaration */
+
 #include "Utility/ExH/Compound.hpp"
 #include "Utility/ExH/System/Exception.hpp"
 #include "Utility/ExH/Logic/DescriptiveException.hpp"
@@ -50,7 +52,7 @@ public:
 public:
 
   void
-  foo (char const* str) throw (InvalidArgument, NotInitialized)
+  foo (char const* str)
   {
     // This is just an example.
 
@@ -72,7 +74,7 @@ public:
   // we allow to throw System exception and any logic exception
   // derived from Base::Exception
   virtual void
-  vfoo () throw (Exception, System::Exception) = 0;
+  vfoo () = 0;
 };
 
 class Derived : public Base
@@ -87,7 +89,7 @@ public:
 
 public:
   virtual void
-  vfoo () throw (NotImplemented, System::Exception)
+  vfoo ()
   {
     std::string str ("Derived::vfoo: not implemented yet.");
     throw NotImplemented (str);

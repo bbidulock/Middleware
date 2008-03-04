@@ -37,24 +37,8 @@
 #  endif  /* !_FILE_OFFSET_BITS */
 #endif /* _WIN64 || WIN64 */
 
-// Define this if you're running NT >= 4.0 (Win2K == NT 5).
-//  Setting applies to  : building ACE
-//  Runtime restrictions: System must be Windows NT => 4.0
-#if !defined (ACE_HAS_WINNT4)
-# define ACE_HAS_WINNT4 1      /* assuming Win NT 4.0 or greater */
-#endif
-
-#if (defined (ACE_HAS_WINNT4) && ACE_HAS_WINNT4 != 0)
-# if !defined (_WIN32_WINNT)
-#  define _WIN32_WINNT 0x0400
-# endif
-#else
-// On Win9X, a shared address SHOULD be between the 2nd and 3rd Gb.
-// Note this will not work for NT: The addresses above 2Gb are
-// reserved for the system, so this one will fail.
-# if !defined (ACE_DEFAULT_BASE_ADDR)
-#   define ACE_DEFAULT_BASE_ADDR ((char*) ((2048UL+512UL)*1024UL*1024UL))
-# endif
+#if !defined (_WIN32_WINNT)
+# define _WIN32_WINNT 0x0400 // pretend it's at least WinNT 4.0
 #endif
 
 // If the invoking procedure turned off debugging by setting NDEBUG, then
@@ -119,8 +103,8 @@
 //  #endif
 
 // Define the special export macros needed to export symbols outside a dll
-#if !defined(__BORLANDC__) && !defined(__IBMCPP__)
-#define ACE_HAS_CUSTOM_EXPORT_MACROS
+#if !defined(__BORLANDC__)
+#define ACE_HAS_CUSTOM_EXPORT_MACROS 1
 #define ACE_Proper_Export_Flag __declspec (dllexport)
 #define ACE_Proper_Import_Flag __declspec (dllimport)
 #define ACE_EXPORT_SINGLETON_DECLARATION(T) template class __declspec (dllexport) T
@@ -201,14 +185,8 @@
 // probably don't want too big a value for ACE_IOV_MAX since it may
 // mostly go to waste or the size of the activation record may become
 // excessively large.
-
 #if !defined (ACE_IOV_MAX)
-#if (defined (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0))
 # define ACE_IOV_MAX 64
-#else
-// Win 95/98/me need a smaller value than WinNT versions of Windows.
-# define ACE_IOV_MAX 16
-#endif /* #if (defined (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0)) */
 #endif /* ACE_IOV_MAX */
 
 #if !defined (ACE_HAS_WINCE)
@@ -286,9 +264,9 @@
 #define ACE_LACKS_UNAME
 #define ACE_LACKS_WAIT
 #define ACE_LACKS_IOVEC
+#define ACE_LACKS_LOG2
 
 #define ACE_HAS_VFWPRINTF
-#define ACE_HAS_VSWPRINTF
 
 #define ACE_MKDIR_LACKS_MODE
 
@@ -296,13 +274,13 @@
 // Green Hills Native x86 does not support __int64 keyword
 // Neither does mingw32.
 #if !defined (ACE_LACKS_LONGLONG_T) && !defined (__MINGW32__)
-#define ACE_INT64_TYPE		signed __int64
-#define ACE_UINT64_TYPE		unsigned __int64
+#define ACE_INT64_TYPE  signed __int64
+#define ACE_UINT64_TYPE unsigned __int64
 #endif /* (ghs) */
 
 #if defined (__MINGW32__)
-#define ACE_INT64_TYPE		signed long long
-#define ACE_UINT64_TYPE		unsigned long long
+#define ACE_INT64_TYPE  signed long long
+#define ACE_UINT64_TYPE unsigned long long
 #endif
 
 // Optimize ACE_Handle_Set for select().
@@ -325,10 +303,8 @@
 // Platform supports the /proc file system.
 //define ACE_HAS_PROC_FS
 
-#if (defined (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0))
 // Platform supports the rusage struct.
 #define ACE_HAS_GETRUSAGE
-#endif /* (defined (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0)) */
 
 // Compiler/platform supports SVR4 signal typedef.
 //define ACE_HAS_SVR4_SIGNAL_T
@@ -367,9 +343,10 @@
 // No system support for replacing any previous mappings.
 #define ACE_LACKS_AUTO_MMAP_REPLACEMENT
 
-// If you want to use highres timers, ensure that
-// Build.Settings.C++.CodeGeneration.Processor is
-// set to Pentium !
+// ACE_HAS_PENTIUM is used to optimize some CDR operations; it's used for
+// some other time-related things using g++, but not for VC. Current VC
+// compilers set _M_IX86 > 400 by default so if you're not using a Pentium
+// class CPU, set the project code generation options appropriately.
 #if !defined(ACE_HAS_PENTIUM) && (_M_IX86 > 400)
 # define ACE_HAS_PENTIUM
 #endif
@@ -433,9 +410,6 @@
 #  include /**/ <afxwin.h>   /* He is doing MFC */
 // Windows.h will be included via afxwin.h->afx.h->afx_ver_.h->afxv_w32.h
 // #define      _INC_WINDOWS  // Prevent winsock.h from including windows.h
-#  if defined (ACE_HAS_WINCE)
-#    include /**/ <wce.h>
-#  endif /* ACE_HAS_WINCE */
 #elif defined (ACE_HAS_WINCE)
 #  include /**/ <windows.h>
 #endif
@@ -549,20 +523,19 @@
 # define ACE_HAS_IP_MULTICAST
 #endif /* ACE_HAS_WINSOCK2 */
 
-#if (defined (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0)) || \
-    defined (ACE_HAS_WINCE)            /* WinCE 3 has these */
-#  if !defined (ACE_HAS_WINCE) || defined (PPC)   /* CE only on some CPUs */
-#    define ACE_HAS_INTERLOCKED_EXCHANGEADD
-#  endif
-# define ACE_HAS_WIN32_TRYLOCK
+#if !defined (ACE_HAS_WINCE) || defined (PPC)   /* CE only on some CPUs */
+#  define ACE_HAS_INTERLOCKED_EXCHANGEADD
 #endif
+#define ACE_HAS_WIN32_TRYLOCK
 
-#if (defined (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0)) && !defined (ACE_USES_WINCE_SEMA_SIMULATION)
+#if !defined (ACE_HAS_WINCE) && !defined (ACE_HAS_PHARLAP)
 # define ACE_HAS_SIGNAL_OBJECT_AND_WAIT
 
 // If CancelIO is undefined get the updated sp2-sdk from MS
 # define ACE_HAS_CANCEL_IO
-#endif /* (defined (ACE_HAS_WINNT4) && (ACE_HAS_WINNT4 != 0)) && !defined (ACE_USES_WINCE_SEMA_SIMULATION) */
+# define ACE_HAS_WIN32_OVERLAPPED_IO
+# define ACE_HAS_WIN32_NAMED_PIPES
+#endif /* !defined (ACE_USES_WINCE_SEMA_SIMULATION) && !ACE_HAS_PHARLAP */
 
 #if !defined (ACE_SEH_DEFAULT_EXCEPTION_HANDLING_ACTION)
 # define ACE_SEH_DEFAULT_EXCEPTION_HANDLING_ACTION EXCEPTION_CONTINUE_SEARCH
@@ -576,12 +549,22 @@
 # endif /* WINSOCK_VERSION */
 #endif /* ACE_HAS_WINSOCK2_GQOS */
 
+// These are the defaults and can be overridden by a user's config.h
+#if !defined (ACE_DEFAULT_FILE_PERMS)
+#  define ACE_DEFAULT_FILE_PERMS (FILE_SHARE_READ | FILE_SHARE_WRITE | \
+                                  FILE_SHARE_DELETE)
+// This alternate used to be used for pre-NT4 systems; may still be needed
+// by knock-offs such as CE and Pharlap.
+//#       define ACE_DEFAULT_FILE_PERMS (FILE_SHARE_READ | FILE_SHARE_WRITE)
+#endif /* !defined (ACE_DEFAULT_FILE_PERMS) */
+
 #define ACE_SIZEOF_WCHAR 2
 #define ACE_HAS_MUTEX_TIMEOUTS
 #define ACE_LACKS_STRUCT_DIR
 #define ACE_LACKS_OPENDIR
 #define ACE_LACKS_CLOSEDIR
 #define ACE_LACKS_READDIR
+#define ACE_LACKS_ALPHASORT
 #define ACE_LACKS_MKSTEMP
 #define ACE_LACKS_LSTAT
 // Looks like Win32 has a non-const swab function
@@ -624,6 +607,50 @@
 #   pragma comment(lib, "netapi32.lib") // needed for obtaing MACaddress
 #  endif
 # endif /* !ACE_HAS_WINCE */
+
+#if !defined (WINVER)
+# define WINVER 0x0400 // pretend it's at least WinNT 4.0
+#endif
+
+///////////////////////////////////////
+// windows version-specific definitions
+// see: http://msdn2.microsoft.com/en-us/library/aa383745.aspx
+// 
+// For TSS information
+// see http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dllproc/base/thread_local_storage.asp
+
+#if (WINVER>=0x0600)
+// Windows Server 2008 definitions go here
+// Windows Vista defintions go here
+#  if ! defined(ACE_DEFAULT_THREAD_KEYS)
+#    define ACE_DEFAULT_THREAD_KEYS 1088
+#  endif // ! defined(ACE_DEFAULT_THREAD_KEYS)
+#elif (WINVER>=0x0502)
+  // Windows Server 2003 SP1 definitions go here
+#  if ! defined(ACE_DEFAULT_THREAD_KEYS)
+#    define ACE_DEFAULT_THREAD_KEYS 1088
+#  endif // ! defined(ACE_DEFAULT_THREAD_KEYS)
+#elif (WINVER>=0x0501)
+// Windows XP definitions go here
+#  if ! defined(ACE_DEFAULT_THREAD_KEYS)
+#    define ACE_DEFAULT_THREAD_KEYS 1088
+#  endif // ! defined(ACE_DEFAULT_THREAD_KEYS)
+#elif (WINVER>=0x0500)
+// Windows 2000 definitions go here
+#  if ! defined(ACE_DEFAULT_THREAD_KEYS)
+#    define ACE_DEFAULT_THREAD_KEYS 1088
+#  endif // ! defined(ACE_DEFAULT_THREAD_KEYS)
+#elif (WINVER>=0x0410)
+// Windows 98 definitions go here
+#  if ! defined(ACE_DEFAULT_THREAD_KEYS)
+#    define ACE_DEFAULT_THREAD_KEYS 80
+#  endif // ! defined(ACE_DEFAULT_THREAD_KEYS)
+#else
+// antique windows 
+#  if ! defined(ACE_DEFAULT_THREAD_KEYS)
+#    define ACE_DEFAULT_THREAD_KEYS 64
+#  endif // ! defined(ACE_DEFAULT_THREAD_KEYS)
+#endif
 
 #if !defined (ACE_DEFAULT_BACKLOG)
 #  define ACE_DEFAULT_BACKLOG SOMAXCONN

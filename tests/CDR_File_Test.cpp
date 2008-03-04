@@ -27,6 +27,7 @@
 #include "ace/Auto_Ptr.h"
 #include "ace/Get_Opt.h"
 #include "ace/ACE.h"
+#include "ace/Truncate.h"
 
 // FUZZ: disable check_for_streams_include
 #include "ace/streams.h"
@@ -87,9 +88,11 @@ operator << (ostream &os,
   ACE_DEBUG ((LM_DEBUG,
               ACE_TEXT ("\n"
                         "Char:               %c\n"
-      "Short:              %u\n"
+                        "Short:              %u\n"
                         "Long:               %d\n"),
-                    t.char_, t.word2_, t.word4_));
+              t.char_,
+              t.word2_,
+              t.word4_));
 
   ACE_CDR::ULongLong hi = (t.word8_ >> 32);
   ACE_CDR::ULongLong lo = (t.word8_ & 0xffffffff);
@@ -97,12 +100,13 @@ operator << (ostream &os,
   ACE_DEBUG ((LM_DEBUG,
               ACE_TEXT ("\n"
                         "ULongLong 1st half: %x\n"
-      "ULongLong 2nd half: %x\n"
+                        "ULongLong 2nd half: %x\n"
                         "Float:              %f\n"
                         "Double:             %f\n"),
-                        ACE_U64_TO_U32(hi),
-                        ACE_U64_TO_U32(lo),
-                        t.fpoint_, t.dprec_));
+              ACE_Utils::truncate_cast<ACE_UINT32> (hi),
+              ACE_Utils::truncate_cast<ACE_UINT32> (lo),
+              t.fpoint_,
+              t.dprec_));
 #else
   os << "Char:              " << t.char_ << endl
      << "Short:             " << t.word2_ << endl
@@ -113,11 +117,11 @@ operator << (ostream &os,
 
   os << "ULongLong 1st half: "
      << hex
-     << ACE_U64_TO_U32 (hi)
+     << ACE_Utils::truncate_cast<ACE_UINT32> (hi)
      << dec << endl
      << "ULongLong 2nd half: "
      << hex
-     << ACE_U64_TO_U32 (lo)
+     << ACE_Utils::truncate_cast<ACE_UINT32> (lo)
      << dec << endl
      << "Float:             " << t.fpoint_ << endl
      << "Double:            " << t.dprec_ << endl;
@@ -325,7 +329,8 @@ run_test (int write_file,
       *ace_file_stream::instance ()->output_file () << temp;
 #endif  // ACE_HAS_WINCE
 
-      ACE_ASSERT (temp == cdr_test);
+      if (!(temp == cdr_test))
+        ACE_ERROR ((LM_ERROR, ACE_TEXT ("Data mismatch across file\n")));
     }
 
   return 0;
@@ -406,9 +411,7 @@ run_main (int argc, ACE_TCHAR *argv[])
                        filename.get_path_name ()),
                       1);
 
-#if (!defined (ACE_WIN32) \
-     || (defined (ACE_HAS_WINNT4) && ACE_HAS_WINNT4 == 1)) && \
-    !defined (VXWORKS)
+#if !defined (ACE_VXWORKS) && !defined (ACE_HAS_PHARLAP) || (defined(ACE_VXWORKS) && (ACE_VXWORKS >= 0x640))
 # define TEST_CAN_UNLINK_IN_ADVANCE
 #endif
 
@@ -419,7 +422,7 @@ run_main (int argc, ACE_TCHAR *argv[])
       // when the process exits.
       if (file.unlink () == -1)
         ACE_ERROR_RETURN ((LM_ERROR,
-                           ACE_TEXT ("unlink failed for %p\n"),
+                           ACE_TEXT ("pre-unlink failed for %p\n"),
                            filename.get_path_name ()),
                           1);
     }

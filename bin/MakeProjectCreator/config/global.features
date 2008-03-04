@@ -36,16 +36,19 @@ ipv6          = 0
 mfc           = 0
 rpc           = 0
 sctp 	      = 0
+boost         = 0
 dummy_label   = 0
 cidl          = 0
-boost         = 0
 wince         = 0
 uses_wchar    = 0
+gen_ostream   = 0
 ziparchive    = 0
 negotiate_codesets  = 0
 versioned_namespace = 0
 vcl           = 0
 stl           = 0
+xsc           = 0
+mcpp          = 0
 
 // Features for various GUI libraries
 
@@ -75,6 +78,8 @@ tk            = 0
 fl            = 0
 // 1 - Qt libraries are avalaible
 qt            = 0
+// 1 - Fox libraries are avalaible
+fox           = 0
 // 1 - OpenGL libraries are avalaible
 gl            = 1
 
@@ -105,5 +110,12 @@ ZIP_Wrapper = 0
 corba_e_compact = 0
 corba_e_micro   = 0
 
+// Footprint feature
+optimize_collocated_invocations = 1
+
 // Option to disable iiop
 tao_no_iiop = 0
+
+// Option to enable the linking of the TAO_CodecFactory library
+// whenever TAO is linked in
+link_codecfactory = 0

@@ -22,7 +22,7 @@ ACE_RCSID (ace,
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
-#if !defined (ACE_HAS_MEMCHR)
+#if defined (ACE_LACKS_MEMCHR)
 const void *
 ACE_OS::memchr_emulation (const void *s, int c, size_t len)
 {
@@ -33,11 +33,11 @@ ACE_OS::memchr_emulation (const void *s, int c, size_t len)
     if (((int) *t) == c)
       return t;
     else
-      t++;
+      ++t;
 
   return 0;
 }
-#endif /*ACE_HAS_MEMCHR*/
+#endif /* ACE_LACKS_MEMCHR */
 
 #if (defined (ACE_LACKS_STRDUP) && !defined (ACE_STRDUP_EQUIVALENT)) \
   || defined (ACE_HAS_STRDUP_EMULATION)
@@ -119,13 +119,18 @@ ACE_OS::strerror (int errnum)
   // and set errno to EINVAL.
   ACE_Errno_Guard g (errno);
   errno = 0;
-  char *errmsg;
+  char *errmsg = 0;
 
-#if defined (ACE_WIN32)
-   if (errnum < 0 || errnum >= _sys_nerr)
-      errno = EINVAL;
+#if defined (ACE_HAS_TR24731_2005_CRT)
+  errmsg = ret_errortext;
+  ACE_SECURECRTCALL (strerror_s (ret_errortext, sizeof(ret_errortext), errnum),
+                     char *, 0, errmsg);
+  return errmsg;
+#elif defined (ACE_WIN32)
+  if (errnum < 0 || errnum >= _sys_nerr)
+    errno = EINVAL;
 #endif /* ACE_WIN32 */
-   errmsg = ::strerror (errnum);
+  errmsg = ::strerror (errnum);
 
   if (errno == EINVAL || errmsg == 0 || errmsg[0] == 0)
     {
@@ -172,14 +177,14 @@ const char *
 ACE_OS::strnstr (const char *s1, const char *s2, size_t len2)
 {
   // Substring length
-  const size_t len1 = ACE_OS::strlen (s1);
+  size_t const len1 = ACE_OS::strlen (s1);
 
   // Check if the substring is longer than the string being searched.
   if (len2 > len1)
     return 0;
 
   // Go upto <len>
-  const size_t len = len1 - len2;
+  size_t const len = len1 - len2;
 
   for (size_t i = 0; i <= len; i++)
     {
@@ -244,25 +249,6 @@ ACE_OS::fast_memcpy (void *t, const void *s, size_t len)
     }
 }
 #endif /* ACE_HAS_MEMCPY_LOOP_UNROLL */
-
-#if defined (ACE_LACKS_STRPBRK)
-char *
-ACE_OS::strpbrk_emulation (const char *string,
-                           const char *charset)
-{
-  const char *scanp;
-  int c, sc;
-
-  while ((c = *string++) != 0)
-    {
-      for (scanp = charset; (sc = *scanp++) != 0;)
-        if (sc == c)
-          return const_cast<char *> (string - 1);
-    }
-
-  return 0;
-}
-#endif /* ACE_LACKS_STRPBRK */
 
 #if defined (ACE_LACKS_STRRCHR)
 char *
@@ -342,26 +328,8 @@ ACE_OS::strsncpy (ACE_WCHAR_T *dst, const ACE_WCHAR_T *src, size_t maxlen)
   return dst;
 }
 
-#if defined (ACE_LACKS_STRSPN)
-size_t
-ACE_OS::strspn_emulation (const char *string,
-                          const char *charset)
-{
-  const char *p = string;
-  const char *spanp;
-  wchar_t c, sc;
-
-  // Skip any characters in charset, excluding the terminating \0.
- cont:
-  c = *p++;
-  for (spanp = charset; (sc = *spanp++) != 0;)
-    if (sc == c)
-      goto cont;
-  return (p - 1 - string);
-}
-#endif /* ACE_LACKS_STRSPN */
-
-#if !defined (ACE_HAS_REENTRANT_FUNCTIONS) || defined (ACE_LACKS_STRTOK_R)
+#if (!defined (ACE_HAS_REENTRANT_FUNCTIONS) || defined (ACE_LACKS_STRTOK_R)) \
+    && !defined (ACE_HAS_TR24731_2005_CRT)
 char *
 ACE_OS::strtok_r_emulation (char *s, const char *tokens, char **lasts)
 {
@@ -390,22 +358,19 @@ ACE_OS::strtok_r_emulation (ACE_WCHAR_T *s,
                             const ACE_WCHAR_T *tokens,
                             ACE_WCHAR_T **lasts)
 {
-  if (s == 0)
-    s = *lasts;
-  else
-    *lasts = s;
-  if (*s == 0)                  // We have reached the end
-    return 0;
-  int l_org = ACE_OS::strlen (s);
-  s = ACE_OS::strtok (s, tokens);
-  if (s == 0)
-    return 0;
-  const int l_sub = ACE_OS::strlen (s);
-  if (s + l_sub < *lasts + l_org)
-    *lasts = s + l_sub + 1;
-  else
-    *lasts = s + l_sub;
-  return s ;
+  ACE_WCHAR_T* sbegin = s ? s : *lasts;
+  sbegin += ACE_OS::strspn(sbegin, tokens);
+  if (*sbegin == 0)
+    {
+      static ACE_WCHAR_T empty[1] = { 0 };
+      *lasts = empty;
+      return 0;
+  }
+  ACE_WCHAR_T*send = sbegin + ACE_OS::strcspn(sbegin, tokens);
+  if (*send != 0)
+      *send++ = 0;
+  *lasts = send;
+  return sbegin;
 }
 # endif  /* ACE_HAS_WCHAR && ACE_LACKS_WCSTOK */
 

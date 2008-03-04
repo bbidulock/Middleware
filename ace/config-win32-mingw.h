@@ -14,7 +14,7 @@
 #  error Use config-win32.h in config.h instead of this header
 #endif /* ACE_CONFIG_WIN32_H */
 
-#define ACE_CC_NAME ACE_LIB_TEXT ("g++")
+#define ACE_CC_NAME ACE_TEXT ("g++")
 #define ACE_CC_PREPROCESSOR "cpp"
 #define ACE_CC_PREPROCESOR_ARGS ""
 
@@ -81,6 +81,7 @@
 #define ACE_LACKS_STROPTS_H
 #define ACE_LACKS_SYS_IOCTL_H
 #define ACE_HAS_NONCONST_WCSDUP
+#define ACE_HAS_WINSOCK2_GQOS
 
 // We trust the user: He must have used -mpentiumpro or -mpentium
 // if that is what he wants.
@@ -88,17 +89,8 @@
 # define ACE_HAS_PENTIUM
 #endif
 
-#if !defined (ACE_HAS_WINNT4)
-# if (defined (WINNT) && WINNT == 1) \
-     || (defined (__WINNT__) && __WINNT__ == 1)
-#  define ACE_HAS_WINNT4 1
-# else
-#  define ACE_HAS_WINNT4 0
-# endif
-#endif
-
-#define ACE_INT64_FORMAT_SPECIFIER ACE_LIB_TEXT ("%I64d")
-#define ACE_UINT64_FORMAT_SPECIFIER ACE_LIB_TEXT ("%I64u")
+#define ACE_INT64_FORMAT_SPECIFIER ACE_TEXT ("%I64d")
+#define ACE_UINT64_FORMAT_SPECIFIER ACE_TEXT ("%I64u")
 
 #define ACE_ENDTHREADEX(STATUS)  ::_endthreadex ((DWORD) (STATUS))
 

@@ -136,17 +136,17 @@ run_main (int, ACE_TCHAR *[])
   {
     /* Set #2 */
     ACE_CString s0 = "hello";
-    ACE_CString s1 ("hello", 0, 0);
-    ACE_CString s2 ("world", 0, 0);
-    ACE_CString s3 ("ll", 0, 0);
-    ACE_CString s4 ("ello", 0, 0);
+    ACE_CString s1 ("hello", 0, false);
+    ACE_CString s2 ("world", 0, false);
+    ACE_CString s3 ("ll", 0, false);
+    ACE_CString s4 ("ello", 0, false);
     ACE_CString s5 = s1 + " " + s2;
 
     char single_character = 'z';
     ACE_CString single_character_string (single_character);
 
-    ACE_CString empty_string (0, 0, 0);
-    ACE_CString zero_size_string (s1.c_str (), 0, 0, 0);
+    ACE_CString empty_string (0, 0, false);
+    ACE_CString zero_size_string (s1.c_str (), 0, 0, false);
 
     // Not equal comparisons. Error if they are equal
     if (s1 == s2){ACE_ERROR((LM_ERROR,"Set #2: \n"));return 1;}
@@ -320,6 +320,7 @@ run_main (int, ACE_TCHAR *[])
     // Set 1 for ACE_SString, which is not tested
     ACE_SString sstr;
 
+    const char *old = sstr.rep ();
     const char *str = "What_a_day_it_has_been";
 
     sstr.rep (const_cast<char *>(str));
@@ -330,6 +331,11 @@ run_main (int, ACE_TCHAR *[])
     if (tmp.length () == 300)
       ACE_ERROR ((LM_ERROR, "SString substring \n"));
 
+    // Constring an ACE_SString without a character pointer or from an
+    // existing ACE_SString causes memory to be allocated that will not
+    // be delete (apparently by design).
+    ACE_Allocator::instance ()->free (const_cast<char *> (old));
+    ACE_Allocator::instance ()->free (const_cast<char *> (tmp.rep ()));
   }
 
   int err = testConcatenation();

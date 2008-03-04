@@ -22,6 +22,7 @@
 #include "ace/OS_NS_sys_stat.h"
 #include "ace/OS_NS_ctype.h"
 #include "ace/OS_TLI.h"
+#include "ace/Truncate.h"
 
 #if defined (ACE_VXWORKS) && (ACE_VXWORKS < 0x620)
 extern "C" int maxFiles;
@@ -127,7 +128,7 @@ ACE::compiler_name (void)
 #ifdef ACE_CC_NAME
   return ACE_CC_NAME;
 #else
-  return ACE_LIB_TEXT ("");
+  return ACE_TEXT ("");
 #endif
 }
 
@@ -287,14 +288,14 @@ const ACE_TCHAR *
 ACE::execname (const ACE_TCHAR *old_name)
 {
 #if defined (ACE_WIN32)
-  const ACE_TCHAR *suffix = ACE_OS::strrchr (old_name, ACE_LIB_TEXT ('.'));
-  if (suffix == 0 || ACE_OS::strcasecmp (suffix, ACE_LIB_TEXT (".exe")) != 0)
+  const ACE_TCHAR *suffix = ACE_OS::strrchr (old_name, ACE_TEXT ('.'));
+  if (suffix == 0 || ACE_OS::strcasecmp (suffix, ACE_TEXT (".exe")) != 0)
     {
       ACE_TCHAR *new_name;
 
       size_t size =
         ACE_OS::strlen (old_name)
-        + ACE_OS::strlen (ACE_LIB_TEXT (".exe"))
+        + ACE_OS::strlen (ACE_TEXT (".exe"))
         + 1;
 
       ACE_NEW_RETURN (new_name,
@@ -306,7 +307,7 @@ ACE::execname (const ACE_TCHAR *old_name)
 
       // Concatenate the .exe suffix onto the end of the executable.
       // end points _after_ the terminating nul.
-      ACE_OS::strcpy (end - 1, ACE_LIB_TEXT (".exe"));
+      ACE_OS::strcpy (end - 1, ACE_TEXT (".exe"));
 
       return new_name;
     }
@@ -1146,12 +1147,10 @@ ACE::recv_n (ACE_HANDLE handle,
           // Check if this block has any space for incoming data.
           while (current_message_block_length > 0)
             {
-              u_long this_chunk_length;
-              if (current_message_block_length > ULONG_MAX)
-                this_chunk_length = ULONG_MAX;
-              else
-                this_chunk_length =
-                  static_cast<u_long> (current_message_block_length);
+              u_long const this_chunk_length =
+                ACE_Utils::truncate_cast<u_long> (
+                  current_message_block_length);
+
               // Collect the data in the iovec.
               iov[iovcnt].iov_base = this_rd_ptr;
               iov[iovcnt].iov_len  = this_chunk_length;
@@ -1169,11 +1168,11 @@ ACE::recv_n (ACE_HANDLE handle,
                 {
                   size_t current_transfer = 0;
 
-                  ssize_t result = ACE::recvv_n (handle,
-                                                 iov,
-                                                 iovcnt,
-                                                 timeout,
-                                                 &current_transfer);
+                  ssize_t const result = ACE::recvv_n (handle,
+                                                       iov,
+                                                       iovcnt,
+                                                       timeout,
+                                                       &current_transfer);
 
                   // Add to total bytes transferred.
                   bytes_transferred += current_transfer;
@@ -1201,11 +1200,11 @@ ACE::recv_n (ACE_HANDLE handle,
     {
       size_t current_transfer = 0;
 
-      ssize_t result = ACE::recvv_n (handle,
-                                     iov,
-                                     iovcnt,
-                                     timeout,
-                                     &current_transfer);
+      ssize_t const result = ACE::recvv_n (handle,
+                                           iov,
+                                           iovcnt,
+                                           timeout,
+                                           &current_transfer);
 
       // Add to total bytes transferred.
       bytes_transferred += current_transfer;
@@ -1924,12 +1923,10 @@ ACE::write_n (ACE_HANDLE handle,
           // Check if this block has any data to be sent.
           while (current_message_block_length > 0)
             {
-              u_long this_chunk_length;
-              if (current_message_block_length > ULONG_MAX)
-                this_chunk_length = ULONG_MAX;
-              else
-                this_chunk_length =
-                  static_cast<u_long> (current_message_block_length);
+              u_long const this_chunk_length =
+                ACE_Utils::truncate_cast<u_long> (
+                  current_message_block_length);
+
               // Collect the data in the iovec.
               iov[iovcnt].iov_base = this_block_ptr;
               iov[iovcnt].iov_len  = this_chunk_length;
@@ -1947,10 +1944,10 @@ ACE::write_n (ACE_HANDLE handle,
                 {
                   size_t current_transfer = 0;
 
-                  ssize_t result = ACE::writev_n (handle,
-                                                  iov,
-                                                  iovcnt,
-                                                  &current_transfer);
+                  ssize_t const result = ACE::writev_n (handle,
+                                                        iov,
+                                                        iovcnt,
+                                                        &current_transfer);
 
                   // Add to total bytes transferred.
                   bytes_transferred += current_transfer;
@@ -1978,10 +1975,10 @@ ACE::write_n (ACE_HANDLE handle,
     {
       size_t current_transfer = 0;
 
-      ssize_t result = ACE::writev_n (handle,
-                                      iov,
-                                      iovcnt,
-                                      &current_transfer);
+      ssize_t const result = ACE::writev_n (handle,
+                                            iov,
+                                            iovcnt,
+                                            &current_transfer);
 
       // Add to total bytes transferred.
       bytes_transferred += current_transfer;
@@ -2022,12 +2019,10 @@ ACE::send_n (ACE_HANDLE handle,
           // Check if this block has any data to be sent.
           while (current_message_block_length > 0)
             {
-              u_long this_chunk_length;
-              if (current_message_block_length > ULONG_MAX)
-                this_chunk_length = ULONG_MAX;
-              else
-                this_chunk_length =
-                  static_cast<u_long> (current_message_block_length);
+              u_long const this_chunk_length =
+                ACE_Utils::truncate_cast<u_long> (
+                  current_message_block_length);
+
               // Collect the data in the iovec.
               iov[iovcnt].iov_base = this_block_ptr;
               iov[iovcnt].iov_len  = this_chunk_length;
@@ -2045,11 +2040,11 @@ ACE::send_n (ACE_HANDLE handle,
                 {
                   size_t current_transfer = 0;
 
-                  ssize_t result = ACE::sendv_n (handle,
-                                                 iov,
-                                                 iovcnt,
-                                                 timeout,
-                                                 &current_transfer);
+                  ssize_t const result = ACE::sendv_n (handle,
+                                                       iov,
+                                                       iovcnt,
+                                                       timeout,
+                                                       &current_transfer);
 
                   // Add to total bytes transferred.
                   bytes_transferred += current_transfer;
@@ -2077,11 +2072,11 @@ ACE::send_n (ACE_HANDLE handle,
     {
       size_t current_transfer = 0;
 
-      ssize_t result = ACE::sendv_n (handle,
-                                     iov,
-                                     iovcnt,
-                                     timeout,
-                                     &current_transfer);
+      ssize_t const result = ACE::sendv_n (handle,
+                                           iov,
+                                           iovcnt,
+                                           timeout,
+                                           &current_transfer);
 
       // Add to total bytes transferred.
       bytes_transferred += current_transfer;
@@ -2322,13 +2317,13 @@ ACE::format_hexdump (const char *buffer,
         {
           c = (u_char) buffer[(i << 4) + j];    // or, buffer[i*16+j]
           ACE_OS::sprintf (obuf,
-                           ACE_LIB_TEXT ("%02x "),
+                           ACE_TEXT ("%02x "),
                            c);
           obuf += 3;
           if (j == 7)
             {
               ACE_OS::sprintf (obuf,
-                               ACE_LIB_TEXT (" "));
+                               ACE_TEXT (" "));
               ++obuf;
             }
           textver[j] = ACE_OS::ace_isprint (c) ? c : '.';
@@ -2337,11 +2332,11 @@ ACE::format_hexdump (const char *buffer,
       textver[j] = 0;
 
       ACE_OS::sprintf (obuf,
-                       ACE_LIB_TEXT ("  %s\n"),
+                       ACE_TEXT ("  %s\n"),
                        textver);
 
       while (*obuf != '\0')
-        obuf++;
+        ++obuf;
     }
 
   if (size % 16)
@@ -2350,13 +2345,13 @@ ACE::format_hexdump (const char *buffer,
         {
           c = (u_char) buffer[size - size % 16 + i];
           ACE_OS::sprintf (obuf,
-                           ACE_LIB_TEXT ("%02x "),
+                           ACE_TEXT ("%02x "),
                            c);
           obuf += 3;
           if (i == 7)
             {
               ACE_OS::sprintf (obuf,
-                               ACE_LIB_TEXT (" "));
+                               ACE_TEXT (" "));
               ++obuf;
             }
           textver[i] = ACE_OS::ace_isprint (c) ? c : '.';
@@ -2365,20 +2360,20 @@ ACE::format_hexdump (const char *buffer,
       for (i = size % 16; i < 16; i++)
         {
           ACE_OS::sprintf (obuf,
-                           ACE_LIB_TEXT ("   "));
+                           ACE_TEXT ("   "));
           obuf += 3;
           if (i == 7)
             {
               ACE_OS::sprintf (obuf,
-                               ACE_LIB_TEXT (" "));
-              obuf++;
+                               ACE_TEXT (" "));
+              ++obuf;
             }
           textver[i] = ' ';
         }
 
       textver[i] = 0;
       ACE_OS::sprintf (obuf,
-                       ACE_LIB_TEXT ("  %s\n"),
+                       ACE_TEXT ("  %s\n"),
                        textver);
     }
   return size;
@@ -2406,36 +2401,36 @@ ACE::timestamp (ACE_TCHAR date_and_time[],
   // below, so DO we need this ifdef.
   static const ACE_TCHAR *day_of_week_name[] =
     {
-      ACE_LIB_TEXT ("Sun"),
-      ACE_LIB_TEXT ("Mon"),
-      ACE_LIB_TEXT ("Tue"),
-      ACE_LIB_TEXT ("Wed"),
-      ACE_LIB_TEXT ("Thu"),
-      ACE_LIB_TEXT ("Fri"),
-      ACE_LIB_TEXT ("Sat")
+      ACE_TEXT ("Sun"),
+      ACE_TEXT ("Mon"),
+      ACE_TEXT ("Tue"),
+      ACE_TEXT ("Wed"),
+      ACE_TEXT ("Thu"),
+      ACE_TEXT ("Fri"),
+      ACE_TEXT ("Sat")
     };
 
   static const ACE_TCHAR *month_name[] =
     {
-      ACE_LIB_TEXT ("Jan"),
-      ACE_LIB_TEXT ("Feb"),
-      ACE_LIB_TEXT ("Mar"),
-      ACE_LIB_TEXT ("Apr"),
-      ACE_LIB_TEXT ("May"),
-      ACE_LIB_TEXT ("Jun"),
-      ACE_LIB_TEXT ("Jul"),
-      ACE_LIB_TEXT ("Aug"),
-      ACE_LIB_TEXT ("Sep"),
-      ACE_LIB_TEXT ("Oct"),
-      ACE_LIB_TEXT ("Nov"),
-      ACE_LIB_TEXT ("Dec")
+      ACE_TEXT ("Jan"),
+      ACE_TEXT ("Feb"),
+      ACE_TEXT ("Mar"),
+      ACE_TEXT ("Apr"),
+      ACE_TEXT ("May"),
+      ACE_TEXT ("Jun"),
+      ACE_TEXT ("Jul"),
+      ACE_TEXT ("Aug"),
+      ACE_TEXT ("Sep"),
+      ACE_TEXT ("Oct"),
+      ACE_TEXT ("Nov"),
+      ACE_TEXT ("Dec")
     };
 
   SYSTEMTIME local;
   ::GetLocalTime (&local);
 
   ACE_OS::sprintf (date_and_time,
-                   ACE_LIB_TEXT ("%3s %3s %2d %04d %02d:%02d:%02d.%06d"),
+                   ACE_TEXT ("%3s %3s %2d %04d %02d:%02d:%02d.%06d"),
                    day_of_week_name[local.wDayOfWeek],
                    month_name[local.wMonth - 1],
                    (int) local.wDay,
@@ -2467,9 +2462,9 @@ ACE::timestamp (ACE_TCHAR date_and_time[],
                     9);
   ACE_OS::sprintf (&date_and_time[11],
 #  if defined (ACE_USES_WCHAR)
-                   ACE_LIB_TEXT ("%ls %ls.%06ld"),
+                   ACE_TEXT ("%ls %ls.%06ld"),
 #  else
-                   ACE_LIB_TEXT ("%s %s.%06ld"),
+                   ACE_TEXT ("%s %s.%06ld"),
 #  endif /* ACE_USES_WCHAR */
                    yeartmp,
                    timetmp,
@@ -2740,7 +2735,7 @@ ACE::handle_timed_accept (ACE_HANDLE listener,
 
 int
 ACE::daemonize (const ACE_TCHAR pathname[],
-                int close_all_handles,
+                bool close_all_handles,
                 const ACE_TCHAR program_name[])
 {
   ACE_TRACE ("ACE::daemonize");
@@ -2845,11 +2840,11 @@ ACE::max_handles (void)
   ACE_TRACE ("ACE::max_handles");
 #if defined (RLIMIT_NOFILE) && !defined (ACE_LACKS_RLIMIT)
   rlimit rl;
-  int r = ACE_OS::getrlimit (RLIMIT_NOFILE, &rl);
+  int const r = ACE_OS::getrlimit (RLIMIT_NOFILE, &rl);
 # if !defined (RLIM_INFINITY)
   if (r == 0)
     return rl.rlim_cur;
-#else
+# else
   if (r == 0 && rl.rlim_cur != RLIM_INFINITY)
     return rl.rlim_cur;
   // If == RLIM_INFINITY, fall through to the ACE_LACKS_RLIMIT sections
@@ -2906,6 +2901,8 @@ ACE::set_handle_limit (int new_limit,
 #if !defined (ACE_LACKS_RLIMIT) && defined (RLIMIT_NOFILE)
       rl.rlim_cur = new_limit;
       return ACE_OS::setrlimit (RLIMIT_NOFILE, &rl);
+#elif defined (ACE_LACKS_RLIMIT_NOFILE)
+      return 0;
 #else
       // Must return EINVAL errno.
       ACE_NOTSUP_RETURN (-1);
@@ -2926,20 +2923,6 @@ ACE::set_handle_limit (int new_limit,
     }
 
   return 0;
-}
-
-int
-ACE::map_errno (int error)
-{
-  switch (error)
-    {
-#if defined (ACE_WIN32)
-    case WSAEWOULDBLOCK:
-      return EAGAIN; // Same as UNIX errno EWOULDBLOCK.
-#endif /* ACE_WIN32 */
-    }
-
-  return error;
 }
 
 // Euclid's greatest common divisor algorithm.
@@ -3025,140 +3008,140 @@ ACE::sock_error (int error)
   switch (error)
     {
     case WSAVERNOTSUPPORTED:
-      return ACE_LIB_TEXT ("version of WinSock not supported");
+      return ACE_TEXT ("version of WinSock not supported");
       /* NOTREACHED */
     case WSASYSNOTREADY:
-      return ACE_LIB_TEXT ("WinSock not present or not responding");
+      return ACE_TEXT ("WinSock not present or not responding");
       /* NOTREACHED */
     case WSAEINVAL:
-      return ACE_LIB_TEXT ("app version not supported by DLL");
+      return ACE_TEXT ("app version not supported by DLL");
       /* NOTREACHED */
     case WSAHOST_NOT_FOUND:
-      return ACE_LIB_TEXT ("Authoritive: Host not found");
+      return ACE_TEXT ("Authoritive: Host not found");
       /* NOTREACHED */
     case WSATRY_AGAIN:
-      return ACE_LIB_TEXT ("Non-authoritive: host not found or server failure");
+      return ACE_TEXT ("Non-authoritive: host not found or server failure");
       /* NOTREACHED */
     case WSANO_RECOVERY:
-      return ACE_LIB_TEXT ("Non-recoverable: refused or not implemented");
+      return ACE_TEXT ("Non-recoverable: refused or not implemented");
       /* NOTREACHED */
     case WSANO_DATA:
-      return ACE_LIB_TEXT ("Valid name, no data record for type");
+      return ACE_TEXT ("Valid name, no data record for type");
       /* NOTREACHED */
       /*
         case WSANO_ADDRESS:
         return "Valid name, no MX record";
       */
     case WSANOTINITIALISED:
-      return ACE_LIB_TEXT ("WSA Startup not initialized");
+      return ACE_TEXT ("WSA Startup not initialized");
       /* NOTREACHED */
     case WSAENETDOWN:
-      return ACE_LIB_TEXT ("Network subsystem failed");
+      return ACE_TEXT ("Network subsystem failed");
       /* NOTREACHED */
     case WSAEINPROGRESS:
-      return ACE_LIB_TEXT ("Blocking operation in progress");
+      return ACE_TEXT ("Blocking operation in progress");
       /* NOTREACHED */
     case WSAEINTR:
-      return ACE_LIB_TEXT ("Blocking call cancelled");
+      return ACE_TEXT ("Blocking call cancelled");
       /* NOTREACHED */
     case WSAEAFNOSUPPORT:
-      return ACE_LIB_TEXT ("address family not supported");
+      return ACE_TEXT ("address family not supported");
       /* NOTREACHED */
     case WSAEMFILE:
-      return ACE_LIB_TEXT ("no file handles available");
+      return ACE_TEXT ("no file handles available");
       /* NOTREACHED */
     case WSAENOBUFS:
-      return ACE_LIB_TEXT ("no buffer space available");
+      return ACE_TEXT ("no buffer space available");
       /* NOTREACHED */
     case WSAEPROTONOSUPPORT:
-      return ACE_LIB_TEXT ("specified protocol not supported");
+      return ACE_TEXT ("specified protocol not supported");
       /* NOTREACHED */
     case WSAEPROTOTYPE:
-      return ACE_LIB_TEXT ("protocol wrong type for this socket");
+      return ACE_TEXT ("protocol wrong type for this socket");
       /* NOTREACHED */
     case WSAESOCKTNOSUPPORT:
-      return ACE_LIB_TEXT ("socket type not supported for address family");
+      return ACE_TEXT ("socket type not supported for address family");
       /* NOTREACHED */
     case WSAENOTSOCK:
-      return ACE_LIB_TEXT ("handle is not a socket");
+      return ACE_TEXT ("handle is not a socket");
       /* NOTREACHED */
     case WSAEWOULDBLOCK:
-      return ACE_LIB_TEXT ("resource temporarily unavailable");
+      return ACE_TEXT ("resource temporarily unavailable");
       /* NOTREACHED */
     case WSAEADDRINUSE:
-      return ACE_LIB_TEXT ("address already in use");
+      return ACE_TEXT ("address already in use");
       /* NOTREACHED */
     case WSAECONNABORTED:
-      return ACE_LIB_TEXT ("connection aborted");
+      return ACE_TEXT ("connection aborted");
       /* NOTREACHED */
     case WSAECONNRESET:
-      return ACE_LIB_TEXT ("connection reset");
+      return ACE_TEXT ("connection reset");
       /* NOTREACHED */
     case WSAENOTCONN:
-      return ACE_LIB_TEXT ("not connected");
+      return ACE_TEXT ("not connected");
       /* NOTREACHED */
     case WSAETIMEDOUT:
-      return ACE_LIB_TEXT ("connection timed out");
+      return ACE_TEXT ("connection timed out");
       /* NOTREACHED */
     case WSAECONNREFUSED:
-      return ACE_LIB_TEXT ("connection refused");
+      return ACE_TEXT ("connection refused");
       /* NOTREACHED */
     case WSAEHOSTDOWN:
-      return ACE_LIB_TEXT ("host down");
+      return ACE_TEXT ("host down");
       /* NOTREACHED */
     case WSAEHOSTUNREACH:
-      return ACE_LIB_TEXT ("host unreachable");
+      return ACE_TEXT ("host unreachable");
       /* NOTREACHED */
     case WSAEADDRNOTAVAIL:
-      return ACE_LIB_TEXT ("address not available");
+      return ACE_TEXT ("address not available");
       /* NOTREACHED */
     case WSAEISCONN:
-      return ACE_LIB_TEXT ("socket is already connected");
+      return ACE_TEXT ("socket is already connected");
       /* NOTREACHED */
     case WSAENETRESET:
-      return ACE_LIB_TEXT ("network dropped connection on reset");
+      return ACE_TEXT ("network dropped connection on reset");
       /* NOTREACHED */
     case WSAEMSGSIZE:
-      return ACE_LIB_TEXT ("message too long");
+      return ACE_TEXT ("message too long");
       /* NOTREACHED */
     case WSAENETUNREACH:
-      return ACE_LIB_TEXT ("network is unreachable");
+      return ACE_TEXT ("network is unreachable");
       /* NOTREACHED */
     case WSAEFAULT:
-      return ACE_LIB_TEXT ("bad address");
+      return ACE_TEXT ("bad address");
       /* NOTREACHED */
     case WSAEDISCON:
-      return ACE_LIB_TEXT ("graceful shutdown in progress");
+      return ACE_TEXT ("graceful shutdown in progress");
       /* NOTREACHED */
     case WSAEACCES:
-      return ACE_LIB_TEXT ("permission denied");
+      return ACE_TEXT ("permission denied");
       /* NOTREACHED */
     case WSAESHUTDOWN:
-      return ACE_LIB_TEXT ("cannot send after socket shutdown");
+      return ACE_TEXT ("cannot send after socket shutdown");
       /* NOTREACHED */
     case WSAEPROCLIM:
-      return ACE_LIB_TEXT ("too many processes");
+      return ACE_TEXT ("too many processes");
       /* NOTREACHED */
     case WSAEALREADY:
-      return ACE_LIB_TEXT ("operation already in progress");
+      return ACE_TEXT ("operation already in progress");
       /* NOTREACHED */
     case WSAEPFNOSUPPORT:
-      return ACE_LIB_TEXT ("protocol family not supported");
+      return ACE_TEXT ("protocol family not supported");
       /* NOTREACHED */
     case WSAENOPROTOOPT:
-      return ACE_LIB_TEXT ("bad protocol option");
+      return ACE_TEXT ("bad protocol option");
       /* NOTREACHED */
     case WSATYPE_NOT_FOUND:
-      return ACE_LIB_TEXT ("class type not found");
+      return ACE_TEXT ("class type not found");
       /* NOTREACHED */
     case WSAEOPNOTSUPP:
-      return ACE_LIB_TEXT ("operation not supported");
+      return ACE_TEXT ("operation not supported");
       /* NOTREACHED */
     case WSAEDESTADDRREQ:
-      return ACE_LIB_TEXT ("destination address required");
+      return ACE_TEXT ("destination address required");
       /* NOTREACHED */
     default:
-      ACE_OS::sprintf (unknown_msg, ACE_LIB_TEXT ("unknown error: %d"), error);
+      ACE_OS::sprintf (unknown_msg, ACE_TEXT ("unknown error: %d"), error);
       return unknown_msg;
       /* NOTREACHED */
     }
@@ -3343,7 +3326,7 @@ ACE::strnew (const char *s)
     return 0;
   char *t = 0;
   ACE_NEW_RETURN (t,
-                  char [::strlen (s) + 1],
+                  char [ACE_OS::strlen (s) + 1],
                   0);
   if (t == 0)
     return 0;

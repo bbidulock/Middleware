@@ -12,11 +12,6 @@
 
 #include "ace/config-sunos5.5.h"
 
-#if defined(__GNUC__) && __GNUC__ >= 2 && __GNUC_MINOR__ >= 95
-// gcc-2.95 fixes this problem for us!
-#undef ACE_HAS_STL_QUEUE_CONFLICT
-#endif /* __GNUC__ */
-
 #if (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE > 2) || \
     defined (__EXTENSIONS__)
 // The asctime_r/ctime_r parameters change at POSIX.1c-1995
@@ -50,9 +45,6 @@
 #if __SUNPRO_CC == 0x540
 #undef ACE_HAS_TEMPLATE_TYPEDEFS
 #endif
-#ifndef ACE_HAS_TYPENAME_KEYWORD
-#define ACE_HAS_TYPENAME_KEYWORD                1
-#endif /* ACE_HAS_TYPENAME_KEYWORD */
 #ifndef ACE_HAS_THR_C_DEST
 #define ACE_HAS_THR_C_DEST                      1
 #endif /* ACE_HAS_THR_C_DEST */

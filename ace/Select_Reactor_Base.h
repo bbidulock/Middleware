@@ -27,7 +27,7 @@
 #include "ace/Reactor_Impl.h"
 
 #if defined (ACE_HAS_REACTOR_NOTIFICATION_QUEUE)
-# include "ace/Unbounded_Queue.h"
+# include "ace/Notification_Queue.h"
 #endif /* ACE_HAS_REACTOR_NOTIFICATION_QUEUE */
 
 #ifdef ACE_WIN32
@@ -38,6 +38,10 @@
 #else
 # include "ace/Array_Base.h"
 #endif  /* ACE_WIN32 */
+
+#if !defined (ACE_DISABLE_NOTIFY_PIPE_DEFAULT)
+# define ACE_DISABLE_NOTIFY_PIPE_DEFAULT 0
+#endif /* ACE_DISABLE_NOTIFY_PIPE_DEFAULT */
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -93,8 +97,7 @@ public:
   ACE_Event_Tuple (void);
 
   /// Constructor.
-  ACE_Event_Tuple (ACE_Event_Handler *eh,
-                   ACE_HANDLE h);
+  ACE_Event_Tuple (ACE_Event_Handler *eh, ACE_HANDLE h);
 
   /// Equality operator.
   bool operator== (const ACE_Event_Tuple &rhs) const;
@@ -140,7 +143,7 @@ public:
   /// Initialize.
   virtual int open (ACE_Reactor_Impl *,
                     ACE_Timer_Queue * = 0,
-                    int disable_notify_pipe = 0);
+                    int disable_notify_pipe = ACE_DISABLE_NOTIFY_PIPE_DEFAULT);
 
   /// Destroy.
   virtual int close (void);
@@ -249,24 +252,18 @@ protected:
   int max_notify_iterations_;
 
 #if defined (ACE_HAS_REACTOR_NOTIFICATION_QUEUE)
-  // = This configuration queues up notifications in separate buffers that
-  //   are in user-space, rather than stored in a pipe in the OS
-  //   kernel.  The kernel-level notifications are used only to trigger
-  //   the Reactor to check its notification queue.  This enables many
-  //   more notifications to be stored than would otherwise be the case.
-
-  /// Keeps track of allocated arrays of type
-  /// <ACE_Notification_Buffer>.
-  ACE_Unbounded_Queue <ACE_Notification_Buffer *> alloc_queue_;
-
-  /// Keeps track of all pending notifications.
-  ACE_Unbounded_Queue <ACE_Notification_Buffer *> notify_queue_;
-
-  /// Keeps track of all free buffers.
-  ACE_Unbounded_Queue <ACE_Notification_Buffer *> free_queue_;
-
-  /// Synchronization for handling of queues.
-  ACE_SYNCH_MUTEX notify_queue_lock_;
+  /**
+   * @brief A user-space queue to store the notifications.
+   *
+   * The notification pipe has OS-specific size restrictions.  That
+   * is, no more than a certain number of bytes may be stored in the
+   * pipe without blocking.  This limit may be too small for certain
+   * applications.  In this case, ACE can be configured to store all
+   * the events in user-space.  The pipe is still needed to wake up
+   * the reactor thread, but only one event is sent through the pipe
+   * at a time.
+   */
+  ACE_Notification_Queue notification_queue_;
 #endif /* ACE_HAS_REACTOR_NOTIFICATION_QUEUE */
 };
 
@@ -321,7 +318,7 @@ public:
   /// Default "do-nothing" constructor.
   ACE_Select_Reactor_Handler_Repository (ACE_Select_Reactor_Impl &);
 
-  /// Initialize a repository of the appropriate <size>.
+  /// Initialize a repository of the appropriate @a size.
   /**
    * On Unix platforms, the size parameter should be as large as the
    * maximum number of file descriptors allowed for a given process.
@@ -394,7 +391,7 @@ private:
   map_type::iterator find_eh (ACE_HANDLE handle);
 
 private:
-  /// Reference to our <Select_Reactor>.
+  /// Reference to our @c Select_Reactor.
   ACE_Select_Reactor_Impl &select_reactor_;
 
 #ifndef ACE_WIN32
@@ -425,7 +422,7 @@ public:
 
   // = Iteration methods.
 
-  /// Pass back the <next_item> that hasn't been seen in the Set.
+  /// Pass back the @a next_item that hasn't been seen in the Set.
   /// Returns @c false when all items have been seen, else @c true.
   bool next (ACE_Event_Handler* & next_item);
 
@@ -456,7 +453,7 @@ private:
  *
  * @brief This class simply defines how Select_Reactor's basic interface
  * functions should look like and provides a common base class for
- * <Select_Reactor> using various locking mechanism.
+ * @c Select_Reactor using various locking mechanism.
  */
 class ACE_Export ACE_Select_Reactor_Impl : public ACE_Reactor_Impl
 {
@@ -591,7 +588,6 @@ protected:
   /// Select_Reactor's token or not.
   int supress_notify_renew (void);
   void supress_notify_renew (int sr);
-
 
 private:
 

@@ -12,11 +12,11 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 ACE_INLINE const void *
 ACE_OS::memchr (const void *s, int c, size_t len)
 {
-#if defined (ACE_HAS_MEMCHR)
+#if !defined (ACE_LACKS_MEMCHR)
   return ::memchr (s, c, len);
-#else /* ACE_HAS_MEMCHR */
+#else /* ACE_LACKS_MEMCHR */
   return ACE_OS::memchr_emulation (s, c, len);
-#endif /* ACE_HAS_MEMCHR */
+#endif /* !ACE_LACKS_MEMCHR */
 }
 
 ACE_INLINE void *
@@ -125,11 +125,7 @@ ACE_OS::strcat (wchar_t *s, const wchar_t *t)
 ACE_INLINE const char *
 ACE_OS::strchr (const char *s, int c)
 {
-#if defined (ACE_LACKS_STRCHR)
-  return ACE_OS::strchr_emulation (s, c);
-#else  /* ! ACE_LACKS_STRCHR */
-  return (const char *) ::strchr (s, c);
-#endif /* ACE_LACKS_STRCHR */
+  return const_cast <const char *> (::strchr (s, c));
 }
 
 #if defined (ACE_HAS_WCHAR)
@@ -263,7 +259,12 @@ ACE_OS::strlen (const ACE_WCHAR_T *s)
 ACE_INLINE char *
 ACE_OS::strncat (char *s, const char *t, size_t len)
 {
+#if 0 /* defined (ACE_HAS_TR24731_2005_CRT) */
+  strncat_s (s, len + 1, t, _TRUNCATE);
+  return s;
+#else
   return ::strncat (s, t, len);
+#endif /* ACE_HAS_TR24731_2005_CRT */
 }
 
 ACE_INLINE ACE_WCHAR_T *
@@ -271,6 +272,9 @@ ACE_OS::strncat (ACE_WCHAR_T *s, const ACE_WCHAR_T *t, size_t len)
 {
 #  if !defined (ACE_HAS_WCHAR) || defined (ACE_LACKS_WCSNCAT)
   return ACE_OS::wcsncat_emulation (s, t, len);
+#  elif 0 /* defined (ACE_HAS_TR24731_2005_CRT) */
+  wcsncat_s (s, len + 1, t, _TRUNCATE);
+  return s;
 #  else /* !ACE_HAS_WCHAR || ACE_LACKS_WCSNCAT */
   return ::wcsncat (s, t, len);
 #  endif /* !ACE_HAS_WCHAR || ACE_LACKS_WCSNCAT */
@@ -357,7 +361,8 @@ ACE_OS::strnlen (const ACE_WCHAR_T *s, size_t maxlen)
 ACE_INLINE char *
 ACE_OS::strnstr (char *s, const char *t, size_t len)
 {
-  return (char *) ACE_OS::strnstr ((const char *) s, t, len);
+  return
+    const_cast <char *> (ACE_OS::strnstr (const_cast <const char *> (s), t, len));
 }
 
 ACE_INLINE ACE_WCHAR_T *
@@ -373,11 +378,7 @@ ACE_OS::strnstr (ACE_WCHAR_T *s, const ACE_WCHAR_T *t, size_t len)
 ACE_INLINE const char *
 ACE_OS::strpbrk (const char *s1, const char *s2)
 {
-#if defined (ACE_LACKS_STRPBRK)
-  return ACE_OS::strpbrk_emulation (s1, s2);
-#else  /* ACE_LACKS_STRPBRK */
-  return (const char *) ::strpbrk (s1, s2);
-#endif /* ACE_LACKS_STRPBRK */
+  return const_cast <const char *> (::strpbrk (s1, s2));
 }
 
 #if defined (ACE_HAS_WCHAR)
@@ -395,11 +396,7 @@ ACE_OS::strpbrk (const wchar_t *s, const wchar_t *t)
 ACE_INLINE char *
 ACE_OS::strpbrk (char *s1, const char *s2)
 {
-#if defined (ACE_LACKS_STRPBRK)
-  return ACE_OS::strpbrk_emulation (s1, s2);
-#else /* ACE_LACKS_STRPBRK */
   return ::strpbrk (s1, s2);
-#endif /* ACE_LACKS_STRPBRK */
 }
 
 #if defined (ACE_HAS_WCHAR)
@@ -455,11 +452,7 @@ ACE_OS::strrchr (wchar_t *s, wchar_t c)
 ACE_INLINE size_t
 ACE_OS::strspn (const char *s, const char *t)
 {
-#if defined (ACE_LACKS_STRSPN)
-  return ACE_OS::strspn_emulation (s, t);
-#else /* ACE_LACKS_STRSPN */
   return ::strspn (s, t);
-#endif /* ACE_LACKS_STRSPN */
 }
 
 #if defined (ACE_HAS_WCHAR)
@@ -536,7 +529,9 @@ ACE_OS::strtok (wchar_t *s, const wchar_t *tokens)
 ACE_INLINE char *
 ACE_OS::strtok_r (char *s, const char *tokens, char **lasts)
 {
-#if defined (ACE_HAS_REENTRANT_FUNCTIONS) && !defined (ACE_LACKS_STRTOK_R)
+#if defined (ACE_HAS_TR24731_2005_CRT)
+  return strtok_s (s, tokens, lasts);
+#elif defined (ACE_HAS_REENTRANT_FUNCTIONS) && !defined (ACE_LACKS_STRTOK_R)
   return ::strtok_r (s, tokens, lasts);
 #else
   return ACE_OS::strtok_r_emulation (s, tokens, lasts);
@@ -547,14 +542,16 @@ ACE_OS::strtok_r (char *s, const char *tokens, char **lasts)
 ACE_INLINE wchar_t*
 ACE_OS::strtok_r (ACE_WCHAR_T *s, const ACE_WCHAR_T *tokens, ACE_WCHAR_T **lasts)
 {
-#if defined (ACE_LACKS_WCSTOK)
-    return ACE_OS::strtok_r_emulation (s, tokens, lasts);
+#if defined (ACE_HAS_TR24731_2005_CRT)
+  return wcstok_s (s, tokens, lasts);
+#elif defined (ACE_LACKS_WCSTOK)
+  return ACE_OS::strtok_r_emulation (s, tokens, lasts);
 #else
 #  if defined (ACE_HAS_3_PARAM_WCSTOK)
-    return ::wcstok (s, tokens, lasts);
+  return ::wcstok (s, tokens, lasts);
 #  else /* ACE_HAS_3_PARAM_WCSTOK */
-    *lasts = ::wcstok (s, tokens);
-    return *lasts;
+  *lasts = ::wcstok (s, tokens);
+  return *lasts;
 #  endif /* ACE_HAS_3_PARAM_WCSTOK */
 #endif  /* ACE_LACKS_WCSTOK */
 }

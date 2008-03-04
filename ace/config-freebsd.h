@@ -119,6 +119,10 @@ extern "C" { char * cuserid (char *s); }
 // Compiler/platform contains the <sys/syscall.h> file.
 #define ACE_HAS_SYS_SYSCALL_H
 
+#if (__FreeBSD_version >= 220000)
+#define ACE_HAS_VASPRINTF
+#endif
+
 #if (__FreeBSD_version >= 300000)
 #define ACE_HAS_SIGINFO_T
 #endif /* __FreeBSD_version >= 300000 */
@@ -129,13 +133,18 @@ extern "C" { char * cuserid (char *s); }
 #define ACE_HAS_2_PARAM_ASCTIME_R_AND_CTIME_R
 #endif /* __FreeBSD_version >= 320000 */
 
+#if (__FreeBSD_version >= 440000)
+#define ACE_HAS_GETPROGNAME
+#define ACE_HAS_SETPROGNAME
+#endif
+
 #if (__FreeBSD_version < 501000)
 #define ACE_LACKS_PWD_REENTRANT_FUNCTIONS
 #endif
 
 #define ACE_HAS_CONSISTENT_SIGNAL_PROTOTYPES
 #define ACE_LACKS_SIGINFO_H
-
+#define ACE_LACKS_LOG2
 #define ACE_LACKS_SI_ADDR
 
 // Compiler/platform supports SVR4 signal typedef
@@ -246,10 +255,6 @@ extern "C" { char * cuserid (char *s); }
 #  endif /* ACE_POSIX_AIOCB_PROACTOR */
 #endif /* ACE_HAS_AIO_CALLS */
 
-/* FreeBSD does not define sigval_t */
-#include <sys/signal.h>
-typedef union sigval sigval_t;
-
 #define ACE_LACKS_STROPTS_H
 
 // Needed when ACE_HAS_WCHAR is defined.
@@ -258,6 +263,7 @@ typedef union sigval sigval_t;
 #define ACE_LACKS_WCSDUP
 #define ACE_LACKS_ITOW
 #define ACE_HAS_3_PARAM_WCSTOK
+#define ACE_HAS_3_PARAM_READDIR_R
 
 #if (__FreeBSD_version >= 501000)
 #  define ACE_HAS_PTHREAD_SETSTACK
@@ -265,6 +271,12 @@ typedef union sigval sigval_t;
 
 #if (__FreeBSD_version < 700007)
 # define ACE_HAS_SIGVAL_SIGVAL_INT
+# define ACE_HAS_BROKEN_SIGEVENT_STRUCT
+#endif
+
+#if (__FreeBSD_version >= 700028)
+# define ACE_HAS_SCTP
+# define ACE_HAS_LKSCTP
 #endif
 
 #include /**/ "ace/post.h"

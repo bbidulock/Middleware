@@ -55,10 +55,10 @@ class ACE_Acceptor : public ACE_Service_Object
 public:
 
   // Useful STL-style traits.
-  typedef ACE_PEER_ACCEPTOR_ADDR                 addr_type;
-  typedef ACE_PEER_ACCEPTOR                      acceptor_type;
-  typedef SVC_HANDLER                            handler_type;
-  typedef ACE_TYPENAME SVC_HANDLER::stream_type  stream_type;
+  typedef ACE_PEER_ACCEPTOR_ADDR            addr_type;
+  typedef ACE_PEER_ACCEPTOR                 acceptor_type;
+  typedef SVC_HANDLER                       handler_type;
+  typedef typename SVC_HANDLER::stream_type stream_type;
 
   /// "Do-nothing" constructor.
   ACE_Acceptor (ACE_Reactor * = 0,
@@ -98,7 +98,7 @@ public:
    *                   OS allow reuse of the listen port.  The default is 1.
    */
   ACE_Acceptor (const ACE_PEER_ACCEPTOR_ADDR &local_addr,
-                ACE_Reactor * = ACE_Reactor::instance (),
+                ACE_Reactor *reactor = ACE_Reactor::instance (),
                 int flags = 0,
                 int use_select = 1,
                 int reuse_addr = 1);
@@ -459,30 +459,30 @@ protected:
   /// Creation strategy for an Acceptor.
   CREATION_STRATEGY *creation_strategy_;
 
-  /// 1 if {Acceptor} created the creation strategy and thus should
-  /// delete it, else 0.
-  int delete_creation_strategy_;
+  /// true if {Acceptor} created the creation strategy and thus should
+  /// delete it, else false.
+  bool delete_creation_strategy_;
 
   /// Accept strategy for an {Acceptor}.
   ACCEPT_STRATEGY *accept_strategy_;
 
-  /// 1 if {Acceptor} created the accept strategy and thus should delete
-  /// it, else 0.
-  int delete_accept_strategy_;
+  /// true if {Acceptor} created the accept strategy and thus should delete
+  /// it, else false.
+  bool delete_accept_strategy_;
 
   /// Concurrency strategy for an {Acceptor}.
   CONCURRENCY_STRATEGY *concurrency_strategy_;
 
-  /// 1 if {Acceptor} created the concurrency strategy and thus should
-  /// delete it, else 0.
-  int delete_concurrency_strategy_;
+  /// true if {Acceptor} created the concurrency strategy and thus should
+  /// delete it, else false.
+  bool delete_concurrency_strategy_;
 
   /// Scheduling strategy for an {Acceptor}.
   SCHEDULING_STRATEGY *scheduling_strategy_;
 
-  /// 1 if {Acceptor} created the scheduling strategy and thus should
-  /// delete it, else 0.
-  int delete_scheduling_strategy_;
+  /// true if {Acceptor} created the scheduling strategy and thus should
+  /// delete it, else false.
+  bool delete_scheduling_strategy_;
 
   // = Service information objects.
 
@@ -523,10 +523,10 @@ class ACE_Oneshot_Acceptor : public ACE_Service_Object
 public:
 
   // Useful STL-style traits.
-  typedef ACE_PEER_ACCEPTOR_ADDR                 addr_type;
-  typedef ACE_PEER_ACCEPTOR                      acceptor_type;
-  typedef SVC_HANDLER                            handler_type;
-  typedef ACE_TYPENAME SVC_HANDLER::stream_type  stream_type;
+  typedef ACE_PEER_ACCEPTOR_ADDR            addr_type;
+  typedef ACE_PEER_ACCEPTOR                 acceptor_type;
+  typedef SVC_HANDLER                       handler_type;
+  typedef typename SVC_HANDLER::stream_type stream_type;
 
   /// Constructor.
   ACE_Oneshot_Acceptor (void);
@@ -664,9 +664,9 @@ private:
   /// Concurrency strategy for an Acceptor.
   ACE_Concurrency_Strategy<SVC_HANDLER> *concurrency_strategy_;
 
-  /// 1 if Acceptor created the concurrency strategy and thus should
-  /// delete it, else 0.
-  int delete_concurrency_strategy_;
+  /// true if Acceptor created the concurrency strategy and thus should
+  /// delete it, else false.
+  bool delete_concurrency_strategy_;
 };
 
 ACE_END_VERSIONED_NAMESPACE_DECL

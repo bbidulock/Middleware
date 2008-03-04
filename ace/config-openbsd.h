@@ -24,7 +24,6 @@
 # include "ace/config-g++-common.h"
 #endif /* __GNUG__ */
 
-
 // Platform specific directives
 // gcc defines __OpenBSD__ automatically for us.
 #include <sys/param.h>
@@ -60,7 +59,11 @@
 #define ACE_HAS_SIG_MACROS
 #define ACE_HAS_CHARPTR_DL
 #define ACE_HAS_DIRENT
-#define ACE_USES_ASM_SYMBOL_IN_DLSYM
+
+// OpenBSD 3.6
+#if (OpenBSD < 200411)
+# define ACE_USES_ASM_SYMBOL_IN_DLSYM
+#endif
 
 #define ACE_LACKS_UCONTEXT_H
 
@@ -154,10 +157,6 @@
 // Compiler/platform defines the sig_atomic_t typedef.
 #define ACE_HAS_SIG_ATOMIC_T
 
-// Compiler/platform supports sys_siglist array.
-// *** This refers to (_sys_siglist) instead of (sys_siglist)
-// #define ACE_HAS_SYS_SIGLIST
-
 // Compiler/platform defines a union semun for SysV shared memory.
 #define ACE_HAS_SEMUN
 
@@ -180,8 +179,6 @@
 
 // Platform/compiler supports timezone * as second parameter to gettimeofday().
 #define ACE_HAS_TIMEZONE_GETTIMEOFDAY
-
-//#define ACE_HAS_SIG_C_FUNC
 
 // OpenBSD's dlsym call segfaults when passed an invalid handle.
 // It seems as if most other OSs detect this and just report an
@@ -225,16 +222,14 @@
 // Platform has POSIX terminal interface.
 #define ACE_HAS_TERMIOS
 
-// OpenBSD actually has the clearerr call, but it causes a
-// bogus compiler syntax error.
-#define ACE_LACKS_CLEARERR
-
 // OpenBSD 3.2 lacks sched_setscheduler (see /usr/src/lib/libc_r/TODO)
 #define ACE_LACKS_SETSCHED
 
 // OpenBSD supports IPv6 by default, but ACE IPv6 code
 // has compile errors.
 //#define ACE_HAS_IPV6
+
+#define ACE_HAS_3_PARAM_READDIR_R
 
 #include /**/ "ace/post.h"
 #endif /* ACE_CONFIG_H */

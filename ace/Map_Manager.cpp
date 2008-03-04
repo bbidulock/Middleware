@@ -170,7 +170,7 @@ ACE_Map_Manager<EXT_ID, INT_ID, ACE_LOCK>::move_all_free_slots_from_occupied_lis
       if (current_slot.free_)
         {
           // Reset free flag to zero before moving to free list.
-          current_slot.free_ = 0;
+          current_slot.free_ = false;
 
           // Move from occupied list to free list.
           this->move_from_occupied_list_to_free_list (position_of_current_slot);
@@ -461,7 +461,7 @@ ACE_Map_Manager<EXT_ID, INT_ID, ACE_LOCK>::unbind_slot (ACE_UINT32 slot)
   // run out of free slots in the free list.
   //
 
-  this->search_structure_[slot].free_ = 1;
+  this->search_structure_[slot].free_ = true;
 
 #else
 
@@ -530,7 +530,7 @@ ACE_Map_Manager<EXT_ID, INT_ID, ACE_LOCK>::resize_i (ACE_UINT32 new_size)
       // flag to be zero so that we don't have to set it when the slot
       // is moved to the occupied list.  In addition, this flag has no
       // meaning while this slot is in the free list.
-      temp[i].free_ = 0;
+      temp[i].free_ = false;
 
 #endif /* ACE_HAS_LAZY_MAP_MANAGER */
 
@@ -596,11 +596,11 @@ ACE_Map_Entry<EXT_ID, INT_ID>::dump (void) const
 {
 #if defined (ACE_HAS_DUMP)
   ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
-  ACE_DEBUG ((LM_DEBUG,  ACE_LIB_TEXT ("next_ = %d"), this->next_));
-  ACE_DEBUG ((LM_DEBUG,  ACE_LIB_TEXT ("prev_ = %d"), this->prev_));
+  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("next_ = %d"), this->next_));
+  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("prev_ = %d"), this->prev_));
 
 #if defined (ACE_HAS_LAZY_MAP_MANAGER)
-  ACE_DEBUG ((LM_DEBUG,  ACE_LIB_TEXT ("free_ = %d"), this->free_));
+  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("free_ = %d"), this->free_));
 #endif /* ACE_HAS_LAZY_MAP_MANAGER */
 
   ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
@@ -612,8 +612,8 @@ ACE_Map_Manager<EXT_ID, INT_ID, ACE_LOCK>::dump (void) const
 {
 #if defined (ACE_HAS_DUMP)
   ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
-  ACE_DEBUG ((LM_DEBUG,  ACE_LIB_TEXT ("total_size_ = %d"), this->total_size_));
-  ACE_DEBUG ((LM_DEBUG,  ACE_LIB_TEXT ("\ncur_size_ = %d"), this->cur_size_));
+  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("total_size_ = %d"), this->total_size_));
+  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("\ncur_size_ = %d"), this->cur_size_));
   this->allocator_->dump ();
   this->lock_.dump ();
   ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
@@ -625,7 +625,7 @@ ACE_Map_Iterator_Base<EXT_ID, INT_ID, ACE_LOCK>::dump_i (void) const
 {
 #if defined (ACE_HAS_DUMP)
   ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
-  ACE_DEBUG ((LM_DEBUG,  ACE_LIB_TEXT ("next_ = %d"), this->next_));
+  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("next_ = %d"), this->next_));
   ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
 }
@@ -635,7 +635,7 @@ ACE_Map_Const_Iterator_Base<EXT_ID, INT_ID, ACE_LOCK>::dump_i (void) const
 {
 #if defined (ACE_HAS_DUMP)
   ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
-  ACE_DEBUG ((LM_DEBUG,  ACE_LIB_TEXT ("next_ = %d"), this->next_));
+  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("next_ = %d"), this->next_));
   ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
 }
