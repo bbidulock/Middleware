@@ -678,7 +678,7 @@ ifneq ($(VXWORKSLINK),1)
 <%if(libs && libpaths)%>
 ifeq ($(static_libs_only), 1)
   ifeq ($(use_dep_libs), 1)
-    DEPLIBS = $(foreach lib,<%foreach(libs)%> <%libname_prefix%><%lib%><%endfor%> <%lit_libs%>, $(foreach libpath,<%foreach(libpaths)%><%if(targetoutdir)%> <%libpath%>/<%targetoutdir%><%endif%> <%libpath%><%endfor%>, $(wildcard $(libpath)/lib$(lib).a)))
+    DEPLIBS = $(foreach lib,<%foreach(libs)%> <%libname_prefix%><%lib%><%endfor%> <%lit_libs%>, $(foreach libpath,<%foreach(libpaths)%><%if(targetoutdir)%> <%libpath%>/<%targetoutdir%><%endif%> <%libpath%><%endfor%>, $(wildcard $(libpath)/$(LIB_PREFIX)$(lib).$(LIBEXT))))
   endif
 endif
 
@@ -738,7 +738,7 @@ install: <%if(postbuild)%>__postbuild__<%else%>all<%endif%>
 INSTALL_LIB ?= lib
 ifneq ($(INSTALL_PREFIX),)
 ifneq ($(install_rpath),0)
-LDFLAGS += -Wl,-R$(INSTALL_PREFIX)/$(INSTALL_LIB)
+LDFLAGS += -Wl,-R$(INSTALL_PREFIX)/$(INSTALL_LIB) $(LD_RPATH_FLAGS)
 endif
 endif
 
@@ -805,11 +805,11 @@ else
 	  -e'elsif ($$ok && s/^#//) {print}' $(MAKEFILE) | \
 	$(INSTALLER) -i -s $(subst $(SPACE),$(COMMA),$(INST_TAGS)) \
 	  $(INST_LOCATIONS) $(if $(ARCH),-d $(ARCH)) $(PRJINST_OPTIONS) \
-	  $(INSTALL_PREFIX)
+	  $(DESTDIR)$(INSTALL_PREFIX)
 <%foreach(custom_types)%>
 <%if(compares(custom_type, pkgconfig_files))%>
 <%if(custom_type->input_files)%>
-	$(ACE_ROOT)/bin/ace_install_pkgconfig.pl <%custom_type->input_files%> --prefix $(INSTALL_PREFIX) --libdir $(INSTALL_LIB) --libs "$(LIBS)" --version $(GNUACE_PROJECT_VERSION)<%foreach(pkgconfig_variables)%> --custom "<%pkgconfig_variable%>"<%endfor%>
+	$(ACE_ROOT)/bin/ace_install_pkgconfig.pl <%custom_type->input_files%> --destdir "$(DESTDIR)" --prefix $(INSTALL_PREFIX) --libdir $(INSTALL_LIB) --libs "$(LIBS)" --version $(GNUACE_PROJECT_VERSION)<%foreach(pkgconfig_variables)%> --custom "<%pkgconfig_variable%>"<%endfor%>
 <%endif%>
 <%endif%>
 <%endfor%>

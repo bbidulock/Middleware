@@ -208,15 +208,16 @@ namespace CIAO_LatencyTT_Test_Sender_Impl
     ACE_NEW_THROW_EX (this->ticker_,
                       WriteTicker (*this),
                       ::CORBA::NO_MEMORY ());
+    ACE_NEW_THROW_EX (this->datalen_range_,
+                      ::CORBA::Short[this->nr_of_runs_],
+                      ::CORBA::NO_MEMORY ());
   }
 
   Sender_exec_i::~Sender_exec_i (void)
   {
     delete this->ticker_;
-    if (this->duration_times_)
-      {
-        delete this->duration_times_;
-      }
+    delete [] this->duration_times_;
+    delete [] datalen_range_;
   }
 
   // Supported operations and attributes.
@@ -309,11 +310,7 @@ namespace CIAO_LatencyTT_Test_Sender_Impl
   void
   Sender_exec_i::reset_results()
   {
-    if (this->duration_times_)
-      {
-        delete this->duration_times_;
-        duration_times_ = 0;
-      }
+    delete [] this->duration_times_;
     this->count_ = 0;
 
     ACE_NEW_THROW_EX (this->duration_times_,
@@ -412,6 +409,9 @@ namespace CIAO_LatencyTT_Test_Sender_Impl
     // This->sleep_ is in ms
     unsigned int sec = this->sleep_ / 1000;
     unsigned int usec = (this->sleep_ % 1000) * 1000;
+    ACE_DEBUG ((LM_DEBUG, "Sender_exec_i::start - "
+              "Start test with interval <%u.%u>\n",
+              sec, usec));
     (void) ACE_High_Res_Timer::global_scale_factor ();
     this->reactor ()->timer_queue ()->gettimeofday (&ACE_High_Res_Timer::gettimeofday_hr);
     if (this->reactor ()->schedule_timer(
@@ -472,16 +472,9 @@ namespace CIAO_LatencyTT_Test_Sender_Impl
   void
   Sender_exec_i::init_values (void)
   {
-    if (this->duration_times_)
-      {
-        delete this->duration_times_;
-        duration_times_ = 0;
-      }
+    delete [] this->duration_times_;
     ACE_NEW_THROW_EX (this->duration_times_,
                       ACE_UINT64[this->iterations_],
-                      ::CORBA::NO_MEMORY ());
-    ACE_NEW_THROW_EX (this->datalen_range_,
-                      ::CORBA::Short[this->nr_of_runs_],
                       ::CORBA::NO_MEMORY ());
     int start = 16;
     for (int i = 0; i < this->nr_of_runs_; i++)
