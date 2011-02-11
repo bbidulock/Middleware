@@ -1,3 +1,399 @@
+Fri Feb 11 11:16:00 UTC 2011  Martin Corino  <mcorino@remedy.nl>
+
+        Merged changes from Remedy work branch.
+
+        === start changelog ===
+
+        Wed Feb  9 12:53:58 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+                * ace/CDR_Size.h:
+                * ace/Lib_Find.h:
+                * ace/Local_Name_Space_T.h:
+                * ace/Lock.h:
+                * ace/Message_Block.h:
+                * ace/Name_Space.h:
+                * ace/Naming_Context.h:
+                  Doxygen changes
+
+        Tue Feb  8 20:52:58 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+                * ace/ACE.cpp:
+                  Removed support for deprecated VxWorks versions
+
+                * ace/Active_Map_Manager.h:
+                  Doxygen changes
+
+        Tue Feb  8 20:47:58 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+                * include/makeinclude/platform_linux_icc.GNU:
+                  Intel C++ 12 has support for visibility
+
+                * include/makeinclude/rules.bin.GNU:
+                * include/makeinclude/wrapper_macros.GNU:
+                  Removed support for Chorus
+
+        Tue Feb  8 20:44:58 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+                * ace/os_include/os_dirent.h:
+                * ace/os_include/os_fcntl.h:
+                * ace/os_include/os_limits.h:
+                * ace/os_include/os_netdb.h:
+                * ace/os_include/os_stdio.h:
+                * ace/os_include/sys/os_time.h:
+                  Removed support for deprecated VxWorks versions
+
+        Tue Feb  8 19:14:58 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+                * examples/Reactor/Misc/notification.cpp:
+                * examples/Reactor/Misc/pingpong.cpp:
+                  Removed old support for chorus
+
+        Tue Feb  8 19:11:58 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+                * tests/Atomic_Op_Test.cpp:
+                * tests/Dirent_Test.cpp:
+                * tests/SSL/SSL_Asynch_Stream_Test.cpp:
+                * tests/SSL/Thread_Pool_Reactor_SSL_Test.cpp:
+                * tests/Thread_Manager_Test.cpp:
+                * tests/Thread_Pool_Reactor_Resume_Test.cpp:
+                  Removed old support for chorus and vxworks 5.5
+
+        Tue Feb  8 13:37:12 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+                * bin/fuzz.pl:
+                * bin/sets-manager.py:
+                * bin/svn_props.py:
+                  Check py files for Id
+
+        Tue Feb  8 10:40:12 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+                * src/Bool_Array.h:
+                * src/Bool_Array.cpp:
+                * src/Gen_Perf.h:
+                * src/Hash_Table.h:
+                * src/Hash_Table.cpp:
+                * src/Iterator.h:
+                * src/Iterator.cpp:
+                * src/Key_List.h:
+                * src/Key_List.cpp:
+                * src/List_Node.h:
+                * src/Options.h:
+                * src/Options.cpp:
+                * src/Vectors.h:
+                * src/Vectors.cpp:
+                * src/gperf.cpp:
+                  Removed checks for ACE_HAS_GPERF, just always compile this executable.
+
+        Tue Feb  8 10:21:36 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+                * ace/IOStream_T.h:
+                * ace/IOStream.h:
+                * ace/IOStream.cpp:
+                  Doxygen changes
+
+                * ace/config-netbsd.h:
+                  Removed define which we don't have anymore
+
+                * ace/config-macosx.h:
+                * ace/config-openbsd.h:
+                * ace/config-win32-interix.h:
+                  Added new defines
+
+                * ace/os_include/sys/os_select.h:
+                  Updated comment
+
+                * ace/OS_NS_netdb.cpp:
+                  Use new define
+
+        Mon Feb  7 09:53:50 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+                * include/makeinclude/platform_linux_icc.GNU:
+                  Fix for Intel C++ 12.0
+
+        Sun Feb  7 19:35:18 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+                * include/makeinclude/platform_g++_common.GNU:
+                  Added gprof for compiling for gprof, gcov for compiling with gcov
+
+        Sat Feb  5 13:49:18 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+                * include/makeinclude/platform_aix_g++.GNU:
+                * include/makeinclude/platform_freebsd.GNU:
+                * include/makeinclude/platform_gnuwin32_common.GNU:
+                * include/makeinclude/platform_hpux_gcc.GNU:
+                * include/makeinclude/platform_linux.GNU:
+                * include/makeinclude/platform_linux_icc.GNU:
+                * include/makeinclude/platform_linux_pgi.GNU:
+                * include/makeinclude/platform_linux_suncc.GNU:
+                * include/makeinclude/platform_lynxos.GNU:
+                * include/makeinclude/platform_macosx.GNU:
+                * include/makeinclude/platform_macosx_common.GNU:
+                * include/makeinclude/platform_macosx_icc.GNU:
+                * include/makeinclude/platform_macosx_panther.GNU:
+                * include/makeinclude/platform_netbsd.GNU:
+                * include/makeinclude/platform_openbsd.GNU:
+                * include/makeinclude/platform_sunos5_g++.GNU:
+                * include/makeinclude/platform_sunos5_sunc++.GNU:
+                * include/makeinclude/platform_vxworks6.2.GNU:
+                * include/makeinclude/platform_vxworks6.3.GNU:
+                * include/makeinclude/platform_win32_dmc.GNU:
+                * include/makeinclude/platform_win32_icc.GNU:
+                * include/makeinclude/platform_win32_interix.GNU:
+                * include/makeinclude/wrapper_macros.GNU:
+                  Cleanup, removed old template flags
+
+        Thu Feb  3 13:05:13 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+                * ace/config-qnx-neutrino.h:
+                * ace/config-qnx-rtp-common.h:
+                * ace/config-qnx-rtp.h:
+                  Cleanup
+
+                * ace/config-minimal.h:
+                  Removed this file, not used
+
+        Thu Feb  3 09:54:32 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+                * ace/config-qnx-rtp.h:
+                  Just one file for qnx, pre 6.2 support is already removed
+
+                * ace/config-qnx-rtp-62x.h:
+                * ace/config-qnx-rtp-pre62x.h:
+                  Removed these files.
+
+        Wed Feb  2 11:22:13 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+                * etc/ace.doxygen:
+                  Added more macros
+
+                * ace/config-doxygen.h:
+                  Removed this file, not needed for doxygen
+
+        Tue Feb  1 15:24:47 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+                * ace/Cache_Map_Manager_T.cpp:
+                * ace/Cached_Connect_Strategy_T.cpp:
+                * ace/Hash_Cache_Map_Manager_T.inl:
+                * ace/Hash_Cache_Map_Manager_T.cpp:
+                  Removed ACE_T1/ACE_T2, this improves doxygen documentation
+
+                * ace/Guard_T.h:
+                * ace/Asynch_IO_Impl.h:
+                  Doxygen fixes
+                * etc/ace.doxygen:
+
+                * ace/Hash_Cache_Map_Manager_T.h:
+                  Removed not needed define
+
+        Thu Jan 27 08:34:36 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+                * ace/Condition_T.h:
+                * ace/Lock.h:
+                  Doxygen changes
+
+                * tests/tests.mpc:
+                  Updated qt base project
+
+        Wed Jan 26 13:53:27 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+                * ace/Lock_Adapter_T.h:
+                  Layout, doxygen changes
+
+                * ace/Lock_Adapter_T.inl:
+                * ace/Lock_Adapter_T.cpp:
+                  Moved constructor to inline, the old compiler mentioned is deprecated
+                  a long time ago
+
+                * ace/QtReactor/QtReactor.h:
+                  Removed Qt3 support
+
+                * ace/QtReactor/ace_qt3reactor.mpc:
+                * bin/MakeProjectCreator/config/ace_qt3.mpb:
+                * bin/MakeProjectCreator/config/ace_qtreactor.mpb:
+                  Removed these files, qt3 support is removed
+
+        === end changelog ===
+
+Wed Feb  9 08:41:00 UTC 2011  Olli Savia  <ops@iki.fi>
+
+        * include/makeinclude/platform_gnuwin32_common.GNU:
+          Moved some settings from CFLAGS to CPPFLAGS and
+          FLAGS_C_CC.
+
+Wed Feb  9 08:25:29 UTC 2011  Olli Savia  <ops@iki.fi>
+
+        * include/makeinclude/platform_cygwin32.GNU:
+        * include/makeinclude/platform_gnuwin32_common.GNU:
+        * include/makeinclude/platform_mingw32.GNU:
+          Moved some common settings from Cygwin/MinGW config files to
+          platform_gnuwin32_common.GNU. Some cleanups.
+
+Tue Feb  8 14:52:43 UTC 2011  Olli Savia  <ops@iki.fi>
+
+        * tests/run_test.lst:
+          Disabled two tests on Cygwin.
+
+Tue Feb  8 13:17:55 UTC 2011  Olli Savia  <ops@iki.fi>
+
+        * include/makeinclude/platform_cygwin32.GNU:
+        * include/makeinclude/platform_gnuwin32_common.GNU:
+        * include/makeinclude/platform_mingw32.GNU:
+          Moved some common setting from Cygwin/MinGW config files to
+          platform_gnuwin32_common.GNU.
+
+Fri Feb  4 20:04:13 UTC 2011  Olli Savia  <ops@iki.fi>
+
+        * tests/OS_Test.cpp:
+          Use ACE::is_inequal() instead of ACE::is_equal().
+
+Fri Feb  4 20:02:28 UTC 2011  Olli Savia  <ops@iki.fi>
+
+        * ace/ACE.h:
+          Added a simple helper ACE::is_inequal() which compares inequality of
+          two objects without using operator!=. This is useful for comparing
+          floating point values.
+
+Fri Feb  4 19:51:33 UTC 2011  Olli Savia  <ops@iki.fi>
+
+        * examples/APG/ThreadManagement/Async_Cancel.cpp:
+          Removed legacy HP-UX workaround. This should fix
+          "statement is unreachable" warning on HP-UX builds.
+
+Fri Feb  4 18:35:52 UTC 2011  Olli Savia  <ops@iki.fi>
+
+        * include/makeinclude/platform_gnuwin32_common.GNU:
+          Another cleanup.
+
+Fri Feb  4 13:58:44 UTC 2011  Olli Savia  <ops@iki.fi>
+
+        * include/makeinclude/platform_gnuwin32_common.GNU:
+          Fixed to use {cpu,tune}modelflag settings in platform_g++_common.GNU
+
+Fri Feb  4 12:21:23 UTC 2011  Olli Savia  <ops@iki.fi>
+
+        * include/makeinclude/platform_mingw32.GNU:
+          Fix for previous commit.
+
+Fri Feb  4 12:13:43 UTC 2011  Olli Savia  <ops@iki.fi>
+
+        * include/makeinclude/platform_gnuwin32_common.GNU:
+        * include/makeinclude/platform_mingw32.GNU:
+          Moved MinGW specific settings to platform_mingw32.GNU
+
+Thu Feb  3 12:26:23 UTC 2011  Olli Savia  <ops@iki.fi>
+
+        * include/makeinclude/platform_gnuwin32_common.GNU:
+          More cleanups
+
+Wed Feb  2 11:13:29 UTC 2011  Olli Savia  <ops@iki.fi>
+
+        * include/makeinclude/platform_gnuwin32_common.GNU:
+          Cleanup.
+
+Tue Feb  1 14:28:18 UTC 2011  Steve Huston  <shuston@riverace.com>
+
+        * ace/String_Base.cpp (operator+=): Add a temporary for the return
+          value to quiet an IBM XL C++ 10 optimizer warning about returning
+          the address of a temporary. No, I'm not kidding.
+
+Fri Jan 28 13:39:54 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+        * docs/ACE-bug-process.html:
+          Updated email addresses
+
+Fri Jan 28 13:23:29 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+        * NEWS:
+        * bin/diff-builds-and-group-fixed-tests-only.sh:
+        * docs/Download.html:
+        * etc/index.html:
+          Updated to make the 6.0.1 release public
+
+Fri Jan 28 11:21:05 CET 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+        * ACE version 6.0.1 released.
+
+Thu Jan 27 08:30:36 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+        * etc/ace.doxygen:
+          Predefine ACE_HAS_THREADS to get several missing classes added to
+          the documentation
+
+Wed Jan 26 20:17:28 UTC 2011  Steve Huston  <shuston@riverace.com>
+
+        * include/makeinclude/platform_aix_ibm.GNU: If XL C/C++ 10.1 is used,
+          use the same compiler options as for XL C/C++ 9.
+
+Wed Jan 26 08:58:32 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+        * tests/tests.mpc:
+          Added empty resource file for 2980 dll
+
+Tue Jan 25 15:17:58 UTC 2011  Steve Huston  <shuston@riverace.com>
+
+        * bin/MakeProjectCreator/config/acemfcexe.mpb: The SubSystem value
+          for "Windows" on VC10 is "Windows", not "2" as it is for VC8-9.
+
+        * tests/ACE_Init_Test.ico: Reverted changes from
+          Fri Jan 21 00:15:19 UTC 2011  Steve Huston  <shuston@riverace.com>
+          The VC8 resource compiler had problems with the new .ico file.
+          Although it's an issue with the VC8 resource compiler that can be
+          worked around, the test builds and works fine with the older
+          ico file, so I just put it back.
+
+        * tests/ACE_Init_Test_Resource.h: Fixed fuzz errors.
+
+        * tests/ACE_Init_Test.rc: Replaced #include afxres.h with winres.h.
+          Although VS generates it that way, afxres.h isn't needed unless
+          MFC is used and won't be present when MFC components aren't installed.
+
+Tue Jan 25 10:52:53 UTC 2010  Martin Corino  <mcorino@remedy.nl>
+
+        * ace/Object_Manager.cpp:
+          Fixed WinCE compilation errors.
+
+Sun Jan 23 18:02:57 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
+
+        * include/makeinclude/platform_linux_common.GNU:
+          Fixed problems with tcl flags
+
+Fri Jan 21 17:04:29 UTC 2011  Steve Huston  <shuston@riverace.com>
+
+        * ace/config-hpux-11.00.h: Set ACE_LACKS_(STR|WCS)TO[U]LL when
+          the requisite long-long compiler settings are missing. Enables
+          use of these functions when they're available.
+
+        * m4/ace_func.m4: Remove the parts of ACE_FUNC_WCSTOLL and
+          ACE_FUNC_WCSTOULL that set ACE_LACKS_*_PROTOTYPE. The use of
+          the ACE_LACKS_*_PROTOTYPE was removed from ACE code in
+          Thu Jan 20 11:42:53 UTC 2010  Martin Corino  <mcorino@remedy.nl>
+          plus, it's wrong. The functions (at least on HP-UX, which seems
+          to center on the issue here) are available when needed via a
+          #pragma extern, which effectively inlines the code from the
+          compiler. Adding a prototype is the wrong thing to do in this
+          case.
+
+        * m4/compiler.m4: Add -ext to aCC's options. Turns on long-long.
+
+        * include/makeinclude/platform_hpux_aCC.GNU: Remove all the specific
+          macro setting to try and select particular threading features and
+          Rogue Wave libs. Use -mt and be done with it. -mt does the right
+          thing wrt RW and preprocessor feature macros based on the -AA/-AP
+          options. Also add -ext to turn on long-long.
+
+Fri Jan 21 00:15:19 UTC 2011  Steve Huston  <shuston@riverace.com>
+
+        * bin/MakeProjectCreator/config/acemfcexe.mpb: New base project
+          that sets the proper subsystem and macros for an MFC app.
+
+        * tests/ACE_Init_Test.ico:
+        * tests/ACE_Init_Test.rc:
+        * tests/ACE_Init_Test_Resource.h: Modernized resource defs to let
+          ACE_Init_Test build and run properly.
+
+        * tests/tests.mpc: Added the rest of the needed files for ACE_Init_Test
+          and made it require mfc; base it off acemfcexe (new, above).
+
 Thu Jan 20 11:42:53 UTC 2010  Martin Corino  <mcorino@remedy.nl>
 
         Merged changes from Remedy work branch.
@@ -38,7 +434,7 @@ Thu Jan 20 11:42:53 UTC 2010  Martin Corino  <mcorino@remedy.nl>
         Mon Jan 10 12:38:10 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
 
                 * etc/ace.doxygen:
-                  Doxygen improvmenet
+                  Doxygen improvement
 
         Mon Jan 10 09:09:16 UTC 2011  Johnny Willemsen  <jwillemsen@remedy.nl>
 
