@@ -8,6 +8,8 @@ using namespace std;
 #include "Base.h"
 #include "BaseSupport.h"
 
+#include "ace/OS_main.h"
+
 #define LIBRARY_NAME  "QueryCondition_Library"
 #define PROFILE_NAME  "QueryCondition_Profile"
 
@@ -17,7 +19,6 @@ long received_samples = 0;
 long expected_samples_run1 = 1 * 2;    //only sample 2 should be received of 2 keys
 long expected_samples_run2 = 1 * 2;   //only sample 5 should be received o 2 keys
 long expected_samples_run3 = (9 - 2) * 2; //all samples 1-9 except sample 2 and 5 of both keys.
-
 
 DDSWaitSet* ws_ = new DDSWaitSet ();
 DDS_Duration_t dur_ = {9, 0};
@@ -30,7 +31,6 @@ void sleep_now (int sleeptime)
         sleep(sleeptime);
 #endif
 }
-
 
 void check_iter (const QueryConditionTest & sample,
                    const DDS_SampleInfo & readinfo,
@@ -245,20 +245,13 @@ int clean_up (DDSDomainParticipant * participant)
       main_result = 1;
     }
   }
+  delete ws_;
+  DDSDomainParticipantFactory::finalize_instance ();
   return main_result;
 }
 
-#if !defined (ACE_TMAIN)
-# define ACE_TMAIN main
-#endif
-
-#if !defined (ACE_TCHAR)
-# define ACE_TCHAR char
-#endif
-
 int ACE_TMAIN (int argc, ACE_TCHAR *argv[])
 {
-  int                 main_result = 1; /* error by default */
   DDSTopic*           topic = 0;
   DDSDataReader*      data_reader = 0;
   DDSSubscriber*      sub = 0;
@@ -422,7 +415,5 @@ int ACE_TMAIN (int argc, ACE_TCHAR *argv[])
 
   read (data_reader, qc, rc, ++run);
 
-  main_result = 0;
-
-  return main_result;
+  return clean_up (participant);
 }

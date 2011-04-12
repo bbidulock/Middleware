@@ -8,6 +8,8 @@ using namespace std;
 #include "Base.h"
 #include "BaseSupport.h"
 
+#include "ace/OS_main.h"
+
 #define LIBRARY_NAME  "QueryCondition_Library"
 #define PROFILE_NAME  "QueryCondition_Profile"
 
@@ -65,14 +67,6 @@ void write (DDSDataWriter * writer)
   ++run_;
   last_iteration_ = number_of_iterations_ * run_;
 }
-
-#if !defined (ACE_TMAIN)
-# define ACE_TMAIN main
-#endif
-
-#if !defined (ACE_TCHAR)
-# define ACE_TCHAR char
-#endif
 
 int ACE_TMAIN (int argc, ACE_TCHAR *argv[])
 {
@@ -173,6 +167,7 @@ clean_exit:
             main_result = 1;
         }
     }
+    DDSDomainParticipantFactory::finalize_instance ();
     return main_result;
 }
 

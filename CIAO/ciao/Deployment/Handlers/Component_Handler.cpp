@@ -3,6 +3,7 @@
 #include "Component_Handler.h"
 #include "ciao/Logger/Log_Macros.h"
 #include "ciao/Base/CIAO_PropertiesC.h"
+#include "ciao/Base/CIAO_ExceptionsC.h"
 #include "ciao/Containers/Container_BaseC.h"
 #include "ccm/CCM_ObjectC.h"
 #include "CIAO_State.h"
@@ -200,6 +201,34 @@ namespace CIAO
 
           container->set_attributes (comp_ref.in (),
                                      attr_config);
+        }
+      catch (::CIAO::InvalidComponent &ex)
+        {
+          if (ex.name.in () == 0)
+            {
+              ex.name = idd.name;
+            }
+
+          CIAO_ERROR (1, (LM_ERROR, CLINFO
+                          "Component_Handler::install_instance - "
+                          "Caught InvalidComponent exception: %C:%C\n",
+                          ex.name.in (), ex.reason.in ()));
+          throw ::Deployment::StartError (ex.name.in (),
+                                          ex.reason.in ());
+        }
+      catch (::CIAO::Installation_Failure &ex)
+        {
+          if (ex.name.in () == 0)
+            {
+              ex.name = idd.name;
+            }
+
+          CIAO_ERROR (1, (LM_ERROR, CLINFO
+                          "Component_Handler::install_instance - "
+                          "Caught Installation_Failure exception: %C:%C\n",
+                          ex.name.in (), ex.reason.in ()));
+          throw ::Deployment::StartError (ex.name.in (),
+                                          ex.reason.in ());
         }
       catch (const ::CORBA::Exception &ex)
         {

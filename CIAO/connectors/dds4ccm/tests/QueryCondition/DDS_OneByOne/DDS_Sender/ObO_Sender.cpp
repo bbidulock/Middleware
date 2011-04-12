@@ -5,6 +5,8 @@
 
 using namespace std;
 
+#include "ace/OS_main.h"
+
 #include "Base_ObO.h"
 #include "Base_ObOSupport.h"
 
@@ -65,14 +67,6 @@ void write (DDSDataWriter * writer)
   ++run_;
   last_iteration_ = number_of_iterations_ * run_;
 }
-
-#if !defined (ACE_TMAIN)
-# define ACE_TMAIN main
-#endif
-
-#if !defined (ACE_TCHAR)
-# define ACE_TCHAR char
-#endif
 
 int ACE_TMAIN (int argc, ACE_TCHAR *argv[])
 {
@@ -173,6 +167,7 @@ clean_exit:
             main_result = 1;
         }
     }
+    DDSDomainParticipantFactory::finalize_instance ();
     return main_result;
 }
 
